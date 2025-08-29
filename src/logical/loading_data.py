@@ -1,8 +1,8 @@
 # модуль загрузки данных из Bybit и сохранения их в csv-файлы
 
-
-from src.Bybit.get.get_kline import get_klines_bybit
-from src.Bybit.get.get_datatime import preparation_date
+from src.Bybit.get.get_kline import get_klines_bybit, preparation_data, revers
+from src.Bybit.get.get_datatime import Preparation_period
+from src.utils.utils import DataTimeToUnix
 
 # Берем настройки из config
 from config import Config
@@ -11,7 +11,6 @@ config = Config()
 # создаем сессию подключения 
 from src.Bybit.client import Connector_Bybit
 session = Connector_Bybit(config)
-
 
 # Логирование 
 import logging
@@ -22,20 +21,30 @@ setup_logging()
 # Создание логгера
 logger = logging.getLogger(__name__)
 
+logger.info(f"Получаем период для загрузки")
 # Формирование дат периода загрузки
-start_datetime, end_datetime    = preparation_date()
+start_datetime, end_datetime    = Preparation_period()
+logger.info(f"Период start {DataTimeToUnix(start_datetime)} finish {DataTimeToUnix(end_datetime)}")
+
+def get_kline_data_timeframe():
+
+    logger.info(f"Получения данных с биржи по symbol {config.SYMBOL} по timeframe {config.TIMEFRAME}, период start {start_datetime} finish {end_datetime}, Limit_data {config.LIMIT}")
+    kline_data = get_klines_bybit(
+        session,
+        config.CATEGORY,
+        config.SYMBOL,
+        config.TIMEFRAME,
+        start_datetime, 
+        end_datetime,
+        config.LIMIT
+        )
 
 
-logger.info(f"Получения данных с биржи по symbol {config.SYMBOL} по timeframe {config.TIMEFRAME}, период start {start_datetime} finish {end_datetime}, Limit_data {config.LIMIT}")
-kline_data = get_klines_bybit(
-    session,
-    config.CATEGORY,
-    config.SYMBOL,
-    config.TIMEFRAME,
-    start_datetime, 
-    end_datetime,
-    config.LIMIT
-    )
+    logger.info(f"Подготовка данных")
+    kline_data = preparation_data(kline_data)
+    # Инвертируем данные
+    logger.info(f"Инвертируем данные")
+    kline_data = revers(kline_data)
 
-
-logger.info(kline_data)
+    logger.info(f"Загрузка данных с биржи завершина.")
+    return kline_data

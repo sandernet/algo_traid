@@ -1,4 +1,5 @@
 import os
+from src.logical.loading_data import get_kline_data_timeframe
 
 # Логирование 
 import logging
@@ -48,7 +49,10 @@ logger = logging.getLogger(__name__)
 # Асинхронная функция для основного процесса
 def main():
     logger.info("Запуск основного процесса")
-    import src.logical.loading_data 
+
+    data = get_kline_data_timeframe()
+    logger.info(data)
+    logger.info("Завершение основного процесса")
 
 
 if __name__ == "__main__":

@@ -2,8 +2,10 @@
 from config import Config
 from src.Bybit.client import Connector_Bybit
 
-config = Config()
+from datetime import timedelta
+import pandas as pd
 
+config = Config()
 
 # Логирование 
 import logging
@@ -13,8 +15,6 @@ logger = logging.getLogger(__name__)
 # создаем сессию подключения 
 session = Connector_Bybit(config)
 
-from datetime import timedelta
-import pandas as pd
 
 # Функция для получения текущей даты и даты 50 дней назад в формате timestamp
 def get_time_interval(current_time, interval_day):
@@ -44,13 +44,13 @@ def get_current_datetime(interval_day):
         return None
 
 
-def preparation_date():
+# Функция для подготовки временного периода
+def Preparation_period():
     # если в конфиге заданы параметры времени берем их
     if config.START_DATETIME is not None and config.END_DATETIME is not None:
         start_datetime  = config.START_DATETIME
         end_datetime    = config.END_DATETIME
     else:
         # Подготавливаем временной период в виде начальной и конечной датой и времени
-        from src.Bybit.get.get_datatime import get_current_datetime  # Импорт функции из utils
         start_datetime, end_datetime = get_current_datetime(config.INTERVAL_DAY) or (None, None)
     return  start_datetime, end_datetime
