@@ -1,5 +1,5 @@
 from config import Config
-from Bybit.config import connect_bybit
+from Bybit.client import Connector_Bybit
 
 from Bybit.get.get_kline import get_klines_strategy
 
@@ -21,7 +21,7 @@ def run_get_data(timeframe, start_datetime, end_datetime,  limit_data):
     logger.info(f"Limit_data {limit_data}")
     # Получаем данные по рабочему timeframe
     # создаем сессию подключения 
-    session = connect_bybit(config)
+    session = Connector_Bybit(config)
     kline_data = get_klines_strategy(
         session, 
         category, 

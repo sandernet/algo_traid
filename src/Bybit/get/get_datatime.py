@@ -1,6 +1,6 @@
 # from utils.utilsDate import get_time_interval
 from config import Config
-from get_dataBybit.config import connect_bybit
+from src.Bybit.client import Connector_Bybit
 
 config = Config()
 
@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # создаем сессию подключения 
-session = connect_bybit(config)
+session = Connector_Bybit(config)
 
 from datetime import timedelta
 import pandas as pd
@@ -51,6 +51,6 @@ def preparation_date():
         end_datetime    = config.END_DATETIME
     else:
         # Подготавливаем временной период в виде начальной и конечной датой и времени
-        from get_dataBybit.get.get_datatime import get_current_datetime  # Импорт функции из utils
+        from src.Bybit.get.get_datatime import get_current_datetime  # Импорт функции из utils
         start_datetime, end_datetime = get_current_datetime(config.INTERVAL_DAY) or (None, None)
     return  start_datetime, end_datetime

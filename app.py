@@ -2,7 +2,7 @@ import os
 
 # Логирование 
 import logging
-from utils.logger import setup_logging
+from src.utils.logger import setup_logging
 
 
 # Загружаем настройки приложения 
@@ -23,7 +23,7 @@ else:
 setup_logging()
 # Создание логгера
 logger = logging.getLogger(__name__)
-logger.info("Запуск приложения")
+
 
 
 # # Функция получения данных и запуска вычислений по стратегии
@@ -48,6 +48,7 @@ logger.info("Запуск приложения")
 # Асинхронная функция для основного процесса
 def main():
     logger.info("Запуск основного процесса")
+    import src.logical.loading_data 
 
 
 if __name__ == "__main__":

@@ -12,6 +12,8 @@ class Config:
     WORK_TIMEFRAME      =   15                          # рабочий timeframe 
     SENIOR_TIME_FRAME   =   30                         # Старший timeframe
     
+    TIMEFRAME       =   30
+    
     INTERVALS       =   [1,3,5,15,30,60,120,240,360,720,'D','M','W'] #существующие timeframes
     LIMIT           =   1000  # количество баров  максимально 1000
     
