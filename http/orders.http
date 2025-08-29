@@ -1,0 +1,34 @@
+@WB_TOKEN = eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjQxMTE4djEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc0ODM3NzEyNiwiaWQiOiIwMTkzNjc4ZC0yZWNkLTdiN2ItYTk2ZS1iMmI5ZjUyYjczZWMiLCJpaWQiOjIxOTM5MDQwLCJvaWQiOjExMDE1NSwicyI6MTA3Mzc0Mjg0OCwic2lkIjoiNWI1YzAyNjAtMWFjMS01ZTcwLWI1MmEtNGFjN2NjMDMzOTQ3IiwidCI6ZmFsc2UsInVpZCI6MjE5MzkwNDB9.Q5SBB77IZG7BHFoeTVP5zGIzLxSdaQ4x6XTO5VkqxgOJzC23K_RfgfZzcq0Zax4YK2HS6xfe5Ipyb4ORUMcZFA
+@WB_TOKEN_TEST = eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjQxMTE4djEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc0ODM3NzEyNiwiaWQiOiIwMTkzNjc4ZC0yZWNkLTdiN2ItYTk2ZS1iMmI5ZjUyYjczZWMiLCJpaWQiOjIxOTM5MDQwLCJvaWQiOjExMDE1NSwicyI6MTA3Mzc0Mjg0OCwic2lkIjoiNWI1YzAyNjAtMWFjMS01ZTcwLWI1MmEtNGFjN2NjMDMzOTQ3IiwidCI6ZmFsc2UsInVpZCI6MjE5MzkwNDB9.Q5SBB77IZG7BHFoeTVP5zGIzLxSdaQ4x6XTO5VkqxgOJzC23K_RfgfZzcq0Zax4YK2HS6xfe5Ipyb4ORUMcZFA
+@server = supplies-api-sandbox.wildberries.ru
+@server_test = advert-api.wildberries.ru
+@point = /api/v1/acceptance/coefficients
+
+
+# Коэфициент отгрузки по складам
+###
+GET https://supplies-api.wildberries.ru/api/v1/acceptance/coefficients
+?warehouseIDs=131643 
+Authorization: {{WB_TOKEN}}
+
+# Коэфициент отгрузки по складам
+###
+GET https://supplies-api.wildberries.ru/api/v1/acceptance/coefficients
+Authorization: {{WB_TOKEN}}
+
+
+# Добавление поставки 
+###
+POST http://{{server}}/api/v1/acceptance/options
+Authorization: {{WB_TOKEN_TEST}}
+[
+  {
+    "quantity": 1,
+    "barcode": "k"
+  },
+  {
+    "quantity": 7,
+    "barcode": "1111111111"
+  }
+]
+

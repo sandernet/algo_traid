@@ -1,0 +1,20 @@
+Создание виртуальной среды
+python3 -m venv <имя среды>
+python -m venv venv
+
+Запуск linux
+source venv/bin/activate
+Запуск Windows
+venv\Scripts\activate
+
+
+Файл Requirements
+pip freeze > requirements.txt
+pip install -r requirements.txt
+
+# стрелка вверх зеленая "\033[92m↑\033[0m"
+# стрелка вниз красная "\033[91m\u2193\033[0m"
+# Вывод \033[92m+\033[0m зеленый +
+# Красный минус \033[91m-\033[0m  -
+
+
