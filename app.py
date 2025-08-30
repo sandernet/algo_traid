@@ -1,5 +1,8 @@
 import os
+import joblib
 from src.logical.loading_data import get_kline_data_timeframe
+from src.logical.education import education
+from src.logical.predictions import make_prediction
 
 # Логирование 
 import logging
@@ -50,8 +53,21 @@ logger = logging.getLogger(__name__)
 def main():
     logger.info("Запуск основного процесса")
 
+    logger.info("Получаем данные для обучения")
     data = get_kline_data_timeframe()
-    logger.info(data)
+    
+    # logger.info("Запускаем обучение моделей")
+    # education(data)
+    logger.info("Получаем предсказания")
+    
+    clf = joblib.load("clf_model.pkl")
+    reg = joblib.load("reg_model.pkl")
+    
+    proba, y_pred_reg = make_prediction(data,clf, reg)
+    logger.info(f"Вероятность роста: {round(proba, 2)}%")
+    logger.info(f"Ожидаемая доходность: {round(y_pred_reg, 2)}%")
+    
+    # logger.info(data)
     logger.info("Завершение основного процесса")
 
 
