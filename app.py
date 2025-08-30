@@ -56,15 +56,18 @@ def main():
     logger.info("Получаем данные для обучения")
     data = get_kline_data_timeframe()
     
-    # logger.info("Запускаем обучение моделей")
+    logger.info("Запускаем обучение моделей")
+    # обучение моделей
     # education(data)
     logger.info("Получаем предсказания")
     
     clf = joblib.load("clf_model.pkl")
     reg = joblib.load("reg_model.pkl")
     
-    proba, y_pred_reg = make_prediction(data,clf, reg)
-    logger.info(f"Вероятность роста: {round(proba, 2)}%")
+    proba_down, proba_up, y_pred_reg = make_prediction(data,clf, reg)
+    logger.info(f"Вероятность роста: {round( proba_up, 2)}%")
+    logger.info(f"Вероятность падения: {round(proba_down, 2)}%")
+
     logger.info(f"Ожидаемая доходность: {round(y_pred_reg, 2)}%")
     
     # logger.info(data)

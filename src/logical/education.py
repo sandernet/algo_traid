@@ -1,13 +1,18 @@
 from src.logical.loading_data import get_kline_data_timeframe
 from src.strategy.fe_v1 import make_features
+from src.strategy.fe_v2 import make_features_v2
 
 import joblib
 
 
-
+# процесс обучения моделей
+# df - данные для обучения
 def education(df):
 
-    X, y_reg, y_cls = make_features(df, horizon=5)
+    # X, y_reg, y_cls = make_features(df, horizon=5)
+    X, y_reg, y_cls = make_features_v2(df, horizon=5)
+    
+    
 
     # обучаем классификатор
     from lightgbm import LGBMClassifier
