@@ -26,6 +26,10 @@ logger.info(f"Получаем период для загрузки")
 start_datetime, end_datetime    = Preparation_period()
 logger.info(f"Период start {DataTimeToUnix(start_datetime)} finish {DataTimeToUnix(end_datetime)}")
 
+
+# ========================================
+# Получаем данные по рабочему timeframe с биржи и преобразовываем в нужный формат
+# Возвращает dataFrame
 def get_kline_data_timeframe():
 
     logger.info(f"Получения данных с биржи по symbol {config.SYMBOL} по timeframe {config.TIMEFRAME}, период start {start_datetime} finish {end_datetime}, Limit_data {config.LIMIT}")
