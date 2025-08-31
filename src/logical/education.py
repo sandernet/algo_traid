@@ -10,6 +10,10 @@ def education(df):
 
     # X, y_reg, y_cls = make_features(df, horizon=5)
     X, y_reg, y_cls = make_features_v2(df, horizon=5)
+    
+    print("Статистика таргета (y_reg):")
+    print(y_reg.describe())
+
      
     # обучаем классификатор
     from lightgbm import LGBMClassifier

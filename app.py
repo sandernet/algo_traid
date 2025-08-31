@@ -36,10 +36,13 @@ logger = logging.getLogger(__name__)
 # Асинхронная функция для основного процесса
 async def main():
    
-   # Запуск планировщика-------------------------
-    logger.info("Запуск планировщика")
-    start_scheduler(starting)
-    
+#    # Запуск планировщика-------------------------
+#     logger.info("Запуск планировщика")
+#     start_scheduler(starting)
+
+
+    #  Запускаем начальную функцию
+    starting()
     
     # Запуск Telegram-бота-------------------------
     logger.info("Зпуск Telegram-бота")
