@@ -21,18 +21,15 @@ setup_logging()
 # Создание логгера
 logger = logging.getLogger(__name__)
 
-logger.info(f"Получаем период для загрузки")
 # Формирование дат периода загрузки
 start_datetime, end_datetime    = Preparation_period()
-logger.info(f"Период start {DataTimeToUnix(start_datetime)} finish {DataTimeToUnix(end_datetime)}")
-
 
 # ========================================
 # Получаем данные по рабочему timeframe с биржи и преобразовываем в нужный формат
 # Возвращает dataFrame
 def get_kline_data_timeframe():
 
-    logger.info(f"Получения данных с биржи по symbol {config.SYMBOL} по timeframe {config.TIMEFRAME}, период start {start_datetime} finish {end_datetime}, Limit_data {config.LIMIT}")
+    logger.info(f"Получения данных с биржи по symbol {config.SYMBOL}\n по timeframe {config.TIMEFRAME},\n период start {DataTimeToUnix(start_datetime)} finish {DataTimeToUnix(end_datetime)},\n Limit {config.LIMIT}")
     kline_data = get_klines_bybit(
         session,
         config.CATEGORY,
@@ -44,11 +41,10 @@ def get_kline_data_timeframe():
         )
 
 
-    logger.info(f"Подготовка данных")
+
     kline_data = preparation_data(kline_data)
     # Инвертируем данные
     logger.info(f"Инвертируем данные")
     kline_data = revers(kline_data)
 
-    logger.info(f"Загрузка данных с биржи завершина.")
     return kline_data

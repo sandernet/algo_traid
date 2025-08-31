@@ -1,12 +1,16 @@
 import os
-import joblib
-from src.logical.loading_data import get_kline_data_timeframe
-from src.logical.education import education
-from src.logical.predictions import make_prediction
+import asyncio
+
+from src.schedulers.schedulers import start_scheduler
+from src.logical.starting import starting
 
 # Логирование 
 import logging
 from src.utils.logger import setup_logging
+
+# Подключение Telegram-бота
+from src.telegram.create_bot import tg_bot, dp, start_bot
+from src.telegram.handlers import user_router  #, different_types
 
 
 # Загружаем настройки приложения 
@@ -29,89 +33,30 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
-
-# # Функция получения данных и запуска вычислений по стратегии
-# def run_strategy_and_graphics():
-#     try:
-#         # Расчет стратегии 
-#         from strategy.strategy import run_strategy
-#         minor_kline_data, work_kline_data, senior_kline_data, vpvr_data = run_strategy(config)
-        
-#         # ========================================
-#         # Вовд графика в браузер
-#         # Если в конфигураторе указано показывать график
-#         if config.GRAFIC_SEE:
-#             from graphics import chart_plotly
-#             logger.info("Запуск построения графика")
-#             chart_plotly(minor_kline_data, work_kline_data, senior_kline_data, vpvr_data, config)
-#     except Exception as e:
-#         print(f"Ошибка проверки данных: {e}")
-
- 
-
 # Асинхронная функция для основного процесса
-def main():
-    logger.info("Запуск основного процесса")
+async def main():
+   
+   # Запуск планировщика-------------------------
+    logger.info("Запуск планировщика")
+    start_scheduler(starting)
+    
+    
+    # Запуск Telegram-бота-------------------------
+    logger.info("Зпуск Telegram-бота")
+    # Регистрируем маршруты (обработчики)
+    dp.include_routers(user_router.router)
+    # регистрация функций
+    dp.startup.register(start_bot)
+    # dp.shutdown.register(stop_bot)
+    # запуск бота в режиме long polling при запуске бот очищает все обновления, которые были за его моменты бездействия
+    try:
+        await tg_bot.delete_webhook(drop_pending_updates=True)
+        await dp.start_polling(tg_bot, allowed_updates=dp.resolve_used_update_types())
+    finally:
+        await tg_bot.session.close()
 
-    logger.info("Получаем данные для обучения")
-    data = get_kline_data_timeframe()
     
-    logger.info("Запускаем обучение моделей")
-    # обучение моделей
-    # education(data)
-    logger.info("Получаем предсказания")
-    
-    clf = joblib.load("clf_model.pkl")
-    reg = joblib.load("reg_model.pkl")
-    
-    proba_down, proba_up, y_pred_reg = make_prediction(data,clf, reg)
-    logger.info(f"Вероятность роста: {round( proba_up, 2)}%")
-    logger.info(f"Вероятность падения: {round(proba_down, 2)}%")
-
-    logger.info(f"Ожидаемая доходность: {round(y_pred_reg, 2)}%")
-    
-    # logger.info(data)
-    logger.info("Завершение основного процесса")
-
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
     
-    
-    # while True:
-    #     print("Выберите действие:")
-    #     print("1. Запустить загрузку данных с ByBit")
-    #     print("2. Запуск стратегии Mozart")
-    #     print("3. Запуск программы с ТГ ботом")
-    #     print("4. Запуск обучения AI")
-    #     print("0. Выйти")
-        
-    #     # Получаем выбор от пользователя
-    #     choice = input("Введите номер действия: ")
-
-    #     if choice == "1":
-    #         # Загрузка и сохранение данных с биржи в файл
-    #         print("Запуск Загрузки данных.....")
-    #         from get_dataBybit.get.index import save_files_in_csv
-    #         save_files_in_csv()
-    #         break
-            
-    #     elif choice == "2":
-    #         print("Запуск стратегии Mozart")
-    #         run_strategy_and_graphics()
-    #         break
-        
-    #     elif choice == "3":
-    #         print("Запуск программы с ТГ ботом")
-    #         asyncio.run(main()) 
-    #     elif choice == "4":
-    #         print("Запуск обучения AI....")
-    #         from nn_ai.nn_training import training 
-    #         training()
-    #     elif choice == "0":
-    #         print("Выход из программы.")
-    #         break  # Завершение цикла
-    #     else:
-    #         print("Некорректный выбор. Попробуйте снова.")
-        
-    #     print()  # Пустая строка для разделения вывода

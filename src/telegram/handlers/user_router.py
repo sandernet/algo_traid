@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import Message, ReplyKeyboardRemove
 
-from telegram_bot.keyboards.kbs_users import kbs_main_menu
+from src.telegram.keyboards.kbs_users import kbs_main_menu
 from config import Config
 
 router = Router()  # [1]
@@ -17,28 +17,19 @@ async def cmd_start(message: Message):
         reply_markup=kbs_main_menu()
     )
 
-@router.message(Command("help"))  # [2]
-async def cmd_start(message: Message):
-    await message.answer(
-        "Этот бот ",
-        reply_markup=kbs_main_menu()
-    )
-
-@router.message(F.text.lower() == "Получить баланс")
+@router.message(F.text == "Кнопка 1")
 async def answer_yes(message: Message):
     await message.answer(
-        "Тут будет ваш баланс...",
+        "Кнопка 1...",
         reply_markup=kbs_main_menu()
     )
         
-@router.message(F.text.lower() == "Посмотреть настройки бота")
+@router.message(F.text == "Посмотреть настрйки торговли")
 async def answer_no(message: Message):
     
     text = (f'👉 Текущая пара: <code><b>{config.SYMBOL}</b></code>\n'
-            f'👥 Установленный рабочий таймфрейм: <b>{config.INTERVAL}</b>\n\n'
+            f'👥 Установленный рабочий таймфрейм: <b>{config.TIMEFRAME}</b>\n'
             f'🚀 Количество свечей для анализа {config.LIMIT}')
-            # f'<code>https://t.me/easy_refer_bot?start={message.from_user.id}</code>')
-    
     await message.answer(
         text,
         reply_markup=kbs_main_menu()
