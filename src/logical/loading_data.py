@@ -42,7 +42,7 @@ def get_kline_data_timeframe():
 
 
 
-    kline_data = preparation_data(kline_data)
+    # kline_data = preparation_data(kline_data)
     # Инвертируем данные
     logger.info(f"Инвертируем данные")
     kline_data = revers(kline_data)

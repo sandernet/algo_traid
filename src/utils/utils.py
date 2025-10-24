@@ -1,3 +1,5 @@
+import datetime
+
 def get_previous_interval(intervals, target):
     try:
         # Найти индекс заданного значения
@@ -8,7 +10,6 @@ def get_previous_interval(intervals, target):
         # Если значение не найдено в массиве, вернуть None
         return target
     
-import datetime
 # Перевод времени из миллисекунд в часы, минуты, секунды
 # Время в миллисекундах
 def DataTimeToUnix(timestamp_ms):

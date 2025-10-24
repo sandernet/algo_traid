@@ -1,0 +1,164 @@
+import yaml
+import os
+from typing import Any, Dict
+
+# Путь к файлу конфигурации
+CONFIG_FILE_PATH = os.path.join(os.getcwd(), "configs", 'config.yaml')
+
+
+# Определение ожидаемых параметров и их типов
+REQUIRED_SETTINGS: Dict[str, Dict[str, Any]] = {
+    "EXCHANGE_SETTINGS": {
+        "EXCHANGE_ID": str,
+        "SYMBOL": str,
+        # API_KEY и SECRET_KEY являются обязательными, кроме режима 'backtest'
+        "TIMEFRAME": str,
+    },
+    "STRATEGY_SETTINGS": {
+        "ZIGZAG_DEVIATION_PERCENT": (int, float),
+        "FIBONACCI_LEVELS": list,
+        "BASE_ORDER_AMOUNT": (int, float),
+    },
+    "RISK_SETTINGS": {
+        "STOP_LOSS_PERCENT": (int, float),
+        "TAKE_PROFIT_PERCENT": (int, float),
+        "MAX_POSITIONS": int,
+    },
+    "MODE_SETTINGS": {
+        "MODE": str,
+    },
+    "TELEGRAM_SETTINGS": {
+        "TOKEN": str,
+    }
+}
+
+class ConfigValidationError(Exception):
+    """Кастомное исключение для ошибок валидации конфигурации."""
+    pass
+
+class ConfigManager:
+    """
+    Класс для загрузки, парсинга и предоставления доступа к настройкам из config.yml.
+    """
+    def __init__(self, config_path: str = CONFIG_FILE_PATH):
+        self.config_path = config_path
+        self._config = self._load_config()
+        # Вызов функции валидации сразу после загрузки
+        self._validate_config()
+        
+
+    def _load_config(self) -> dict:
+        """Загружает и возвращает данные из YAML-файла."""
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as file:
+                config_data = yaml.safe_load(file)
+            print(f"✅ Конфигурация успешно загружена из: {self.config_path}")
+            return config_data
+        except FileNotFoundError:
+            raise FileNotFoundError(f"❌ Файл конфигурации не найден по пути: {self.config_path}")
+        except yaml.YAMLError as e:
+            raise yaml.YAMLError(f"❌ Ошибка парсинга YAML-файла: {e}")
+        
+    def _validate_config(self):
+        """Проверяет наличие и тип всех обязательных параметров."""
+        print("🔍 Запуск валидации конфигурации...")
+        errors = []
+        mode = self.get_setting("MODE_SETTINGS", "MODE").lower()
+
+        # 1. Проверка наличия и типа основных параметров
+        for section, settings in REQUIRED_SETTINGS.items():
+            if section not in self._config:
+                errors.append(f"Отсутствует обязательная секция: {section}")
+                continue
+
+            for key, expected_type in settings.items():
+                if key not in self._config[section]:
+                    errors.append(f"Отсутствует обязательный параметр: [{section}][{key}]")
+                    continue
+
+                value = self._config[section][key]
+                if not isinstance(value, expected_type):
+                    # Обработка list как частного случая
+                    if expected_type == list and value is None:
+                         errors.append(f"Некорректный тип для [{section}][{key}]. Ожидается {expected_type.__name__}, но получено None.")
+                    elif expected_type != list and value is not None and not isinstance(value, expected_type):
+                        errors.append(f"Некорректный тип для [{section}][{key}]. Ожидается {expected_type.__name__}, но получено {type(value).__name__}.")
+
+        # 2. Дополнительные логические проверки
+        
+        # Проверка API-ключей, если это Live или Paper Trading
+        if mode in ['live', 'paper']:
+            api_key = self._config.get("EXCHANGE_SETTINGS", {}).get("API_KEY")
+            secret_key = self._config.get("EXCHANGE_SETTINGS", {}).get("SECRET_KEY")
+            
+            if not api_key:
+                errors.append("Для режима 'live'/'paper' требуется API_KEY.")
+            if not secret_key:
+                errors.append("Для режима 'live'/'paper' требуется SECRET_KEY.")
+                
+        # Проверка параметров бэктестинга
+        if mode == 'backtest':
+            if not self.get_setting("MODE_SETTINGS", "BACKTEST_START_DATE"):
+                errors.append("Для режима 'backtest' требуется BACKTEST_START_DATE.")
+            # Здесь можно добавить проверку формата даты
+        
+        # Проверка параметров стратегии
+        deviation = self.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEVIATION_PERCENT")
+        if deviation <= 0:
+            errors.append("ZIGZAG_DEVIATION_PERCENT должен быть положительным числом (> 0).")
+            
+        fib_levels = self.get_setting("STRATEGY_SETTINGS", "FIBONACCI_LEVELS")
+        if not (0 < min(fib_levels) < 1 and 0 < max(fib_levels) < 1):
+             errors.append("Уровни Фибоначчи должны быть в диапазоне (0, 1).")
+
+
+        # 3. Вывод результатов валидации
+        if errors:
+            error_message = "\n\n❌ ОШИБКА ВАЛИДАЦИИ КОНФИГУРАЦИИ (config.yml):\n"
+            error_message += "\n".join([f"- {err}" for err in errors])
+            error_message += "\n\nПожалуйста, исправьте файл config.yml и перезапустите."
+            raise ConfigValidationError(error_message)
+        
+        print("✅ Валидация конфигурации успешно пройдена.")
+    
+    def get_setting(self, section: str, key: str):
+        """Возвращает конкретную настройку по секции и ключу."""
+        # ... (Код без изменений)
+        if section in self._config and key in self._config[section]:
+            return self._config[section][key]
+        else:
+            # Во время runtime мы предполагаем, что _validate_config уже нашел все критические ошибки,
+            # но для безопасности можно оставить эту проверку.
+            return None 
+            # raise KeyError(f"Настройка '{key}' не найдена в секции '{section}'.")
+
+    def get_section(self, section: str) -> dict:
+        """Возвращает всю секцию настроек."""
+        if section in self._config:
+            return self._config[section]
+        else:
+            raise KeyError(f"❌ Секция '{section}' не найдена в файле конфигурации.")
+
+
+
+# # ======================================================================
+# # ПРИМЕР ИСПОЛЬЗОВАНИЯ В ДРУГИХ МОДУЛЯХ
+# # ======================================================================
+# if __name__ == '__main__':
+#     # Получение настроек Биржи
+#     exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
+#     symbol = config.get_setting("EXCHANGE_SETTINGS", "SYMBOL")
+    
+#     # Получение настроек Стратегии
+#     zigzag_dev = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEVIATION_PERCENT")
+#     fib_levels = config.get_setting("STRATEGY_SETTINGS", "FIBONACCI_LEVELS")
+    
+#     # Вывод для проверки
+#     print(f"\n--- Проверка Настроек ---")
+#     print(f"Биржа: {exchange_id}, Пара: {symbol}")
+#     print(f"ZigZag Отклонение: {zigzag_dev*100}%")
+#     print(f"Уровни Фибоначчи: {fib_levels}")
+    
+#     # Можно получить всю секцию целиком
+#     risk_settings = config.get_section("RISK_SETTINGS")
+#     print(f"Настройки Риска: {risk_settings}")

@@ -1,10 +1,10 @@
 import pandas as pd
 
 
-def get_klines_strategy(session, category, symbol, interval, start_time, end_time, limit, reverse = False):
+def get_klines_strategy(session, category, symbol, interval, limit, reverse = False):
 
-    kline_data = get_klines_bybit(session, category, symbol, interval, start_time, end_time, limit)
-    kline_data = preparation_data(kline_data) 
+    kline_data = get_klines_bybit(session, category, symbol, interval, limit)
+    # kline_data = preparation_data(kline_data) 
     if reverse :
         kline_data = revers(kline_data)
     return kline_data
@@ -18,15 +18,15 @@ def get_klines_strategy(session, category, symbol, interval, start_time, end_tim
 # interval - интервал в минутах (1,3,5,15,30,60,120,240,360,720,D,M,W)
 # start_time - начальное время в миллисекундах
 # end_time - конечное время в миллисекундах
-def get_klines_bybit(session, category, symbol, interval, start_time, end_time, limit = 1000):
+def get_klines_bybit(session, category, symbol, interval, limit = 1000):
     # Запрос данных по свечам
     try:
         kline_data = session.get_kline(
             category=category,  # Выбор типа контракта (inverse, linear)
             symbol=symbol,       # Символ, например BTCUSD
             interval=interval,   # Интервал в минутах (1,3,5,15,30,60,120,240,360,720,D,M,W)
-            start=start_time,    # Начальное время в миллисекундах
-            end=end_time,         # Конечное время в миллисекундах
+            # start=start_time,    # Начальное время в миллисекундах
+            # end=end_time,         # Конечное время в миллисекундах
             limit = limit
         )
         return kline_data
@@ -44,8 +44,8 @@ def preparation_data(kline_data):
     # Проверка и приведение данных к числовому типу
     kline_data[['Open', 'High', 'Low', 'Close', 'Volume']] = kline_data[['Open', 'High', 'Low', 'Close', 'Volume']].apply(pd.to_numeric, errors='coerce').astype(float)
     # Убедимся, что колонка 'Date' является индексом, что требуется для mplfinance
-    kline_data.set_index('DateTime', inplace=True)
-    kline_data.index = pd.to_datetime(kline_data.index.astype(float), unit='ms')
+    # kline_data.set_index('DateTime', inplace=True)
+    # kline_data.index = pd.to_datetime(kline_data.index.astype(float), unit='ms')
     return kline_data
 
 

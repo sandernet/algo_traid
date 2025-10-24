@@ -6,20 +6,18 @@ class Config:
     """Базовый класс конфигурации с общими настройками для всех окружений."""
     CATEGORY            =   "spot"  # Выбор типа контракта (inverse, linear, etc.)
     SYMBOL              =   "BTCUSDT"                   # Выбор торгового символа
-    
+    TIMEFRAME       =   5
+    LIMIT           =   1000  # количество баров  максимально 1000
+    TESTNET         =   False                     # True means your API keys were generated on testnet.bybit.com
+    START_DATETIME  =   "01-01-2024"                     # Начало периода загрузки данных (в формате DD-MM-YYYY) или None
+    END_DATETIME    =   "01-01-2025"                     # Конец периода загрузки данных (в формате DD-MM-YYYY) или None
+   
+
+    INTERVAL_DAY        =   365 # INTERVAL_DAY
     # таймфраймы для получения данных
     MINOR_TIME_FRAME    =   5                          # Младший timeframe
     WORK_TIMEFRAME      =   15                          # рабочий timeframe 
     SENIOR_TIME_FRAME   =   30                         # Старший timeframe
-    
-    TIMEFRAME       =   5
-    
-    INTERVALS       =   [1,3,5,15,30,60,120,240,360,720,'D','M','W'] #существующие timeframes
-    LIMIT           =   1000  # количество баров  максимально 1000
-    
-    TESTNET         =   False                     # True means your API keys were generated on testnet.bybit.com
-    INTERVAL_DAY    =   365                   # Интервал загрузки данных по ценам с биржи для анализа
-    
     
     # Конфигурация графиков 
     SCROLLZOOM = {'scrollZoom': True,
@@ -34,9 +32,7 @@ class Config:
     PERCENTAGE          = 0.10 # процент отклонения от минимального объема для вхождения в уровень  (максимальный пик - минимальный объем) * config.PERCENTAGE
     API_KEY         = os.getenv("API_KEY")
     API_SECRET      = os.getenv("API_SECRET")
-        # задаем свой период для тестов либо None #
-    START_DATETIME  = None #1729710387000
-    END_DATETIME    = None #1730401587000
+
     
     # ==========================================================
     # Телеграмм настройка

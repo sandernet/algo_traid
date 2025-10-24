@@ -19,9 +19,9 @@ def starting():
     logger.info("Получаем данные для обучения")
     data = get_kline_data_timeframe()
     
-    logger.info("Запускаем обучение моделей")
-    # обучение моделей
-    education(data)
+    # logger.info("Запускаем обучение моделей")
+    # # обучение моделей
+    # education(data)
     
     
     logger.info("Получаем предсказания")

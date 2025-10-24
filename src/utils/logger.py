@@ -1,33 +1,81 @@
-"""
-Модуль logging поддерживает несколько уровней логирования:
-
-DEBUG: Подробная информация, обычно интересная только для разработки.
-INFO: Подтверждение того, что все работает как ожидается.
-WARNING: Указание на то, что что-то может пойти не так.
-ERROR: Сообщение об ошибке, которая произошла.
-CRITICAL: Очень серьезная ошибка, которая может привести к остановке программы.
-
-"""
+# logger.py
 import logging
+import logging.handlers
+import os
+from config import config # Импортируем наш модуль конфигурации
 
-def setup_logging(log_file='app.log', level=logging.INFO):
-    # Настройка логирования
-    logging.basicConfig(
-        level=level,  # Уровень логирования
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Формат сообщений
-        handlers=[
-            logging.FileHandler(log_file),  # Логи в файл
-            logging.StreamHandler()  # Логи в консоль
-        ]
-    )
+class LoggerManager:
+    """
+    Класс для настройки и получения централизованного логгера.
+    Использует RotatingFileHandler для управления размером и количеством файлов.
+    """
+    
+    def __init__(self):
+        # 1. Получение настроек логирования
+        log_settings = config.get_section("LOGGING_SETTINGS")
+        
+        self.log_level = log_settings["LEVEL"].upper()
+        self.log_dir = log_settings["LOG_DIR"]
+        self.log_file = os.path.join(self.log_dir, log_settings["FILENAME"])
+        self.max_bytes = log_settings["MAX_BYTES"]
+        self.backup_count = log_settings["BACKUP_COUNT"]
+        
+        # Убедимся, что директория для логов существует
+        if not os.path.exists(self.log_dir):
+            os.makedirs(self.log_dir)
+
+        # 2. Форматтер
+        # Добавляем %(name)s (имя логгера, т.е. модуля) для поддержки модульности
+        self.formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+
+        # 3. Базовая настройка
+        # Устанавливаем корневой уровень для всего приложения
+        logging.getLogger().setLevel(self.log_level)
+        
+        # Настройка файлового обработчика
+        self._setup_file_handler()
+        
+        # Настройка консольного обработчика
+        self._setup_console_handler()
+        
+        # Выводим информацию об успешной настройке
+        self.get_logger(__name__).info("Система логирования инициализирована.")
 
 
-"""
-# Пример логирования
-logging.debug("Это отладочное сообщение")
-logging.info("Это информационное сообщение")
-logging.warning("Это предупреждающее сообщение")
-logging.error("Это сообщение об ошибке")
-logging.critical("Это критическое сообщение")
-"""
+    def _setup_file_handler(self):
+        """Настраивает обработчик для записи в файл с ротацией."""
+        # 'a' - режим добавления (append)
+        file_handler = logging.handlers.RotatingFileHandler(
+            self.log_file,
+            maxBytes=self.max_bytes,
+            backupCount=self.backup_count,
+            encoding='utf-8'
+        )
+        file_handler.setFormatter(self.formatter)
+        logging.getLogger().addHandler(file_handler)
+        
+        self.get_logger(__name__).info(
+            f"Логирование в файл: {self.log_file} (Max size: {self.max_bytes / 1024**2:.2f} MB, Backups: {self.backup_count})"
+        )
 
+    def _setup_console_handler(self):
+        """Настраивает обработчик для вывода в консоль."""
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(self.formatter)
+        logging.getLogger().addHandler(console_handler)
+
+    @staticmethod
+    def get_logger(name: str) -> logging.Logger:
+        """
+        Статический метод для получения логгера в любом модуле.
+        Имя логгера должно соответствовать имени модуля (используйте __name__).
+        """
+        return logging.getLogger(name)
+
+# Инициализируем систему логирования один раз при запуске приложения
+log_manager = LoggerManager()
+
+# Статический метод для простого импорта в других модулях
+get_logger = LoggerManager.get_logger

@@ -1,19 +1,19 @@
 # from utils.utilsDate import get_time_interval
-from config import Config
-from src.Bybit.client import Connector_Bybit
+import src.config.config as config
+from src.bybit.client import Connector_Bybit
 
 from datetime import timedelta
 import pandas as pd
-
-config = Config()
 
 # Логирование 
 import logging
 # Создание логгера
 logger = logging.getLogger(__name__)
 
+cfg = config.get_config()
+
 # создаем сессию подключения 
-session = Connector_Bybit(config)
+session = Connector_Bybit()
 
 
 # Функция для получения текущей даты и даты 50 дней назад в формате timestamp
@@ -47,10 +47,11 @@ def get_current_datetime(interval_day):
 # Функция для подготовки временного периода
 def Preparation_period():
     # если в конфиге заданы параметры времени берем их
-    if config.START_DATETIME is not None and config.END_DATETIME is not None:
-        start_datetime  = config.START_DATETIME
-        end_datetime    = config.END_DATETIME
+    
+    if cfg["exchange"]["start_datetime"] is not None and cfg["exchange"]["end_datetime"] is not None:
+        start_datetime  = cfg["exchange"]["start_datetime"]
+        end_datetime    = cfg["exchange"]["end_datetime"]
     else:
         # Подготавливаем временной период в виде начальной и конечной датой и времени
-        start_datetime, end_datetime = get_current_datetime(config.INTERVAL_DAY) or (None, None)
+        start_datetime, end_datetime = get_current_datetime(cfg["exchange"]["interval_day"]) or (None, None)
     return  start_datetime, end_datetime

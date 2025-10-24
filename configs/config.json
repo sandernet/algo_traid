@@ -1,0 +1,54 @@
+{
+  "exchange": {
+    "api_key": "MgrXLxN6GPT3j7Bqu2",
+    "api_secret": "vB2j0v4zQU8oafG5eVCh7Nem1pKu8iUqde6b",
+    "category": "spot",
+    "timeframe": "D",
+    "limit": 110,
+    "testnet": false,
+    "demo": true,
+    "start_datetime": null,
+    "end_datetime": null,
+    "interval_day": 365
+  },
+  "coins": [{
+    "symbol": "BTC",
+    "timeframe": "D",
+    "auto_trading": true, 
+    "start_deposit_usdt": 100,
+    "orderType": "Market"
+  },{
+    "symbol": "ETH",
+    "timeframe": "D",
+    "auto_trading": true, 
+    "start_deposit_usdt": 100,
+    "orderType": "Market"
+  }],
+  "telegram": {
+    "token": "8426424372:AAG9j9_0L7DWKL79Ngnyeh4cDc87C3kWmf0",
+    "admin": 408983918,
+    "channel": -4970333714
+  },
+  "strategy": {
+    "atr_len": 10,
+    "factor": 3.0,
+    "training_data_period": 100,
+    "high_vol": 0.75,
+    "mid_vol": 0.5,
+    "low_vol": 0.25
+  },
+  "testing": {
+    "graphic_see": false,
+    "to_excel": false
+  },
+  "scheduler": {
+    "hour": 9,
+    "minute": 57,
+    "second": 5,
+    "timezone": "Asia/Irkutsk"
+  },
+  "logger": {
+    "level": "INFO",
+    "log_files": "app_test.log"
+  }
+}

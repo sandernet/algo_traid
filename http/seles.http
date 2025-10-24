@@ -3,29 +3,3 @@
 
 @server = api.bybit.com
 
-
-###
-GET http://{{server}}/adv/v1/promotion/count
-Authorization: {{WB_TOKEN}}
-
-# Список акций 
-###
-GET http://{{server}}/v5/position/list
-Authorization: {{WB_TOKEN}}
-
-
-# Добавление поставки 
-###
-POST http://{{server}}
-Authorization: {{WB_TOKEN_TEST}}
-[
-  {
-    "quantity": 1,
-    "barcode": "k"
-  },
-  {
-    "quantity": 7,
-    "barcode": "1111111111"
-  }
-]
-

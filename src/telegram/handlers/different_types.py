@@ -1,5 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import Message
+from aiogram.types import ChatMemberUpdated
 
 router = Router()
 
@@ -14,3 +15,4 @@ async def message_with_sticker(message: Message):
 @router.message(F.animation)
 async def message_with_gif(message: Message):
     await message.answer("Это GIF!")
+    
