@@ -8,7 +8,7 @@
 # ======================================================================
 EXCHANGE_SETTINGS: 
 # Используемая биржа (например, binance, bybit, kucoin)
-  EXCHANGE_ID: binance
+  EXCHANGE_ID: bybit
   API_KEY: "MgrXLxN6GPT3j7Bqu2"
   API_SECRET: "vB2j0v4zQU8oafG5eVCh7Nem1pKu8iUqde6b"
   CATEGORY: "spot"
@@ -70,3 +70,22 @@ LOGGING_SETTINGS:
   MAX_BYTES: 10485760
   # Количество хранимых резервных файлов логов
   BACKUP_COUNT: 5
+  
+# ======================================================================
+# СЕКЦИЯ ТЕЛЕГРАМ (TELEGRAM_SETTINGS)
+# ======================================================================
+TELEGRAM_SETTINGS:
+  # Токен для доступа к Telegram Bot API
+  TOKEN: "8426424372:AAG9j9_0L7DWKL79Ngnyeh4cDc87C3kWmf0"
+  # ID администратора бота
+  ADMIN_ID: 408983918
+  # ID чата для отправки уведомлений
+  CHANNEL_ID: -4970333714
+
+# ======================================================================
+# СЕКЦИЯ ПЛАНИРОВЩИКА (SCHEDULER_SETTINGS)
+# ======================================================================
+SCHEDULER_SETTINGS:
+  # Включить/выключить планировщик
+  ENABLED: true
+  TIMEZONE: "Asia/Irkutsk"

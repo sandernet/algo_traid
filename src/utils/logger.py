@@ -2,7 +2,7 @@
 import logging
 import logging.handlers
 import os
-from config import config # Импортируем наш модуль конфигурации
+from src.config.config import config # Импортируем наш модуль конфигурации
 
 class LoggerManager:
     """

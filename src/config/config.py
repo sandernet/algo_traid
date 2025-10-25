@@ -10,9 +10,11 @@ CONFIG_FILE_PATH = os.path.join(os.getcwd(), "configs", 'config.yaml')
 REQUIRED_SETTINGS: Dict[str, Dict[str, Any]] = {
     "EXCHANGE_SETTINGS": {
         "EXCHANGE_ID": str,
-        "SYMBOL": str,
-        # API_KEY и SECRET_KEY являются обязательными, кроме режима 'backtest'
+        "API_KEY": str,
+        "API_SECRET": str,
         "TIMEFRAME": str,
+        "CATEGORY": str,
+        "LIMIT": int,
     },
     "STRATEGY_SETTINGS": {
         "ZIGZAG_DEVIATION_PERCENT": (int, float),
@@ -29,6 +31,8 @@ REQUIRED_SETTINGS: Dict[str, Dict[str, Any]] = {
     },
     "TELEGRAM_SETTINGS": {
         "TOKEN": str,
+        "ADMIN_ID": int,
+        "CHANNEL_ID": int
     }
 }
 
@@ -80,7 +84,7 @@ class ConfigManager:
                 if not isinstance(value, expected_type):
                     # Обработка list как частного случая
                     if expected_type == list and value is None:
-                         errors.append(f"Некорректный тип для [{section}][{key}]. Ожидается {expected_type.__name__}, но получено None.")
+                        errors.append(f"Некорректный тип для [{section}][{key}]. Ожидается {expected_type.__name__}, но получено None.")
                     elif expected_type != list and value is not None and not isinstance(value, expected_type):
                         errors.append(f"Некорректный тип для [{section}][{key}]. Ожидается {expected_type.__name__}, но получено {type(value).__name__}.")
 
@@ -129,8 +133,8 @@ class ConfigManager:
         else:
             # Во время runtime мы предполагаем, что _validate_config уже нашел все критические ошибки,
             # но для безопасности можно оставить эту проверку.
-            return None 
-            # raise KeyError(f"Настройка '{key}' не найдена в секции '{section}'.")
+            # return None 
+            raise KeyError(f"Настройка '{key}' не найдена в секции '{section}'.")
 
     def get_section(self, section: str) -> dict:
         """Возвращает всю секцию настроек."""
@@ -139,26 +143,14 @@ class ConfigManager:
         else:
             raise KeyError(f"❌ Секция '{section}' не найдена в файле конфигурации.")
 
+try:
+    config = ConfigManager()
+except (FileNotFoundError, yaml.YAMLError, ConfigValidationError) as e:
+    # Важно: При ошибке валидации или загрузки, программа должна быть остановлена
+    print(f"\nFATAL ERROR: {e}")
+    # Вы можете добавить здесь os._exit(1) для принудительной остановки, 
+    # если это главный скрипт
+    raise SystemExit(1)
 
-
-# # ======================================================================
-# # ПРИМЕР ИСПОЛЬЗОВАНИЯ В ДРУГИХ МОДУЛЯХ
-# # ======================================================================
-# if __name__ == '__main__':
-#     # Получение настроек Биржи
-#     exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
-#     symbol = config.get_setting("EXCHANGE_SETTINGS", "SYMBOL")
-    
-#     # Получение настроек Стратегии
-#     zigzag_dev = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEVIATION_PERCENT")
-#     fib_levels = config.get_setting("STRATEGY_SETTINGS", "FIBONACCI_LEVELS")
-    
-#     # Вывод для проверки
-#     print(f"\n--- Проверка Настроек ---")
-#     print(f"Биржа: {exchange_id}, Пара: {symbol}")
-#     print(f"ZigZag Отклонение: {zigzag_dev*100}%")
-#     print(f"Уровни Фибоначчи: {fib_levels}")
-    
-#     # Можно получить всю секцию целиком
-#     risk_settings = config.get_section("RISK_SETTINGS")
-#     print(f"Настройки Риска: {risk_settings}")
+# # Создание синглтона для доступа к конфигурации
+# config = ConfigManager()

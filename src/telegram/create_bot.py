@@ -3,12 +3,15 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.types import BotCommand, BotCommandScopeDefault
 
-import src.config.config as config
+from src.config.config import config # Импортируем наш модуль конфигурации
 
-cfg = config.get_config()
+log_settings = config.get_section("TELEGRAM_SETTINGS")
+token = log_settings["TOKEN"]
+admin = log_settings["ADMIN_ID"]
+
 
 # инициируем объект бота, передавая ему parse_mode=ParseMode.HTML по умолчанию
-tg_bot = Bot(token=cfg["telegram"]["token"], default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+tg_bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 # инициируем объект бота
 dp = Dispatcher()
@@ -23,7 +26,6 @@ async def set_commands(tg_bot):
 # Функция, которая выполнится когда бот запустится
 async def start_bot():
     # получаем список администраторов из .env
-    admin = cfg["telegram"]["admin"]
     # channal = cfg["telegram"]["channel"]
     
     await set_commands(tg_bot)
