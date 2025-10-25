@@ -3,6 +3,31 @@
 # Настройки конфигурации для торгового бота ZigZag-Fibonacci
 # ----------------------------------------------------------------------
 
+# =====================================================================
+# Настройки торговых монет (SYMBOLS)
+# =====================================================================
+COINS:
+  - SYMBOL: BTC
+    TIMEFRAME: D
+    AUTO_TRADING: true
+    START_DEPOSIT_USDT: 100
+    ORDERTYPE: Market
+  - SYMBOL: ETH
+    TIMEFRAME: D
+    AUTO_TRADING: true
+    START_DEPOSIT_USDT: 100
+    ORDERTYPE: Market
+  - SYMBOL: BNB
+    TIMEFRAME: D
+    AUTO_TRADING: true
+    START_DEPOSIT_USDT: 100
+    ORDERTYPE: Market
+  - SYMBOL: XRP
+    TIMEFRAME: D
+    AUTO_TRADING: true
+    START_DEPOSIT_USDT: 100
+    ORDERTYPE: Market
+
 # ======================================================================
 # СЕКЦИЯ БИРЖИ (EXCHANGE_SETTINGS)
 # ======================================================================

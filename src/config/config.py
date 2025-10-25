@@ -35,6 +35,14 @@ REQUIRED_SETTINGS: Dict[str, Dict[str, Any]] = {
         "CHANNEL_ID": int
     }
 }
+# Определение ожидаемых параметров и их типов для каждого элемента в массиве COINS
+REQUIRED_COIN_FIELDS: Dict[str, Any] = {
+    "SYMBOL": str,
+    "TIMEFRAME": str,
+    "AUTO_TRADING": bool,
+    "START_DEPOSIT_USDT": (int, float),
+    "ORDERTYPE": str
+}
 
 class ConfigValidationError(Exception):
     """Кастомное исключение для ошибок валидации конфигурации."""
@@ -89,6 +97,32 @@ class ConfigManager:
                         errors.append(f"Некорректный тип для [{section}][{key}]. Ожидается {expected_type.__name__}, но получено {type(value).__name__}.")
 
         # 2. Дополнительные логические проверки
+        # 2. **НОВАЯ ПРОВЕРКА**: Проверка массива COINS
+        if 'COINS' not in self._config:
+            errors.append("Отсутствует обязательный массив: [COINS]")
+        else:
+            coins_list = self._config['COINS']
+            if not isinstance(coins_list, list):
+                errors.append("[COINS] должен быть списком (массивом). Получено: {type(coins_list).__name__}")
+            elif not coins_list:
+                errors.append("Массив [COINS] не должен быть пустым.")
+            else:
+                # Перебор каждой монеты в массиве
+                for i, coin in enumerate(coins_list):
+                    if not isinstance(coin, dict):
+                        errors.append(f"[COINS][{i}]: Элемент должен быть объектом (словарем). Получено: {type(coin).__name__}")
+                        continue
+
+                    for key, expected_type in REQUIRED_COIN_FIELDS.items():
+                        if key not in coin:
+                            errors.append(f"[COINS][{i}] ({coin.get('SYMBOL', 'UNKNOWN')}): Отсутствует обязательный параметр: {key}")
+                            continue
+
+                        value = coin[key]
+                        # Проверка типа
+                        if not isinstance(value, expected_type):
+                            errors.append(f"[COINS][{i}] ({coin.get('SYMBOL', 'UNKNOWN')}): Некорректный тип для '{key}'. Ожидается {expected_type.__name__}, но получено {type(value).__name__}.")
+            
         
         # Проверка API-ключей, если это Live или Paper Trading
         if mode in ['live', 'paper']:
