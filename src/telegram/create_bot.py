@@ -25,11 +25,7 @@ async def set_commands(tg_bot):
 
 # Функция, которая выполнится когда бот запустится
 async def start_bot():
-    # получаем список администраторов из .env
-    # channal = cfg["telegram"]["channel"]
-    
     await set_commands(tg_bot)
-
     try:
         await tg_bot.send_message(admin, f'Я запущен🥳.')
         # await tg_bot.send_message(channal, f'Я запущен🥳.')
