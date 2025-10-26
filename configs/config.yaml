@@ -77,7 +77,7 @@ MODE_SETTINGS:
   # Режим работы: 'live', 'backtest', 'paper'
   MODE: backtest
   # Директория для хранения исторических данных
-  DATA_DIR: data/
+  DATA_DIR: DATA_OHLCV/
   # Дата начала для бэктестинга (YYYY-MM-DD)
   BACKTEST_START_DATE: 2023-01-01
   # Дата окончания для бэктестинга (YYYY-MM-DD)

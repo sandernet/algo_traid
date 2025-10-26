@@ -1,6 +1,7 @@
 /.env
 /.vscode
 /data
+/DATA_OHLCV
 /logs
 /.venv
 **/__pycache__

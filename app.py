@@ -9,15 +9,20 @@ logger = get_logger(__name__)
 logger.info("Конфигурация успешно загружена и прошла валидацию.")
 
 
-
-# Основной код приложения
-
+# ====================================================
+# Основная функция
+# ====================================================
 def main():
-    from src.logical.data_fetcher.data_pipeline import run_data_update_pipeline
-
-    logger.info("Запуск основного конвейера получения и сохранения исторических данных...")
-    run_data_update_pipeline()
-    logger.info("Конвейер завершил работу.")
+    
+    # logger.info("Запуск основного конвейера получения и сохранения исторических данных...")
+    # from src.logical.data_fetcher.data_pipeline import run_data_update_pipeline
+    # run_data_update_pipeline()
+    # logger.info("Конвейер завершил работу.")
+    
+    logger.info("Запуск бэктестера с локальными данными...")
+    from src.logical.backtester.backtester import run_local_backtest
+    run_local_backtest()
+    logger.info("Бэктестер завершил работу.")
 
 # Точка входа
 if __name__ == "__main__":
