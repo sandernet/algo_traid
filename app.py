@@ -9,15 +9,14 @@ logger = get_logger(__name__)
 logger.info("Конфигурация успешно загружена и прошла валидацию.")
 
 
-from src.logical.data_fetcher.data_fetcher import DataFetcher
-
 
 # Основной код приложения
 # ====================================================
 def main():
-    logger.info("Приложение запущено")
+    logger.info("Запуск приложения...")
     # Получение настроек Биржи
     exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
+    limit = config.get_setting("EXCHANGE_SETTINGS", "LIMIT")
     
     
     # 1. Получение массива монет
@@ -29,23 +28,30 @@ def main():
         print(f"Критическая ошибка: {e}")
         coins_list = [] # Устанавливаем пустой список для безопасной работы
         
-    
+    # Подключение к Бирже
+    from src.logical.data_fetcher.data_fetcher import DataFetcher
+    # 2. Обработка каждой монеты   
     for coin in coins_list:
-        symbol = coin.get("SYMBOL")
+        logger.info("============================================================================")
+        symbol = coin.get("SYMBOL")+"/USDT"
         timeframe = coin.get("TIMEFRAME")
-        print(f"Монета: {symbol}, Таймфрейм: {timeframe}")
+        logger.info(f"Монета: {symbol}, Таймфрейм: {timeframe}")
         
         
-        fetcher = DataFetcher()
-        data_df = fetcher.fetch_all_historical_data()
+        fetcher = DataFetcher( symbol, timeframe, exchange_id, limit)
+        logger.info("Загрузка данных за всю историю...")
+        data_df = fetcher.fetch_entire_history()
         
+        # Сохранение данных
         if data_df is not None:
-            print("\n--- Фрагмент загруженных данных (DataFrame) ---")
-            print(data_df.head())
-            print(data_df.tail())
-    
-    # Здесь можно добавить основной код приложения
-    # Например, запуск бота или других сервисов
+            logger.info(f"Загружено {len(data_df)} свечей {symbol}, {timeframe} за всю историю.")
+            
+            data_df.to_excel(f"data_{symbol.replace('/', '_')}_{timeframe}.xlsx")
+            logger.info(f"Данные сохранены в файл data_{symbol.replace('/', '_')}_{timeframe}.xlsx")
+
+            
+
+
     
 
 # Точка входа

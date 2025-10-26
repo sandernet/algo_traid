@@ -8,7 +8,7 @@ import ccxt
 import pandas as pd
 import time
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from src.utils.logger import get_logger 
 from src.config.config import config
 
@@ -19,16 +19,30 @@ logger = get_logger(__name__)
 
 class DataFetcher:
     """
-    Класс для получения исторических данных с биржи с помощью пагинации.
+    Класс для получения исторических данных с биржи с помощью пагинации для разных монет и временных интервалов.
+    Параметры:
+    - symbol: Торговая пара (например, 'BTC/USDT').
+    - timeframe: Временной интервал (например, '1m' для минутных свечей).
+    - exchange_id: Идентификатор биржи в ccxt (например, 'bybit').
+    - limit: Максимальное количество свечей на один запрос (ограничение биржи).
+    
+    Поддерживает загрузку больших объемов данных, начиная с указанной даты.
+    1. Инициализация биржи ccxt.
+    2. Основной запрос к API с пагинацией.
+    3. Обновление 'since' для следующего запроса.
+    4. Формирование DataFrame.
+    5. Обработка ошибок и логирование.
     """
-    def __init__(self):
-        # Получение настроек
-        exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
-        self.symbol = config.get_setting("EXCHANGE_SETTINGS", "SYMBOL")
-        self.timeframe = config.get_setting("EXCHANGE_SETTINGS", "TIMEFRAME")
-        
-        # Настройки для пагинации
-        self.limit = 1000  # Максимальное количество свечей за запрос
+    
+    # Инициализация с параметрами монеты и биржи
+    # ======================================================
+    def __init__(self, symbol: str, timeframe: str, exchange_id: str, limit: int): 
+        # Параметры, зависящие от монеты
+        self.symbol = symbol 
+        self.timeframe = timeframe 
+        # Параметры биржи
+        self.exchange_id = exchange_id
+        self.limit = limit
         
         # 1. Инициализация биржи ccxt
         try:
@@ -40,92 +54,154 @@ class DataFetcher:
             logger.error(f"Биржа '{exchange_id}' не поддерживается библиотекой ccxt.")
             raise
 
-    def _convert_date_to_ms(self, date_str: str) -> int:
-        """Конвертирует дату YYYY-MM-DD в Unix-таймштамп в миллисекундах."""
-        dt = datetime.strptime(date_str, '%Y-%m-%d')
-        return int(dt.timestamp() * 1000)
-
-    def fetch_all_historical_data(self) -> Optional[pd.DataFrame]:
+    def _convert_date_to_ms(self, date_str: str, is_end_date: bool = False) -> int:
         """
-        Загружает исторические данные, используя пагинацию,
-        начиная с BACKTEST_START_DATE и до текущей даты.
+        Конвертирует дату YYYY-MM-DD в Unix-таймштамп в миллисекундах.
+        Для конечной даты (is_end_date=True) устанавливает время на конец дня (23:59:59.999).
         """
-        all_ohlcv = []
+        try:
+            dt = datetime.strptime(date_str, '%Y-%m-%d')
+            if is_end_date:
+                # Конец дня: 23:59:59.999
+                dt = dt.replace(hour=23, minute=59, second=59, microsecond=999000)
+            
+            return int(dt.timestamp() * 1000)
+        except ValueError:
+            logger.error(f"Неверный формат даты: {date_str}. Ожидается 'YYYY-MM-DD'.")
+            raise
         
-        # Получаем начальную дату из конфигурации
-        start_date_str = config.get_setting("MODE_SETTINGS", "BACKTEST_START_DATE")
-        since_ms = self._convert_date_to_ms(start_date_str)
+    def _generic_fetcher(self, start_date_ms: Optional[int] = None, end_date_ms: Optional[int] = None) -> Optional[pd.DataFrame]:
+        """
+        Универсальный метод для загрузки данных с пагинацией НАЗАД ВО ВРЕМЕНИ.
         
-        # Текущий таймштамп для остановки цикла
-        now_ms = int(time.time() * 1000)
+        :param start_date_ms: Самый ранний таймштамп в мс, который нужно загрузить.
+                              Если None, загрузка идет до самой ранней доступной даты.
+        :param end_date_ms: Таймштамп в мс, с которого НАЧИНАЕТСЯ загрузка (самая новая дата).
+                             Если None, начинается с текущего времени.
+        """
+        all_ohlcv: List[List] = []
         
-        logger.info(f"Начало загрузки {self.symbol} ({self.timeframe}) с {start_date_str}...")
+        # 1. Определение начальной точки загрузки (самой новой свечи)
+        # Если end_date_ms не указан, начинаем с текущего момента.
+        since_ms = end_date_ms if end_date_ms is not None else int(time.time() * 1000)
+        
+        # 2. Определение точки остановки (самой старой свечи)
+        # Если start_date_ms не указан, загрузка идет до конца истории (0).
+        stop_ms = start_date_ms if start_date_ms is not None else 0 
+        
+        start_log = datetime.fromtimestamp(stop_ms / 1000).strftime('%Y-%m-%d') if stop_ms > 0 else "начала доступной истории"
+        end_log = datetime.fromtimestamp(since_ms / 1000).strftime('%Y-%m-%d %H:%M:%S')
+        logger.info(f"Начало загрузки {self.symbol} ({self.timeframe}) НАЗАД с {end_log} до {start_log}...")
 
-        while since_ms < now_ms:
+
+        while True:
             try:
-                # 2. Основной запрос к API с пагинацией
+                # 3. Запрос: мы запрашиваем чанк, который ЗАКАНЧИВАЕТСЯ временем since_ms
+                # Фактически, мы просим ccxt дать нам limit свечей, предшествующих since_ms.
+                # Большинство бирж поддерживают такой режим, если since/until не указаны, 
+                # но для пагинации назад мы используем параметр 'since' как 'until' 
+                # или полагаемся на внутреннюю логику ccxt.
                 ohlcv_chunk = self.exchange.fetch_ohlcv(
                     symbol=self.symbol,
                     timeframe=self.timeframe,
-                    since=since_ms,
-                    limit=self.limit
+                    since=since_ms - 1000 * 60 * 60 * 24 * 365 * 10, # Приблизительная дата, чтобы ccxt мог начать, не критично, но лучше
+                    limit=self.limit,
+                    params={'until': since_ms} # Используем until/since, если биржа это поддерживает
                 )
                 
-                if not ohlcv_chunk:
-                    logger.warning("Получен пустой ответ. Достигнут конец доступной истории.")
-                    break
-
-                all_ohlcv.extend(ohlcv_chunk)
+                # --- Важный момент: Биржи и ccxt ---
+                # Самый надежный способ: ccxt.exchange.fetch_ohlcv()
+                # Если биржа поддерживает 'until', ccxt использует его для загрузки НАЗАД.
+                # На практике, передача None в 'since' и использование 'params={'until': since_ms}' 
+                # часто заставляет ccxt загружать последние свечи до 'since_ms'.
                 
-                # 3. Обновление 'since' для следующего запроса
-                # 'since' устанавливается на таймштамп ПОСЛЕДНЕЙ свечи в полученном чанке + 1мс.
-                # Это гарантирует, что мы не получим дубликаты.
+                # Если fetch_ohlcv не поддерживает 'until' через params, 
+                # нам нужно загрузить chunk, найти его первый таймштамп, 
+                # и использовать его как точку 'since' для следующего шага назад. 
+                # Ниже мы используем 'until' и полагаемся на ccxt.
+
+                if not ohlcv_chunk or len(ohlcv_chunk) < 2:
+                    logger.info(f"[{self.symbol}] Получен пустой ответ или менее двух свечей. Достигнут конец истории.")
+                    break # Конец истории
+
+                # 4. Обработка полученного чанка
+                first_timestamp = ohlcv_chunk[0][0]
                 last_timestamp = ohlcv_chunk[-1][0]
-                since_ms = last_timestamp + 1
+                
+                # Если самая старая свеча (first_timestamp) уже старше нашей точки остановки (stop_ms)
+                if first_timestamp <= stop_ms:
+                    # Фильтруем свечи, которые выходят за рамки 'stop_ms' (слишком старые)
+                    valid_chunk = [candle for candle in ohlcv_chunk if candle[0] >= stop_ms]
+                    all_ohlcv.extend(valid_chunk)
+                    logger.info(f"[{self.symbol}] Загрузка завершена по достижении начальной даты.")
+                    break # Выход из цикла
+                
+                # Обычный случай: продолжаем пагинацию
+                valid_chunk = ohlcv_chunk 
+                all_ohlcv.extend(valid_chunk)
+
+                # 5. Обновление 'since' (для следующего шага назад)
+                # Следующая точка "until" будет на 1мс раньше самой первой свечи в этом чанке
+                since_ms = first_timestamp - 1 
                 
                 # Логирование прогресса
-                last_date = datetime.fromtimestamp(last_timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S')
-                logger.info(f"Успешно загружено свечей: {len(ohlcv_chunk)}. Продолжение с даты: {last_date}")
+                first_date = datetime.fromtimestamp(first_timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S')
+                logger.info(f"[{self.symbol}] Успешно загружено свечей: {len(valid_chunk)}. Продолжение НАЗАД с: {first_date}")
                 
-                # Защита от DoS (небольшая задержка между запросами)
+                # Защита от DoS
                 time.sleep(self.exchange.rateLimit / 1000) 
 
             except ccxt.ExchangeError as e:
-                logger.error(f"Ошибка API при загрузке данных: {e}")
-                time.sleep(5)  # Пауза и повторная попытка
+                # ... (обработка ошибок)
+                logger.error(f"[{self.symbol}] Ошибка API при загрузке данных: {e}. Пауза 5с.", exc_info=True)
+                time.sleep(5)
                 continue
             except Exception as e:
-                logger.critical(f"Критическая ошибка загрузки данных: {e}", exc_info=True)
+                # ... (обработка ошибок)
+                logger.critical(f"[{self.symbol}] Критическая ошибка загрузки данных: {e}", exc_info=True)
                 return None
 
+        # 6. Формирование DataFrame
         if not all_ohlcv:
-            logger.warning("Данные не загружены. Проверьте правильность SYMBOL и TIMEFRAME.")
+            logger.warning(f"[{self.symbol}] Данные не загружены.")
             return None
 
-        # 4. Формирование DataFrame
         df = pd.DataFrame(all_ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         
-        # Удаление дубликатов (если они могли возникнуть из-за ошибки в since_ms)
+        # Так как загрузка шла от нового к старому, список all_ohlcv будет обратным.
+        # Сортируем его по таймштампу, чтобы данные были в хронологическом порядке.
+        df.sort_values('timestamp', ascending=True, inplace=True) 
         df.drop_duplicates(subset=['timestamp'], inplace=True) 
-        
-        # Установка таймштампа в качестве индекса и конвертация в формат datetime
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
         df.set_index('timestamp', inplace=True)
         
-        logger.info(f"Загрузка завершена. Всего свечей: {len(df)}. Диапазон: {df.index.min()} - {df.index.max()}")
+        logger.info(f"[{self.symbol}] Загрузка завершена. Всего свечей: {len(df)}. Диапазон: {df.index.min()} - {df.index.max()}")
         
         return df
+    
+    # -------------------------------------------------------------
+    # 1. МЕТОД: Загрузка за весь период
+    # -------------------------------------------------------------
+    def fetch_entire_history(self) -> Optional[pd.DataFrame]:
+        """
+        Загружает максимально доступную историю (от самой ранней до текущей).
+        """
+        # start_date_ms=None и end_date_ms=None активируют логику "весь период" в _generic_fetcher
+        return self._generic_fetcher(start_date_ms=None, end_date_ms=None)
+    
+    # -------------------------------------------------------------
+    # 2. МЕТОД: Загрузка за определенный период
+    # -------------------------------------------------------------
+    def fetch_history_range(self, start_date: str, end_date: str) -> Optional[pd.DataFrame]:
+        """
+        Загружает данные за указанный период (включительно). 
+        Формат даты: 'YYYY-MM-DD'.
+        """
+        start_ms = self._convert_date_to_ms(start_date, is_end_date=False)
+        end_ms = self._convert_date_to_ms(end_date, is_end_date=True) # Конечная дата должна быть до конца дня!
 
-# # ======================================================================
-# # ПРИМЕР ЗАПУСКА
-# # ======================================================================
-# if __name__ == '__main__':
-#     # В реальном приложении этот код будет в модуле main
-    
-#     fetcher = DataFetcher()
-#     data_df = fetcher.fetch_all_historical_data()
-    
-#     if data_df is not None:
-#         print("\n--- Фрагмент загруженных данных (DataFrame) ---")
-#         print(data_df.head())
-#         print(data_df.tail())
+        if start_ms >= end_ms:
+            logger.error("Начальная дата должна быть раньше конечной даты.")
+            return None
+        
+        return self._generic_fetcher(start_date_ms=start_ms, end_date_ms=end_ms)
