@@ -3,7 +3,7 @@
 # Подключение к API биржи (например, Binance, Bybit). 
 # Загрузка OHLCV-свечей. Обновление рыночных данных в реальном времени.
 """
-
+import os
 import ccxt
 import pandas as pd
 import time
@@ -178,7 +178,7 @@ class DataFetcher:
         logger.info(f"[{self.symbol}] Загрузка завершена. Всего свечей: {len(df)}. Диапазон: {df.index.min()} - {df.index.max()}")
         
         return df
-    
+
     # -------------------------------------------------------------
     # 1. МЕТОД: Загрузка за весь период
     # -------------------------------------------------------------
@@ -205,3 +205,85 @@ class DataFetcher:
             return None
         
         return self._generic_fetcher(start_date_ms=start_ms, end_date_ms=end_ms)
+    
+    
+    # -------------------------------------------------------------
+    # ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Формирование пути для экспорта
+    # -------------------------------------------------------------
+    def _get_export_path(self, directory: str, file_name_prefix: str, file_extension: str) -> str:
+        """
+        Формирует полный путь для сохранения файла и гарантирует существование директории.
+        """
+        # 1. Создание директории, если она не существует
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            logger.info(f"Создана директория для экспорта: {directory}")
+
+        # 2. Формирование имени файла
+        # Пример: BTC_USDT_15m_2023-10-26_OHLCV.csv
+        current_date_str = datetime.now().strftime('%Y-%m-%d')
+        file_name = f"{file_name_prefix}_{current_date_str}_OHLCV.{file_extension}"
+        
+        return os.path.join(directory, file_name)
+
+    # -------------------------------------------------------------
+    # 3. МЕТОД: Экспорт в CSV
+    # -------------------------------------------------------------
+    def export_to_csv(self, df: pd.DataFrame, directory: str = "data_export") -> Optional[str]:
+        """
+        Сохраняет DataFrame с данными в файл формата CSV.
+        
+        :param df: DataFrame с историческими данными.
+        :param directory: Директория, куда будет сохранен файл.
+        :return: Полный путь к сохраненному файлу или None в случае ошибки.
+        """
+        if df is None or df.empty:
+            logger.error(f"Невозможно экспортировать пустой DataFrame для {self.symbol}.")
+            return None
+        
+        # Префикс имени файла
+        file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}"
+        file_path = self._get_export_path(directory, file_prefix, "csv")
+        
+        try:
+            # index=True сохранит индекс (таймштамп) как первый столбец
+            df.to_csv(file_path, index=True)
+            logger.info(f"✅ Данные для {self.symbol} успешно экспортированы в: {file_path}")
+            return file_path
+        except Exception as e:
+            logger.error(f"❌ Ошибка при сохранении CSV для {self.symbol}: {e}")
+            return None
+
+    # -------------------------------------------------------------
+    # 4. МЕТОД: Экспорт в Excel
+    # -------------------------------------------------------------
+    def export_to_excel(self, df: pd.DataFrame, directory: str = "data_export") -> Optional[str]:
+        """
+        Сохраняет DataFrame с данными в файл формата Excel (xlsx).
+        
+        :param df: DataFrame с историческими данными.
+        :param directory: Директория, куда будет сохранен файл.
+        :return: Полный путь к сохраненному файлу или None в случае ошибки.
+        """
+        if df is None or df.empty:
+            logger.error(f"Невозможно экспортировать пустой DataFrame для {self.symbol}.")
+            return None
+        
+        # Префикс имени файла
+        file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}"
+        file_path = self._get_export_path(directory, file_prefix, "xlsx")
+        
+        try:
+            # Используем ExcelWriter, чтобы избежать предупреждений
+            writer = pd.ExcelWriter(file_path, engine='openpyxl')
+            df.to_excel(writer, sheet_name='OHLCV Data', index=True)
+            writer.close()
+            
+            logger.info(f"✅ Данные для {self.symbol} успешно экспортированы в: {file_path}")
+            return file_path
+        except ImportError:
+            logger.error("❌ Библиотека 'openpyxl' не найдена. Установите: pip install openpyxl")
+            return None
+        except Exception as e:
+            logger.error(f"❌ Ошибка при сохранении Excel для {self.symbol}: {e}")
+            return None

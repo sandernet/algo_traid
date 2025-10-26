@@ -8,7 +8,7 @@
 # =====================================================================
 COINS:
   - SYMBOL: BTC
-    TIMEFRAME: D
+    TIMEFRAME: "60"
     AUTO_TRADING: true
     START_DEPOSIT_USDT: 100
     ORDERTYPE: Market
@@ -76,6 +76,8 @@ RISK_SETTINGS:
 MODE_SETTINGS:
   # Режим работы: 'live', 'backtest', 'paper'
   MODE: backtest
+  # Директория для хранения исторических данных
+  DATA_DIR: data/
   # Дата начала для бэктестинга (YYYY-MM-DD)
   BACKTEST_START_DATE: 2023-01-01
   # Дата окончания для бэктестинга (YYYY-MM-DD)
