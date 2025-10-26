@@ -21,10 +21,10 @@ def run_data_update_pipeline():
     # 1. Получение массива монет
     try:
         coins_list = config.get_section("COINS")
-        print(f"Загружено {len(coins_list)} монет из конфигурации.")
+        logger.info(f"Загружено {len(coins_list)} монет из конфигурации.")
     except KeyError as e:
         # Хотя валидация должна была поймать это, это хорошая защита
-        print(f"Критическая ошибка: {e}")
+        logger.error(f"Критическая ошибка: {e}")
         coins_list = [] # Устанавливаем пустой список для безопасной работы
         
     # Подключение к Бирже
