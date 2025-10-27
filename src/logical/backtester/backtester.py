@@ -29,14 +29,14 @@ def run_local_backtest():
         logger.error(f"Критическая ошибка: {e}")
         coins_list = [] # Устанавливаем пустой список для безопасной работы
         
-    # Подключение к Бирже
+    # Подключение модуля с загрузчиком данных
     from src.logical.data_fetcher.data_fetcher import DataFetcher
     # 2. Обработка каждой монеты   
     for coin in coins_list:
         logger.info("============================================================================")
         symbol = coin.get("SYMBOL")+"/USDT"
         timeframe = coin.get("TIMEFRAME")
-        logger.info(f"Монета: {symbol}, Таймфрейм: {timeframe}")
+        logger.info(f"🪙 Монета: {symbol}, ↔️ Таймфрейм: {timeframe}")
         # 1. Инициализируем DataFetcher
         fetcher = DataFetcher( 
             symbol=symbol, 
@@ -66,11 +66,11 @@ def backtest_coin(data_df):
     zigzag_df = None
     from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import start_zz_and_fibo
     if data_df is not None:
-        logger.info("Запуск расчета ZigZag и уровней Фибоначчи.")
+        # Расчет стратегии ZigZag и Фибоначчи
         zigzag_df = start_zz_and_fibo(data_df)
         
     if zigzag_df is not None:
-        logger.info("Запуск расчета ордеров по стратегии.")
+        logger.info("🎢 Запуск расчета данных по ордерам по стратегии.")
         # запускаем расчет ордеров по стратегии
     
     return zigzag_df
