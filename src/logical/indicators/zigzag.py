@@ -31,6 +31,7 @@ class ZigZag:
     # ----------------------
     def calculate_zigzag(self, df):
         """Вычисляет ZigZag индикатор и добавляет его в DataFrame."""
+        
         # Используем ExcelWriter, чтобы избежать предупреждений
         writer = pd.ExcelWriter("zigzag.xlsx", engine='openpyxl')
         df.to_excel(writer, sheet_name='OHLCV Data', index=True)
@@ -38,6 +39,9 @@ class ZigZag:
 
         high = df['high'].values
         low = df['low'].values
-        close = df['close'].values
         length = len(df)
+        for i in range(length):
+            date = df.index[i]  # Получаем дату из индекса
+            print(f"Index: {i}, date: {date}, High: {high[i]}, Low: {low[i]}")
+
 

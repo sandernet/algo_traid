@@ -1,8 +1,8 @@
 /.env
-/data
 /DATA_OHLCV
 /logs
 /.venv
 **/__pycache__
 *.pyc
 *.log
+*.xlsx
