@@ -1,6 +1,6 @@
-from src.logical.loading_data import get_kline_data_timeframe
-from src.strategy.fe_v1 import make_features
-from src.strategy.fe_v2 import make_features_v2
+
+from src.logical.model_training.fe_v1 import make_features
+from src.logical.model_training.fe_v2 import make_features_v2
 
 import joblib
 
