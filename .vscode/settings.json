@@ -1,0 +1,8 @@
+{
+  "rest-client.environmentVariables": {
+    "$shared": {},
+    "ENV Developer": {
+      "wb_token": "-"
+    }
+  }
+}

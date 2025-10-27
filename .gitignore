@@ -1,5 +1,4 @@
 /.env
-/.vscode
 /data
 /DATA_OHLCV
 /logs
