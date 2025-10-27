@@ -49,7 +49,7 @@ EXCHANGE_SETTINGS:
 # СЕКЦИЯ СТРАТЕГИИ (STRATEGY_SETTINGS)
 # ======================================================================
 STRATEGY_SETTINGS:
-  # Параметр отклонения ZigZag (в процентах). 0.02 = 2%
+  # Параметр отклонения ZigZag
   ZIGZAG_DEPTH: 12
   ZIGZAG_DEVIATION: 5
   ZIGZAG_BACKTEP: 2

@@ -20,7 +20,7 @@ def run_local_backtest():
     data_dir = config.get_setting("MODE_SETTINGS", "DATA_DIR")
     
     
-    # 1. Получение массива монет
+    # 1. Получение массива монет из конфигурации
     try:
         coins_list = config.get_section("COINS")
         logger.info(f"Загружено {len(coins_list)} монет из конфигурации.")
@@ -37,38 +37,35 @@ def run_local_backtest():
         symbol = coin.get("SYMBOL")+"/USDT"
         timeframe = coin.get("TIMEFRAME")
         logger.info(f"Монета: {symbol}, Таймфрейм: {timeframe}")
+        # 1. Инициализируем DataFetcher
         fetcher = DataFetcher( symbol, timeframe, exchange_id, limit)
         # 2. Загрузка из файла
-        
         data_df = fetcher.load_from_csv(directory=data_dir+"csv_files", file_type="csv")
     
         if data_df is not None:
             logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктестера
-            # backtester.run(data_df)
+            backtest_coin(data_df)
         else:
             logger.error(f"Невозможно запустить бэктест для {symbol}: данные не загружены.")
         
-        
-def backtest_coin(coin_symbol: str, timeframe: str, file_path: str):
+
+# ====================================================
+# Запуск бэктеста для одной монеты
+# ====================================================
+def backtest_coin(data_df):
     """
     Запуск бэктеста с данными, загруженными из локального файла.
     """
-    
-    # 1. Инициализируем DataFetcher (хотя он не будет обращаться к бирже, 
-    #    он нужен для использования метода load_from_csv)
-    # Используем заглушечные параметры для биржи, так как они не важны
-        # Подключение к Бирже
-    from src.logical.data_fetcher.data_fetcher import DataFetcher
-    
-    fetcher = DataFetcher(symbol=coin_symbol, timeframe=timeframe, exchange_id="bybit", limit=1000)
-    
-    # 2. Загрузка из файла
-    data_df = fetcher.load_from_csv(file_path)
-    
+    zigzag_df = None
+    from src.logical.strategy.zigzag_and_fibo import start_zz_and_fibo
     if data_df is not None:
-        logger.info(f"🚀 Запуск стратегии для {coin_symbol} с локальными данными.")
-        # Здесь вы передаете data_df в ваш модуль стратегии или бэктестера
-        # backtester.run(data_df)
-    else:
-        logger.error(f"Невозможно запустить бэктест для {coin_symbol}: данные не загружены.")
+        logger.info("Запуск расчета ZigZag и уровней Фибоначчи.")
+        zigzag_df = start_zz_and_fibo(data_df)
+        
+    if zigzag_df is not None:
+        logger.info("Запуск расчета ордеров по стратегии.")
+        # запускаем расчет ордеров по стратегии
+    
+    return zigzag_df
+

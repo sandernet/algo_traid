@@ -17,7 +17,9 @@ REQUIRED_SETTINGS: Dict[str, Dict[str, Any]] = {
         "LIMIT": int,
     },
     "STRATEGY_SETTINGS": {
-        "ZIGZAG_DEVIATION_PERCENT": (int, float),
+        "ZIGZAG_DEPTH": (int, float),
+        "ZIGZAG_DEVIATION": (int, float),
+        "ZIGZAG_BACKTEP": (int, float),
         "FIBONACCI_LEVELS": list,
         "BASE_ORDER_AMOUNT": (int, float),
     },
@@ -140,10 +142,10 @@ class ConfigManager:
                 errors.append("Для режима 'backtest' требуется BACKTEST_START_DATE.")
             # Здесь можно добавить проверку формата даты
         
-        # Проверка параметров стратегии
-        deviation = self.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEVIATION_PERCENT")
-        if deviation <= 0:
-            errors.append("ZIGZAG_DEVIATION_PERCENT должен быть положительным числом (> 0).")
+        # # Проверка параметров стратегии
+        # deviation = self.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEVIATION_PERCENT")
+        # if deviation <= 0:
+        #     errors.append("ZIGZAG_DEVIATION_PERCENT должен быть положительным числом (> 0).")
             
         fib_levels = self.get_setting("STRATEGY_SETTINGS", "FIBONACCI_LEVELS")
         if not (0 < min(fib_levels) < 1 and 0 < max(fib_levels) < 1):

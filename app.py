@@ -23,6 +23,8 @@ def main():
     from src.logical.backtester.backtester import run_local_backtest
     run_local_backtest()
     logger.info("Бэктестер завершил работу.")
+    
+
 
 # Точка входа
 if __name__ == "__main__":
