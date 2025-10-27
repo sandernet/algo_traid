@@ -38,9 +38,15 @@ def run_local_backtest():
         timeframe = coin.get("TIMEFRAME")
         logger.info(f"Монета: {symbol}, Таймфрейм: {timeframe}")
         # 1. Инициализируем DataFetcher
-        fetcher = DataFetcher( symbol, timeframe, exchange_id, limit)
+        fetcher = DataFetcher( 
+            symbol=symbol, 
+            timeframe=timeframe, 
+            exchange_id=exchange_id, 
+            limit=limit,
+            directory=data_dir,
+            )
         # 2. Загрузка из файла
-        data_df = fetcher.load_from_csv(directory=data_dir+"csv_files", file_type="csv")
+        data_df = fetcher.load_from_csv(file_type="csv")
     
         if data_df is not None:
             logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")

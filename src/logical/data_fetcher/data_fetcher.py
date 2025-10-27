@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 from typing import Optional, List
 from src.utils.logger import get_logger 
-from src.config.config import config
+# from src.config.config import config
 
 logger = get_logger(__name__)
 
@@ -36,7 +36,7 @@ class DataFetcher:
     
     # Инициализация с параметрами монеты и биржи
     # ======================================================
-    def __init__(self, symbol: str, timeframe: str, exchange_id: str, limit: int): 
+    def __init__(self, symbol: str, timeframe: str, exchange_id: str, limit: int, directory: str): 
         # Параметры, зависящие от монеты
         self.symbol = symbol 
         self.timeframe = timeframe 
@@ -44,34 +44,49 @@ class DataFetcher:
         self.exchange_id = exchange_id
         self.limit = limit
         
+        self.directory = directory
+        # self.file_extension = file_extension
+        
+    
+    # -------------------------------------------------------------
+    # ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Инициализация биржи ccxt
+    # -------------------------------------------------------------
+    def _set_exchange(self):
         # 1. Инициализация биржи ccxt
         try:
-            exchange_class = getattr(ccxt, exchange_id.lower())
+            exchange_class = getattr(ccxt, self.exchange_id.lower())
             # Bybit не требует API-ключей для публичных данных (OHLCV)
             self.exchange = exchange_class() 
-            logger.info(f"Подключение к бирже {exchange_id} успешно.")
+            logger.info(f"Подключение к бирже {self.exchange_id} успешно.")
         except AttributeError:
-            logger.error(f"Биржа '{exchange_id}' не поддерживается библиотекой ccxt.")
+            logger.error(f"Биржа '{self.exchange_id}' не поддерживается библиотекой ccxt.")
             raise
     
     # -------------------------------------------------------------
     # ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Формирование пути для экспорта и импорта файлов
     # -------------------------------------------------------------
-    def _get_export_path(self, directory: str, file_name_prefix: str, file_extension: str) -> str:
+    def _get_export_path(self, file_extension: str = "csv") -> str:
         """
         Формирует полный путь для сохранения файла и гарантирует существование директории.
         """
+        file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}_{self.exchange_id}"
+        path = ""
+        if file_extension == "csv":
+            path = self.directory+"csv_files"
+        elif file_extension == "xlsx":
+            path = self.directory+"excel"
+
         # 1. Создание директории, если она не существует
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-            logger.info(f"Создана директория для экспорта: {directory}")
+        if not os.path.exists(path):
+            os.makedirs(path)
+            logger.info(f"Создана директория для экспорта: {path}")
 
         # 2. Формирование имени файла
         # Пример: BTC_USDT_15m_OHLCV.csv
-        file_name = f"{file_name_prefix}_OHLCV.{file_extension}"
+        file_name = f"{file_prefix}_OHLCV.{file_extension}"
         
-        return os.path.join(directory, file_name)
-    
+        return os.path.join(path, file_name)
+
     # -------------------------------------------------------------
     # ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Конвертация даты в миллисекунды
     # -------------------------------------------------------------
@@ -207,6 +222,7 @@ class DataFetcher:
         """
         Загружает максимально доступную историю (от самой ранней до текущей).
         """
+        self._set_exchange()
         # start_date_ms=None и end_date_ms=None активируют логику "весь период" в _generic_fetcher
         return self._generic_fetcher(start_date_ms=None, end_date_ms=None)
     
@@ -225,18 +241,18 @@ class DataFetcher:
             logger.error("Начальная дата должна быть раньше конечной даты.")
             return None
         
+        self._set_exchange()
         return self._generic_fetcher(start_date_ms=start_ms, end_date_ms=end_ms)
     
 
     # -------------------------------------------------------------
     # 3. МЕТОД: Экспорт в CSV
     # -------------------------------------------------------------
-    def export_to_csv(self, df: pd.DataFrame, directory: str = "data_export") -> Optional[str]:
+    def export_to_csv(self, df: pd.DataFrame) -> Optional[str]:
         """
         Сохраняет DataFrame с данными в файл формата CSV.
         
         :param df: DataFrame с историческими данными.
-        :param directory: Директория, куда будет сохранен файл.
         :return: Полный путь к сохраненному файлу или None в случае ошибки.
         """
         if df is None or df.empty:
@@ -244,8 +260,8 @@ class DataFetcher:
             return None
         
         # Префикс имени файла
-        file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}"
-        file_path = self._get_export_path(directory, file_prefix, "csv")
+        # file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}_{self.exchange_id}"
+        file_path = self._get_export_path()
         
         try:
             # index=True сохранит индекс (таймштамп) как первый столбец
@@ -259,12 +275,11 @@ class DataFetcher:
     # -------------------------------------------------------------
     # 4. МЕТОД: Экспорт в Excel
     # -------------------------------------------------------------
-    def export_to_excel(self, df: pd.DataFrame, directory: str = "data_export") -> Optional[str]:
+    def export_to_excel(self, df: pd.DataFrame ) -> Optional[str]:
         """
         Сохраняет DataFrame с данными в файл формата Excel (xlsx).
         
         :param df: DataFrame с историческими данными.
-        :param directory: Директория, куда будет сохранен файл.
         :return: Полный путь к сохраненному файлу или None в случае ошибки.
         """
         if df is None or df.empty:
@@ -272,8 +287,9 @@ class DataFetcher:
             return None
         
         # Префикс имени файла
-        file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}"
-        file_path = self._get_export_path(directory, file_prefix, "xlsx")
+        # file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}"
+        # file_path = self._get_export_path(directory, file_prefix, "xlsx")
+        file_path = self._get_export_path("xlsx")
         
         try:
             # Используем ExcelWriter, чтобы избежать предупреждений
@@ -293,7 +309,7 @@ class DataFetcher:
     # -------------------------------------------------------------
     # 5. МЕТОД: Загрузка данных из CSV-файла
     # -------------------------------------------------------------
-    def load_from_csv(self, directory: str = "data_export", file_type: str = "csv") -> Optional[pd.DataFrame]:
+    def load_from_csv(self, file_type: str) -> Optional[pd.DataFrame]:
         """
         Загружает исторические данные из локального CSV-файла.
 
@@ -301,8 +317,8 @@ class DataFetcher:
         :return: DataFrame с данными или None в случае ошибки.
         """
         # Префикс имени файла
-        file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}"
-        file_path = self._get_export_path(directory, file_prefix, file_type)
+        # file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}"
+        file_path = self._get_export_path(file_extension=file_type)
         
         if not os.path.exists(file_path):
             logger.error(f"❌ Файл данных не найден по пути: {file_path}")

@@ -36,7 +36,13 @@ def run_data_update_pipeline():
         timeframe = coin.get("TIMEFRAME")
         logger.info(f"Монета: {symbol}, Таймфрейм: {timeframe}")
        
-        fetcher = DataFetcher( symbol, timeframe, exchange_id, limit)
+        fetcher = DataFetcher(
+            symbol=symbol, 
+            timeframe=timeframe, 
+            exchange_id=exchange_id, 
+            limit=limit,
+            directory=data_dir,
+        )
         logger.info("Загрузка данных за всю историю...")
         data_df = fetcher.fetch_entire_history()
         
@@ -45,7 +51,7 @@ def run_data_update_pipeline():
             logger.info(f"Загружено {len(data_df)} свечей {symbol}, {timeframe} за всю историю.")
          
             # Сохранить в подпапку 'csv_files'
-            fetcher.export_to_csv(data_df, directory=data_dir+"csv_files") 
+            fetcher.export_to_csv(data_df) 
                 
                 # Сохранить в подпапку 'excel_files'
-            fetcher.export_to_excel(data_df, directory=data_dir+"excel_files")
+            fetcher.export_to_excel(data_df)

@@ -1,22 +1,29 @@
 import argparse
-
-
-
+import os
 
 # ====================================================
 # Основная функция
 # ====================================================
 def main():
+    from src.config.config import config
+    # ------------------------------------------
+    # аргументы командной строки
     parser = argparse.ArgumentParser(description='Программа алготрейдинга с бэктестером и загрузкой данных.')
     
     # Добавляем параметр --loaddata
     parser.add_argument(
         '--loaddata',
         action='store_true',  # Флаг (без значения)
-        help='Загрузить или обновить исторические данные перед запуском бэктеста'
+        help='Загрузить или обновить исторические данные c биржи'
     )
-    
-    
+
+    # Добавляем параметр --backtester
+    data_dir = config.get_setting("MODE_SETTINGS", "DATA_DIR")
+    parser.add_argument(
+        '--backtester',
+        action='store_true',  # Флаг (без значения)
+        help=f'Запустить бэктестер с локальными данными из директории {data_dir}'
+    )
     
     args = parser.parse_args()
     
@@ -29,6 +36,7 @@ def main():
     from src.utils.logger import get_logger
     logger = get_logger(__name__)
     logger.info("Конфигурация успешно загружена и прошла валидацию.")
+    
     # Проверяем параметры
     if args.loaddata:
         logger.info("Загрузка и обновление исторических данных...")
@@ -36,12 +44,23 @@ def main():
         run_data_update_pipeline()
         logger.info("Загрузка и обновление исторических данных завершены.")
     
-    logger.info("Запуск бэктестера с локальными данными...")
-    from src.logical.backtester.backtester import run_local_backtest
-    run_local_backtest()
-    logger.info("Бэктестер завершил работу.")
+    # Проверяем параметры
+    if args.backtester:
+        # 1. Проверяем есть ли данные для бэктеста
+        if not os.path.exists(data_dir):
+            logger.info(f"Нет директории для данных по бэктесту. Создаю: {data_dir}")
+            os.makedirs(data_dir)
+            logger.info("Загружаем данные с биржи для бэктестера...")
+            from src.logical.data_fetcher.data_pipeline import run_data_update_pipeline
+            run_data_update_pipeline()
+            logger.info("Загрузка данных с биржи завершена.")
+            
+        # 2. Запуск бэктестера
+        logger.info(f"Запуск бэктестера с локальными данными из {data_dir}...")
+        from src.logical.backtester.backtester import run_local_backtest
+        run_local_backtest()
+        logger.info("Бэктестер завершил работу.")
     
-
 
 # Точка входа
 if __name__ == "__main__":

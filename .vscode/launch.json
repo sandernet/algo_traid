@@ -5,17 +5,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "App debug",
+            "name": "App no args",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/app.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },
- {
-            "name": "App with loaddata",
+        {
+            "name": "App backtester",
             "type": "python",
             "request": "launch",
+            "program": "${workspaceFolder}/app.py",
+            "args": ["--backtester"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "App with loaddata",
+            "type": "python",
+            "request": "launch", 
             "program": "${workspaceFolder}/app.py",
             "args": ["--loaddata"],
             "console": "integratedTerminal",
