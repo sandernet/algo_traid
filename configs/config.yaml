@@ -50,6 +50,7 @@ EXCHANGE_SETTINGS:
 # ======================================================================
 STRATEGY_SETTINGS:
   # Параметр отклонения ZigZag
+  ZIGZAG_DISTANCE: 200
   ZIGZAG_DEPTH: 12
   ZIGZAG_DEVIATION: 5
   ZIGZAG_BACKTEP: 2

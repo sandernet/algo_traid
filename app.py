@@ -38,14 +38,14 @@ def main():
     logger.info("Конфигурация успешно загружена и прошла валидацию.")
     
     # Проверяем параметры
-    if args.loaddata:
+    if args.ldata:
         logger.info("Загрузка и обновление исторических данных...")
         from src.logical.data_fetcher.data_pipeline import run_data_update_pipeline
         run_data_update_pipeline()
         logger.info("Загрузка и обновление исторических данных завершены.")
     
     # Проверяем параметры
-    if args.backtester:
+    if args.btest:
         # 1. Проверяем есть ли данные для бэктеста
         if not os.path.exists(data_dir):
             logger.info(f"Нет директории для данных по бэктесту. Создаю: {data_dir}")

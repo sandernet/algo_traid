@@ -11,12 +11,11 @@ from src.config.config import config
 
 
 class ZigZag:
-    def __init__(self, df):
+    def __init__(self):
         # Получение настроек индикатора
         # depth = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEPTH")
         # deviation = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEVIATION")
         # backstep = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_BACKTEP")
-        self.dataFrame = df
         self.depth = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEPTH")
         self.price = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEVIATION")    
         self.price = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_BACKTEP")
@@ -26,11 +25,15 @@ class ZigZag:
     # Вспомогательные методы для работы с точками ZigZag
     # ----------------------
     
-    def calculate_zigzag(self):
+    
+    # ----------------------
+    # Расчет индикатора ZigZag
+    # ----------------------
+    def calculate_zigzag(self, df):
         """Вычисляет ZigZag индикатор и добавляет его в DataFrame."""
-        df = self.dataFrame.copy()
+        logger.info("Расчет ZigZag индикатора.")
         high = df['high'].values
         low = df['low'].values
         close = df['close'].values
         length = len(df)
-
+        logger.info(f"Calculating ZigZag for {length} data points.")

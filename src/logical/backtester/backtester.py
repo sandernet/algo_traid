@@ -64,7 +64,7 @@ def backtest_coin(data_df):
     Запуск бэктеста с данными, загруженными из локального файла.
     """
     zigzag_df = None
-    from src.logical.strategy.zigzag_and_fibo import start_zz_and_fibo
+    from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import start_zz_and_fibo
     if data_df is not None:
         logger.info("Запуск расчета ZigZag и уровней Фибоначчи.")
         zigzag_df = start_zz_and_fibo(data_df)
