@@ -12,7 +12,7 @@ def main():
     
     # Добавляем параметр --loaddata
     parser.add_argument(
-        '--loaddata',
+        '--ldata',
         action='store_true',  # Флаг (без значения)
         help='Загрузить или обновить исторические данные c биржи'
     )
@@ -20,7 +20,7 @@ def main():
     # Добавляем параметр --backtester
     data_dir = config.get_setting("MODE_SETTINGS", "DATA_DIR")
     parser.add_argument(
-        '--backtester',
+        '--btest',
         action='store_true',  # Флаг (без значения)
         help=f'Запустить бэктестер с локальными данными из директории {data_dir}'
     )
