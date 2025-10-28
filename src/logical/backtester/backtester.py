@@ -63,15 +63,21 @@ def backtest_coin(data_df):
     """
     Запуск бэктеста с данными, загруженными из локального файла.
     """
-    zigzag_df = None
-    from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import start_zz_and_fibo
-    if data_df is not None:
-        # Расчет стратегии ZigZag и Фибоначчи
-        zigzag_df = start_zz_and_fibo(data_df)
+    MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
+    for i in range(MIN_BARS, len(data_df)):
+        current_data = data_df.iloc[i-MIN_BARS : i]
         
-    if zigzag_df is not None:
-        logger.info("🎢 Запуск расчета данных по ордерам по стратегии.")
-        # запускаем расчет ордеров по стратегии
+        print(f"Обработка бара {i}/ взято {len(current_data)} баров")
     
-    return zigzag_df
+        from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import start_zz_and_fibo
+        # Применяем функцию к каждой строке
+        signal = start_zz_and_fibo(current_data)
+        data_df.loc[i, 'signal'] = signal
+
+    # signal = data_df['Signal'].values()
+        
+    # if signal is not None:
+    #     logger.info("🎢 Запуск расчета данных по ордерам по стратегии.")
+    #     # запускаем расчет ордеров по стратегии
+
 
