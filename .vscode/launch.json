@@ -26,7 +26,7 @@
             "type": "python",
             "request": "launch", 
             "program": "${workspaceFolder}/app.py",
-            "args": ["--loaddata"],
+            "args": ["--ldata"],
             "console": "integratedTerminal",
             "justMyCode": true
         },
