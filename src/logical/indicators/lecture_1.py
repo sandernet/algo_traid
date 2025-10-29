@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 """
 def checking_for_an_extreme(one, two, three):
     # Свеча 1
-    one_high = float(one['High'])
-    one_low = float(one['Low'])
+    one_high = float(one['high'])
+    one_low = float(one['low'])
     # Свеча 2
-    two_high = float(two['High'])
-    two_low = float(two['Low'])
+    two_high = float(two['high'])
+    two_low = float(two['low'])
     # Свеча 3
-    three_high = float(three['High'])
-    three_low = float(three['Low'])
+    three_high = float(three['high'])
+    three_low = float(three['low'])
 
     #  Находим точки "+" Экстремумы 
     if one_high <= two_high >= three_high:
@@ -43,11 +43,11 @@ def checking_for_an_extreme(one, two, three):
     если хай 2 свечи меньше хая следующих свечей то экстремум не является трендовыи
         False
 """
-def confirmation_extremum(high, low, data, start_index):
+def _confirmation_extremum(high, low, data, start_index):
     # Перебираем все свечи 
     for i in range(start_index+1, len(data)-1):
-        current_high = float(data['High'].iloc[i])
-        current_low = float(data['Low'].iloc[i])
+        current_high = float(data['high'].iloc[i])
+        current_low = float(data['low'].iloc[i])
         # если лой 2 свечи больше лоя  следующих свечей то экстремум не является трендовыи         
         if low > current_low:
             return True    
@@ -62,7 +62,7 @@ def confirmation_extremum(high, low, data, start_index):
 """
 Чистим значение после перелома тренда 
 """
-def clear_extremum(data, start_point, end_point, colum):
+def _clear_extremum(data, start_point, end_point, colum):
     # Удалям значения в периоде 
     for i in range(start_point+1, end_point):
         data.loc[i, colum] = None
@@ -72,7 +72,7 @@ def clear_extremum(data, start_point, end_point, colum):
 """
 Функция поиска экстремумов с подтверждением
 """
-def search_extremes_1(data):
+def _search_extremes_1(data):
     
     extremum = 0
 
@@ -86,7 +86,7 @@ def search_extremes_1(data):
             # Проверяем является верхним экстремумом по 3м свечам
             # Проверяем пробивает хай свечи или лой
             if (checking_for_an_extreme(data.iloc[i-1], data.iloc[i], data.iloc[i+1]) == 1 and
-                confirmation_extremum(data['High'].iloc[i], data['Low'].iloc[i], data, i)):
+                _confirmation_extremum(data['high'].iloc[i], data['low'].iloc[i], data, i)):
                 # Подтвержденный Экстремум ВВЕРХ по 3 свечам с подтверждением
                 data.loc[i,'extremum'] = 1 
                 extremum = 1
@@ -95,23 +95,22 @@ def search_extremes_1(data):
             # Проверяем является нижним экстремумом по 3м свечам
             # Проверяем пробивает хай свечи 
             if (checking_for_an_extreme(data.iloc[i-1], data.iloc[i], data.iloc[i+1]) == -1 and
-                not confirmation_extremum(data['High'].iloc[i], data['Low'].iloc[i], data, i)):
+                not _confirmation_extremum(data['high'].iloc[i], data['low'].iloc[i], data, i)):
                 # Подтвержденный Экстремум ВНИЗ V по 3 свечам с подтверждением 
                 data.loc[i, 'extremum'] = -1 # Да это просто экстремум c подтверждением  
                 extremum = -1          
             
         i += 1  # Переход к следующему значению, если нет изменения
     
-    data.set_index('DateTime', inplace=True)  # Восстановите индекс, если это нужно
+    data.set_index('timestamp', inplace=True)  # Восстановите индекс, если это нужно
     return data    
     
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-"""
-Функция по определению тренда
-"""
+# ==========================================================
+# основная функция по определению тренда
+# ==========================================================
 def strategy_extremes(data):
     
-    search_extremes_1(data)
+    _search_extremes_1(data)
     
     trend = 1
     
@@ -135,7 +134,7 @@ def strategy_extremes(data):
         if trend == 1:
             if data['extremum'].iloc[i] == 1:
                 # Если тренд восходящий  
-                if data['High'].iloc[point_index_max] < data['High'].iloc[i] or point_index_min == point_intermediate_min:
+                if data['high'].iloc[point_index_max] < data['high'].iloc[i] or point_index_min == point_intermediate_min:
                     # если обновляем верхний экстремум 
                     data.loc[i, 'extremum_trend']   = 2
                     if point_intermediate_min < point_index_max:
@@ -147,35 +146,35 @@ def strategy_extremes(data):
                     
             elif data['extremum'].iloc[i] == -1:
                 # Происходит смена тренда
-                if data['Low'].iloc[point_intermediate_min] > data['Close'].iloc[i]:
+                if data['low'].iloc[point_intermediate_min] > data['close'].iloc[i]:
                     # закрепились ниже меняем тренд
                     # Происходит смена тренда
                     trend = -1
                     start_trend = point_index_max
-                    clear_extremum(data, start_trend, i,  'extremum_trend')
+                    _clear_extremum(data, start_trend, i,  'extremum_trend')
                     data.loc[start_trend, 'start_trend'] = trend
                     point_index_min = start_trend
                     i = start_trend
                     point_intermediate_max = start_trend
                     point_intermediate_min = start_trend
                 # ложный пробой
-                elif data['Low'].iloc[point_index_min] < data['Close'].iloc[i] and data['Low'].iloc[point_index_min] > data['Low'].iloc[i]:
+                elif data['low'].iloc[point_index_min] < data['close'].iloc[i] and data['low'].iloc[point_index_min] > data['low'].iloc[i]:
                     # ложный пробой
                     data.loc[i, 'false_breakout'] = -3
                     point_intermediate_min = i
                 # если  экстремум в расширении
-                elif data['Low'].iloc[point_index_min] < data['Low'].iloc[i] and data['High'].iloc[point_index_max] > data['Low'].iloc[i]:
+                elif data['low'].iloc[point_index_min] < data['low'].iloc[i] and data['high'].iloc[point_index_max] > data['low'].iloc[i]:
                     # если  экстремум в расширении
                     if point_intermediate_min == point_index_min:
                         point_intermediate_min = i
-                    elif data['Low'].iloc[point_intermediate_min] > data['Low'].iloc[i]:
+                    elif data['low'].iloc[point_intermediate_min] > data['low'].iloc[i]:
                         point_intermediate_min = i    
             
         elif trend == -1:  
             # Если тренд нисходящий
             if data['extremum'].iloc[i] == -1:
                 # Обновляем лой
-                if data['Low'].iloc[point_index_min] > data['Low'].iloc[i] or point_index_min == point_intermediate_min:
+                if data['low'].iloc[point_index_min] > data['low'].iloc[i] or point_index_min == point_intermediate_min:
                     # если обновляем Low 
                     data.loc[i, 'extremum_trend'] = -2
                     if point_intermediate_max < point_index_min:
@@ -187,30 +186,30 @@ def strategy_extremes(data):
             
             elif data['extremum'].iloc[i] == 1:  # Если тренд нисходящий 
                 # Происходит смена тренда               
-                if data['High'].iloc[point_intermediate_max] < data['Close'].iloc[i]:
+                if data['high'].iloc[point_intermediate_max] < data['close'].iloc[i]:
                     # Если свеча закрылась выше предыдущего максимума
                     trend = 1
                     start_trend = point_index_min
-                    clear_extremum(data, start_trend, i,  'extremum_trend')
+                    _clear_extremum(data, start_trend, i,  'extremum_trend')
                     data.loc[start_trend, 'start_trend'] = trend
                     point_index_max = start_trend
                     i = start_trend                                        
                     point_intermediate_max = start_trend
                     point_intermediate_min = start_trend
                 # ложный пробой
-                elif data['High'].iloc[point_index_max] > data['Close'].iloc[i] and data['High'].iloc[point_index_max] < data['High'].iloc[i]: 
+                elif data['high'].iloc[point_index_max] > data['close'].iloc[i] and data['high'].iloc[point_index_max] < data['high'].iloc[i]: 
                     data.loc[i, 'false_breakout'] = 3
                     point_intermediate_max = i
                 # если  экстремум в расширении
-                elif data['High'].iloc[point_index_max] > data['High'].iloc[i] and data['Low'].iloc[point_index_min] < data['High'].iloc[i]: 
+                elif data['high'].iloc[point_index_max] > data['high'].iloc[i] and data['low'].iloc[point_index_min] < data['high'].iloc[i]: 
                     
                     if point_intermediate_max == point_index_max:
                         point_intermediate_max = i
-                    elif data['High'].iloc[point_intermediate_max] < data['High'].iloc[i]:
+                    elif data['high'].iloc[point_intermediate_max] < data['high'].iloc[i]:
                         point_intermediate_max = i
         
         i += 1  # Переход к следующему значению, если нет изменения
     
-    data.set_index('DateTime', inplace=True)  # Восстановите индекс, если это нужно
+    data.set_index('timestamp', inplace=True)  # Восстановите индекс, если это нужно
     return data
 

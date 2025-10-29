@@ -13,7 +13,7 @@ COINS:
   #   START_DEPOSIT_USDT: 100
   #   ORDERTYPE: Market
   - SYMBOL: ETH
-    TIMEFRAME: "D"
+    TIMEFRAME: "60"
     AUTO_TRADING: true
     START_DEPOSIT_USDT: 100
     ORDERTYPE: Market
@@ -49,9 +49,9 @@ EXCHANGE_SETTINGS:
 # СЕКЦИЯ СТРАТЕГИИ (STRATEGY_SETTINGS)
 # ======================================================================
 STRATEGY_SETTINGS:
-  MINIMAL_BARS: 201 # Минимальное количество баров для расчета индикаторов
+  MINIMAL_BARS: 100 # Минимальное количество баров для расчета индикаторов
   # Параметр отклонения ZigZag
-  ZIGZAG_DISTANCE: 200
+  # ZIGZAG_DISTANCE: 12
   ZIGZAG_DEPTH: 12
   ZIGZAG_DEVIATION: 5
   ZIGZAG_BACKTEP: 2

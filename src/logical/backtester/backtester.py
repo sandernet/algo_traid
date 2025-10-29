@@ -63,11 +63,21 @@ def backtest_coin(data_df):
     """
     Запуск бэктеста с данными, загруженными из локального файла.
     """
+    
+    
+    logger.info("🎢 Поиск экстремумов")
+    from src.logical.strategy.mozart.strategy import run_strategy
+    
+    run_strategy(data_df)
+    logger.info("🎢 Поиск экстремумов завершен.")
+    
+    
     MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
     for i in range(MIN_BARS, len(data_df)):
+        logger.info(f"Обработка бара {data_df.index[i]} |================================================")
         current_data = data_df.iloc[i-MIN_BARS : i]
         
-        print(f"Обработка бара {i}/ взято {len(current_data)} баров")
+        logger.info(f"Обработка бара {i}/ взято {len(current_data)} баров")
     
         from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import start_zz_and_fibo
         # Применяем функцию к каждой строке
