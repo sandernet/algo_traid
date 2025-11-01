@@ -74,18 +74,39 @@ class ZigZag:
         
         # определяем направление
         
-        # Находим минимум и максимум за период
-        
-        
         highs = df['high'].values
         lows = df['low'].values
         
+        df['highs'] = None
+        df['lows'] = None
         
         maxin = self._highestbars(pd.Series(highs), self.depth)
         minin = self._lowestbars(pd.Series(lows), self.depth)
         
-        logger.info(f"ZigZag highs: {highs}, lows: {lows}")
+        
         logger.info(f"ZigZag maxin: {maxin}, minin: {minin}")
+        logger.info(f"ZigZag highs: {highs[len(highs) - maxin-1]}, \
+                    lows: {lows[len(lows) - minin-1]} ")
+        
+        
+        x = highs[len(highs) - maxin - 1]
+        y = highs[-1]
+        
+        d = self.deviation*mintick
+        
+        if highs[len(highs) - maxin-1] - highs[-1] > self.deviation*mintick:
+            logger.info("ZigZag detected HIGH")
+            df[-1,'highs'] = highs[-1]
+            
+        if lows[-1] - lows[len(lows) - minin-1] > self.deviation*mintick:
+            logger.info("ZigZag detected LOW")
+            df[-1,'lows'] = lows[-1]
+       
+        # h = highs[len(highs) - maxin-1] - highs[-1] > self.deviation*mintick
+        # l = lows[-1] - lows[len(lows) - minin-1] > self.deviation*mintick 
+        
+        logger.info(f"ZigZag h: df[-1,'highs']: {df[-1,'highs']}, \
+                    l: df[-1,'lows']: {df[-1,'lows']}") 
         
         # # Храним экстремумы
         # peaks = []
