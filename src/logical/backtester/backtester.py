@@ -64,15 +64,9 @@ def backtest_coin(data_df):
     Запуск бэктеста с данными, загруженными из локального файла.
     """
     
-    
-    logger.info("🎢 Поиск экстремумов")
-    from src.logical.strategy.mozart.strategy import run_strategy
-    
-    run_strategy(data_df)
-    logger.info("🎢 Поиск экстремумов завершен.")
-    
-    
+    # берем из конфигурации минимальное количество баров для расчета стратегии
     MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
+    
     for i in range(MIN_BARS, len(data_df)):
         logger.info(f"Обработка бара {data_df.index[i]} |================================================")
         current_data = data_df.iloc[i-MIN_BARS : i]
@@ -83,11 +77,13 @@ def backtest_coin(data_df):
         # Применяем функцию к каждой строке
         signal = start_zz_and_fibo(current_data)
         data_df.loc[i, 'signal'] = signal
-
-    # signal = data_df['Signal'].values()
         
-    # if signal is not None:
-    #     logger.info("🎢 Запуск расчета данных по ордерам по стратегии.")
-    #     # запускаем расчет ордеров по стратегии
+        if signal is not None:
+            logger.info("🎢 Запуск расчета данных по ордерам по стратегии.")
+            # запускаем расчет ордеров по стратегии
+            from src.logical.risk_manager.risk_manager import RiskManager
+            risk_manager = RiskManager()
+            risk_manager.calculate_position_size()
 
+    
 

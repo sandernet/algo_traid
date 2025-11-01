@@ -16,6 +16,12 @@ def main():
         action='store_true',  # Флаг (без значения)
         help='Загрузить или обновить исторические данные c биржи'
     )
+    # Добавляем параметр --debugger_strategy
+    parser.add_argument(
+        '--debug',
+        action='store_true',  # Флаг (без значения)
+        help='запуск отладки стратегии на локальных данных'
+    )
 
     # Добавляем параметр --backtester
     data_dir = config.get_setting("MODE_SETTINGS", "DATA_DIR")
@@ -43,6 +49,13 @@ def main():
         from src.logical.data_fetcher.data_pipeline import run_data_update_pipeline
         run_data_update_pipeline()
         logger.info("Загрузка и обновление исторических данных завершены.")
+    
+    # Проверяем параметры
+    if args.debug:
+        logger.info("Запуск отладки стратегии...")
+        from src.logical.debugger.debugger import debugger_strategy
+        debugger_strategy()
+        logger.info("Отладка стратегии завершена.")
     
     # Проверяем параметры
     if args.btest:

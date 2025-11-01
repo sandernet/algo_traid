@@ -1,0 +1,60 @@
+
+# Логирование
+# ====================================================
+from src.utils.logger import get_logger
+logger = get_logger(__name__)
+
+from src.config.config import config
+
+# точка входа для бэктестера
+# ====================================================
+def debugger_strategy():
+    """Отладка стратегии"""
+
+    # Получение настроек Биржи
+    exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
+    limit = config.get_setting("EXCHANGE_SETTINGS", "LIMIT")
+    data_dir = config.get_setting("MODE_SETTINGS", "DATA_DIR")
+    
+    
+    # 1. Получение массива монет из конфигурации
+    try:
+        coins_list = config.get_section("COINS")
+        logger.info(f"Загружено {len(coins_list)} монет из конфигурации.")
+    except KeyError as e:
+        # Хотя валидация должна была поймать это, это хорошая защита
+        logger.error(f"Критическая ошибка: {e}")
+        coins_list = [] # Устанавливаем пустой список для безопасной работы
+        
+    # Подключение модуля с загрузчиком данных
+    from src.logical.data_fetcher.data_fetcher import DataFetcher
+    # 2. Обработка каждой монеты   
+    for coin in coins_list:
+        logger.info("============================================================================")
+        symbol = coin.get("SYMBOL")+"/USDT"
+        timeframe = coin.get("TIMEFRAME")
+        logger.info(f"🪙 Монета: {symbol}, ↔️ Таймфрейм: {timeframe}")
+        # 1. Инициализируем DataFetcher
+        fetcher = DataFetcher( 
+            symbol=symbol, 
+            timeframe=timeframe, 
+            exchange_id=exchange_id, 
+            limit=limit,
+            directory=data_dir,
+            )
+        # 2. Загрузка из файла
+        data_full = fetcher.load_from_csv(file_type="csv")
+    
+        if data_full is not None:
+            logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
+            #  Здесь вы передаете data_full в ваш модуль стратегии или бэктестера
+            from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import start_zz_and_fibo
+            
+            # берем из конфигурации минимальное количество баров для расчета стратегии
+            MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
+            # обрезать нужное количество баров для расчета индикаторов
+            data_df = data_full.tail(MIN_BARS)
+            
+            start_zz_and_fibo(data_df)
+        else:
+            logger.error(f"Невозможно запустить бэктест для {symbol}: данные не загружены.")

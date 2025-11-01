@@ -22,6 +22,15 @@
             "justMyCode": true
         },
         {
+            "name": "Debugger strategy",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/app.py",
+            "args": ["--debug"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "App with loaddata",
             "type": "python",
             "request": "launch", 
