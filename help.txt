@@ -12,9 +12,5 @@ venv\Scripts\activate
 pip freeze > requirements.txt
 pip install -r requirements.txt
 
-# стрелка вверх зеленая "\033[92m↑\033[0m"
-# стрелка вниз красная "\033[91m\u2193\033[0m"
-# Вывод \033[92m+\033[0m зеленый +
-# Красный минус \033[91m-\033[0m  -
 
 
