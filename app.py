@@ -47,10 +47,9 @@ def main():
     # Проверяем параметры
     if args.btest:
         # 1. Проверяем есть ли данные для бэктеста
-        if not os.path.exists(data_dir):
-            logger.info(f"Нет директории для данных по бэктесту. Создаю: {data_dir}")
-            os.makedirs(data_dir)
-            logger.info("Загружаем данные с биржи для бэктестера...")
+        if not os.path.exists(data_dir+"csv_files"):
+            logger.info(f"Нет данных для бэктеста.")
+            logger.info("Загружаем данные с биржи...")
             from src.logical.data_fetcher.data_pipeline import run_data_update_pipeline
             run_data_update_pipeline()
             logger.info("Загрузка данных с биржи завершена.")

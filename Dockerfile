@@ -1,17 +1,22 @@
-FROM python:3.13-slim
+# Используем официальный образ Python как базовый
+FROM python:3.11-slim
 
-# Установка рабочей директории
+# Устанавливаем рабочую директорию внутри контейнера
 WORKDIR /app
 
-# Установка зависимостей
+# Создаём необходимые директории
+RUN mkdir -p DATA_OHLCV logs configs
+
+# Копируем зависимости (если есть requirements.txt)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копирование исходного кода
+# Копируем само приложение
 COPY . .
 
-# Создание volume для данных
-VOLUME ["/app/data"]
+# Указываем тома, чтобы данные можно было монтировать извне
+VOLUME ["/app/DATA_OHLCV", "/app/logs", "/app/configs"]
+
 
 # Команда запуска
 CMD ["python", "app.py"]

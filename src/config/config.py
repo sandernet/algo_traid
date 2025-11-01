@@ -136,11 +136,11 @@ class ConfigManager:
             if not secret_key:
                 errors.append("Для режима 'live'/'paper' требуется SECRET_KEY.")
                 
-        # Проверка параметров бэктестинга
-        if mode == 'backtest':
-            if not self.get_setting("MODE_SETTINGS", "BACKTEST_START_DATE"):
-                errors.append("Для режима 'backtest' требуется BACKTEST_START_DATE.")
-            # Здесь можно добавить проверку формата даты
+        # # Проверка параметров бэктестинга
+        # if mode == 'backtest':
+        #     if not self.get_setting("MODE_SETTINGS", "BACKTEST_START_DATE"):
+        #         errors.append("Для режима 'backtest' требуется BACKTEST_START_DATE.")
+        #     # Здесь можно добавить проверку формата даты
         
         # # Проверка параметров стратегии
         # deviation = self.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEVIATION_PERCENT")
