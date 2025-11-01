@@ -89,3 +89,37 @@ python app.py --btest
 - `MODE_SETTINGS` - режим работы (live/backtest)
 - `LOGGING_SETTINGS` - настройки логирования
 - `TELEGRAM_SETTINGS` - настройки Telegram бота
+
+## Docker
+
+Проект поддерживает запуск в Docker контейнерах. Доступны следующие конфигурации:
+
+### Производственный режим
+```bash
+docker-compose up trading_bot
+```
+
+### Режим разработки
+```bash
+docker-compose up trading_bot_dev
+```
+
+### Загрузка данных
+```bash
+docker-compose up trading_bot_data
+```
+
+### Сборка образов
+```bash
+docker-compose build
+```
+
+Volumes:
+- `./data`: Хранение исторических данных
+- `./configs`: Конфигурационные файлы
+- `./logs`: Логи работы бота
+
+Для остановки контейнеров:
+```bash
+docker-compose down
+```
