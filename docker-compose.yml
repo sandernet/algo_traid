@@ -12,4 +12,4 @@ services:
       - ./logs:/app/logs
     environment:
       - PYTHONUNBUFFERED=1
-    command: python app.py --btest
+    command: python app.py

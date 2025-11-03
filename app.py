@@ -10,7 +10,7 @@ def main():
     # аргументы командной строки
     parser = argparse.ArgumentParser(description='Программа алготрейдинга с бэктестером и загрузкой данных.')
     
-    # Добавляем параметр --loaddata
+    # Добавляем параметр --ldata загрузка данных с биржи
     parser.add_argument(
         '--ldata',
         action='store_true',  # Флаг (без значения)
@@ -22,7 +22,6 @@ def main():
         action='store_true',  # Флаг (без значения)
         help='запуск отладки стратегии на локальных данных'
     )
-
     # Добавляем параметр --backtester
     data_dir = config.get_setting("MODE_SETTINGS", "DATA_DIR")
     parser.add_argument(
