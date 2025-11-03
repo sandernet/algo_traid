@@ -96,7 +96,7 @@ python app.py --btest
 
 ### Производственный режим
 ```bash
-docker-compose up trading_bot
+docker compose up trading_bot
 ```
 
 ### Режим разработки
