@@ -101,17 +101,17 @@ docker-compose up trading_bot
 
 ### Режим разработки
 ```bash
-docker-compose up trading_bot_dev
+docker compose up trading_bot_dev
 ```
 
 ### Загрузка данных
 ```bash
-docker-compose up trading_bot_data
+docker compose up trading_bot_data
 ```
 
 ### Сборка образов
 ```bash
-docker-compose build
+docker compose build
 ```
 
 Volumes:
