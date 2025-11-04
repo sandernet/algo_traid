@@ -38,25 +38,25 @@ def main():
 
     # Логирование
     # ====================================================
-    from src.utils.logger import get_logger
+    from src.utils.logger import get_logger, logging
     logger = get_logger(__name__)
-    logger.info("Конфигурация успешно загружена и прошла валидацию.")
     
     # Проверяем параметры
+    # Загрузка исторических данных с биржи
     if args.ldata:
         logger.info("Загрузка и обновление исторических данных...")
         from src.logical.data_fetcher.data_pipeline import run_data_update_pipeline
         run_data_update_pipeline()
         logger.info("Загрузка и обновление исторических данных завершены.")
     
-    # Проверяем параметры
+    # Отладка стратегии 
     if args.debug:
         logger.info("Запуск отладки стратегии...")
         from src.logical.debugger.debugger import debugger_strategy
         debugger_strategy()
         logger.info("Отладка стратегии завершена.")
     
-    # Проверяем параметры
+    # бектестинг стратегии на исторических данных
     if args.btest:
         # 1. Проверяем есть ли данные для бэктеста
         if not os.path.exists(data_dir+"csv_files"):

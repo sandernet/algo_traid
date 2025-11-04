@@ -73,6 +73,11 @@ pip install -r requirements.txt
 python app.py --ldata
 ```
 
+Запуск отладки стратегии:
+```bash
+python app.py --debug
+```
+
 Запуск бэктестера:
 ```bash
 python app.py --btest

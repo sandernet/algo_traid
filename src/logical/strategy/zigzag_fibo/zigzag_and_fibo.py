@@ -22,15 +22,15 @@ def start_zz_and_fibo(data_df):
     signal = None
     
     # Расчет индикатора zigzag
-    zigzag_distance = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEPTH")
+    # zigzag_distance = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEPTH")
     # для расчета ZigZag отсекаем только нужный участок данных
-    zigzag_df = data_df.tail(zigzag_distance)
-    logger.info(f"Данные для расчета ZigZag: {len(zigzag_df)} записей после отсечения первых записей.")
+    # zigzag_df = data_df.tail(zigzag_distance).copy()
+    logger.info(f"Данные для расчета ZigZag: {len(data_df)} записей после отсечения первых записей.")
 
     from src.logical.indicators.zigzag import ZigZag
     zigzag_indicator = ZigZag()
-    direction, z1, z2, signal = zigzag_indicator.calculate_zigzag(data_df)
-    logger.info(f"Направление ZigZag: {direction}, z1={z1} z1={z2} signal={signal}")
+    signal = zigzag_indicator.calculate_zigzag(data_df)
+    # logger.info(f"Направление ZigZag: {direction}, z1={z1} z1={z2} signal={signal}")
 
     
     # Здесь можно добавить расчет уровней Фибоначчи, если это необходимо
