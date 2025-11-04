@@ -27,12 +27,13 @@ class ZigZag:
     # ----------------------
     # Расчет индикатора ZigZag
     # ----------------------
-    def calculate_zigzag(self, df):
+    def calculate_zigzag(self, df_data):
         """
         Вычисляет ZigZag индикатор и добавляет его в DataFrame.
         hr = ta.barssince(not (_high[-ta.highestbars(depth)] - _high > deviation*syminfo.mintick)[1])
         
         """
+        df = df_data.copy()
         # Расчёт
         df['hr'] = self._calc_hr(df, self.depth, self.deviation, self.mintick)
         df['lr'] = self._calc_lr(df, self.depth, self.deviation, self.mintick)
@@ -43,15 +44,7 @@ class ZigZag:
         _high = df["high"].to_numpy()
         _low = df["low"].to_numpy()
 
-    
-        logger.info(f"hr = : {df['hr'][-1]}, lr = : {df['lr'][-1]} direction = : {df['direction'][-1]}")
-        logger.info(f"_low = : {_low[-2]}, _high = : {_high[-2]} direction = : {direction[-1]}")
             
-        print(f"{'Index':<10}{'hr':<10}{'lr':<10}")
-        print("-" * 40)
-        for i in range(len(df)):
-            print(f"index {df.index[i]}-------- {df['hr'][i]:<10} {df['lr'][i]:<10}  {df['direction'][i]:<10}")
-
         # Инициализация z, z1, z2 значениями цен
         z  = df['low'].iloc[-1]
         z1 = df['low'].iloc[-1]
@@ -90,8 +83,7 @@ class ZigZag:
                 })
             
         zz = pd.DataFrame(bars)
-        print(zz.tail(30))
-        return False
+        return  z1, z2, zz['direction'].iloc[-1]
     
     # ----------------------
     # Вспомогательные методы для работы с точками ZigZag
@@ -177,7 +169,7 @@ class ZigZag:
 
         # 2. Значения high на тех барах, где был максимум
         _highest = [
-            np.nan if np.isnan(offsets[i]) else _high.iloc[i - int(offsets[i])]
+            np.nan if np.isnan(offsets.iloc[i]) or i - int(offsets.iloc[i]) < 0 else _high.iloc[i - int(offsets.iloc[i])]
             for i in range(len(_high))
         ]
         _highest = pd.Series(_highest, index=_high.index)
@@ -190,7 +182,7 @@ class ZigZag:
 
         # 5) привести к булевому типу: NaN -> False (или можно выбрать другое поведение)
         #    затем инвертировать
-        cond_prev_bool = cond_prev.fillna(False).astype(bool)
+        cond_prev_bool = cond_prev.astype(bool).fillna(False)
         cond_inv = ~cond_prev_bool
 
         # 6) barssince
@@ -219,7 +211,7 @@ class ZigZag:
 
         cond = (_low - _lowest) > (deviation * syminfo_mintick)
         cond_prev = cond.shift(1)
-        cond_prev_bool = cond_prev.fillna(False).astype(bool)
+        cond_prev_bool = cond_prev.astype(bool).fillna(False)
         cond_inv = ~cond_prev_bool
 
         return self._barssince(cond_inv)

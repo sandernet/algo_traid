@@ -29,8 +29,8 @@ def start_zz_and_fibo(data_df):
 
     from src.logical.indicators.zigzag import ZigZag
     zigzag_indicator = ZigZag()
-    signal = zigzag_indicator.calculate_zigzag(data_df)
-    # logger.info(f"Направление ZigZag: {direction}, z1={z1} z1={z2} signal={signal}")
+    z1, z2, direction = zigzag_indicator.calculate_zigzag(data_df)
+    logger.info(f"Направление ZigZag: {direction}, z1={z1} z1={z2}")
 
     
     # Здесь можно добавить расчет уровней Фибоначчи, если это необходимо
