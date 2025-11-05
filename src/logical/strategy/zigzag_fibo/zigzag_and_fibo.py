@@ -25,11 +25,7 @@ def start_zz_and_fibo(data_full):
     MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
     # обрезать нужное количество баров для расчета индикаторов
     data_df = data_full.tail(MIN_BARS)
-    # # Расчет индикатора zigzag
-    # # zigzag_distance = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEPTH")
-    # # для расчета ZigZag отсекаем только нужный участок данных
-    # # zigzag_df = data_df.tail(zigzag_distance).copy()
-    # logger.info(f"Данные для расчета ZigZag: {len(data_df)} записей после отсечения первых записей.")
+
 
     from src.logical.indicators.zigzag import ZigZag
     zigzag_indicator = ZigZag()

@@ -8,7 +8,7 @@
 # =====================================================================
 COINS:
   # - SYMBOL: BTC
-  #   TIMEFRAME: "60"
+  #   TIMEFRAME: "D"
   #   AUTO_TRADING: true
   #   START_DEPOSIT_USDT: 100
   #   ORDERTYPE: Market
