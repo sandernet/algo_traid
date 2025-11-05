@@ -147,9 +147,9 @@ class ConfigManager:
         # if deviation <= 0:
         #     errors.append("ZIGZAG_DEVIATION_PERCENT должен быть положительным числом (> 0).")
             
-        fib_levels = self.get_setting("STRATEGY_SETTINGS", "FIBONACCI_LEVELS")
-        if not (0 < min(fib_levels) < 1 and 0 < max(fib_levels) < 1):
-             errors.append("Уровни Фибоначчи должны быть в диапазоне (0, 1).")
+        # fib_levels = self.get_setting("STRATEGY_SETTINGS", "FIBONACCI_LEVELS")
+        # if not (0 < min(fib_levels) < 1 and 0 < max(fib_levels) < 1):
+        #      errors.append("Уровни Фибоначчи должны быть в диапазоне (0, 1).")
 
 
         # 3. Вывод результатов валидации
