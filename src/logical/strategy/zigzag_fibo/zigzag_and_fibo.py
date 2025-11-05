@@ -13,7 +13,7 @@ from src.config.config import config
 # расчет стратегии ZigZag и Фибоначчи 
 # на выходе получаем dtaframe с рассчитанными индикаторами
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def start_zz_and_fibo(data_df):
+def start_zz_and_fibo(data_full):
     """
     Запуск стратегии ZigZag и уровней Фибоначчи на переданных данных.
     """
@@ -21,6 +21,10 @@ def start_zz_and_fibo(data_df):
     
     signal = None
     
+    # берем из конфигурации минимальное количество баров для расчета стратегии
+    MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
+    # обрезать нужное количество баров для расчета индикаторов
+    data_df = data_full.tail(MIN_BARS)
     # # Расчет индикатора zigzag
     # # zigzag_distance = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEPTH")
     # # для расчета ZigZag отсекаем только нужный участок данных

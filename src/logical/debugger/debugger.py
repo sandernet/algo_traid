@@ -50,11 +50,6 @@ def debugger_strategy():
             #  Здесь вы передаете data_full в ваш модуль стратегии или бэктестера
             from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import start_zz_and_fibo
             
-            # берем из конфигурации минимальное количество баров для расчета стратегии
-            MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
-            # обрезать нужное количество баров для расчета индикаторов
-            data_df = data_full.tail(MIN_BARS)
-            
-            start_zz_and_fibo(data_df)
+            start_zz_and_fibo(data_full)
         else:
             logger.error(f"Невозможно запустить бэктест для {symbol}: данные не загружены.")
