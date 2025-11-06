@@ -46,10 +46,16 @@ def debugger_strategy():
         data_full = fetcher.load_from_csv(file_type="csv")
     
         if data_full is not None:
-            logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
+            logger.info(f"🚀 Запуск стратегии 〽️ ZigZag и уровней Фибоначчи. {symbol} с локальными данными.")
             #  Здесь вы передаете data_full в ваш модуль стратегии или бэктестера
-            from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import start_zz_and_fibo
+
+            from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculete_strategy
             
-            start_zz_and_fibo(data_full)
+            direction, z1, z2, fiboLev =    calculete_strategy(data_full)
+            
+            if direction is None or z1 is None or z2 is None or fiboLev is None:
+                logger.error(f"Стратегия не вернула корректные результаты для {symbol}.")
+                continue
+            
         else:
             logger.error(f"Невозможно запустить бэктест для {symbol}: данные не загружены.")

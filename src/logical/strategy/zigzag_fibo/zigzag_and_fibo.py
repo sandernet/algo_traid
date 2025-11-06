@@ -1,4 +1,3 @@
-
 # Логирование
 # ====================================================
 from src.utils.logger import get_logger
@@ -11,31 +10,28 @@ from src.config.config import config
 # расчет стратегии ZigZag и Фибоначчи 
 # на выходе получаем dtaframe с рассчитанными индикаторами
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def start_zz_and_fibo(data_full):
+def calculete_strategy(data_full):
     """
     Запуск стратегии ZigZag и уровней Фибоначчи на переданных данных.
     """
-    logger.info("〽️ Запуск стратегии ZigZag и уровней Фибоначчи.")
-    
-    signal = None
-    
-    # берем из конфигурации минимальное количество баров для расчета стратегии
-    MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
-    # обрезать нужное количество баров для расчета индикаторов
-    data_df = data_full.tail(MIN_BARS)
+    try:
+            # берем из конфигурации минимальное количество баров для расчета стратегии
+        MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
+        # обрезать нужное количество баров для расчета индикаторов
+        data_df = data_full.tail(MIN_BARS)
+        
+        # Расчет индикаторов ZigZag
+        from src.logical.indicators.zigzag import ZigZag
+        zigzag_indicator = ZigZag()
+        z1, z2, direction = zigzag_indicator.calculate_zigzag(data_df)
+        
+        # Расчет уровней Фибоначчи
+        fiboLev = fibonacci_levels(z1, z2, direction)
 
-
-    from src.logical.indicators.zigzag import ZigZag
-    zigzag_indicator = ZigZag()
-    z1, z2, direction = zigzag_indicator.calculate_zigzag(data_df)
-    logger.info(f"Направление ZigZag: {direction}, z1={z1} z1={z2}")
-    fiboLev = fibonacci_levels(z1, z2, direction)
-    for level, value in fiboLev.items():
-        logger.info(f"Уровень Фибоначчи {level}%: {value}")
-    
-    logger.info("Расчет ZigZag и уровней Фибоначчи завершен.")
-    
-    return signal  # , fibo_levels (если добавлен расчет Фибоначчи)
+        return direction, z1, z2, fiboLev
+    except Exception as e:
+        logger.error(f"Ошибка при запуске стратегии ZigZag и Фибоначчи: {e}")
+        return None, None, None, None
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -56,7 +52,7 @@ def fibonacci_levels(z1: float, z2: float, direction: int) -> dict:
     if direction == 1:
         # коррекция вниз
         for r in fib_ratios:
-            level = z2 + (z2 - z1) * r
+            level = z1 + (z2 - z1) * r
             levels[round(r * 100, 1)] = level
     elif direction == -1:
         # коррекция вверх
@@ -67,3 +63,6 @@ def fibonacci_levels(z1: float, z2: float, direction: int) -> dict:
         raise ValueError("direction должен быть 'up' или 'down'")
 
     return levels
+
+
+

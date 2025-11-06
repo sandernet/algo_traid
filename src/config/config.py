@@ -21,7 +21,6 @@ REQUIRED_SETTINGS: Dict[str, Dict[str, Any]] = {
         "ZIGZAG_DEVIATION": (int, float),
         "ZIGZAG_BACKTEP": (int, float),
         "FIBONACCI_LEVELS": list,
-        "BASE_ORDER_AMOUNT": (int, float),
     },
     "RISK_SETTINGS": {
         "STOP_LOSS_PERCENT": (int, float),
