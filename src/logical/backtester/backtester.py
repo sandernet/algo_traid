@@ -12,6 +12,9 @@ from src.config.config import config
 
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculete_strategy
 
+
+from src.risk_manager.order_block import TradePosition, TakeProfitLevel
+
 # точка входа для бэктестера
 # ====================================================
 def run_local_backtest():
@@ -87,16 +90,33 @@ def backtest_coin(data_df):
             continue
 
         logger.info(f"z1 =: {zigzag["z1"]}, z2 =: {zigzag["z2"]}, z2_index: {zigzag['z2_index']} direction: {zigzag['direction']}")        
-        logger.info(f"------")        
+     
         direction = zigzag["direction"]
-        z1 = zigzag["z1"]
-        z2 = zigzag["z2"]
+
         
         if direction == -1 and (previous_direction == 1 or previous_direction == None):
             logger.info(f"🎢 Расчет сделки на [bold green] BUY [/bold green] / на баре - {data_df.index[i]} ")
+            
+            entry_price = data_df["open"].iloc[i]
+            stop_loss = fiboLev[161.8]
+            
+            # Создание сделки
+            tps= []
+            for level, value in list(fiboLev.items())[:5]:
+                # logger.info(f"Уровень Фибоначчи {level}%: {value}")
+                tps.append(TakeProfitLevel(price=value, volume=0.2)) 
+        
+            trade = TradePosition(
+                entry_price=entry_price,
+                stop_loss=stop_loss,
+                take_profits=tps,
+                direction='long'
 
-            for level, value in fiboLev.items():
-                logger.info(f"Уровень Фибоначчи {level}%: {value}")
+            )
+            
+            logger.info(f"Сделка создана: {trade}")            
+            # for level, value in fiboLev.items():
+            #     logger.info(f"Уровень Фибоначчи {level}%: {value}")
             
             # запускаем расчет ордеров по стратегии
             # from src.risk_manager.risk_manager import RiskManager
