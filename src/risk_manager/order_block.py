@@ -12,10 +12,10 @@ class TradePosition:
     stop_loss: float  # стоп-лосс
     take_profits: List[TakeProfitLevel] 
     direction: str  # 'BUY' или 'SELL'
+    status: str = 'open' # 'open', 'closed', "None"
 
-    
-    def __init__(self, entry_price: float, stop_loss: float, take_profits: List[TakeProfitLevel], direction: str):
-        self.entry_price = entry_price
-        self.stop_loss = stop_loss
-        self.take_profits = take_profits
-        self.direction = direction
+
+class OrderBlock(TradePosition):
+    def __init__(self):
+        pass
+                 

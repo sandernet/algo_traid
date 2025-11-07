@@ -36,10 +36,11 @@ class DataFetcher:
     
     # Инициализация с параметрами монеты и биржи
     # ======================================================
-    def __init__(self, symbol: str, timeframe: str, exchange_id: str, limit: int, directory: str): 
+    def __init__(self, coin, exchange_id: str, limit: int, directory: str): 
         # Параметры, зависящие от монеты
-        self.symbol = symbol 
-        self.timeframe = timeframe 
+        self.symbol = coin.get("SYMBOL")+"/USDT" 
+        self.timeframe = coin.get("TIMEFRAME") 
+        
         # Параметры биржи
         self.exchange_id = exchange_id
         self.limit = limit

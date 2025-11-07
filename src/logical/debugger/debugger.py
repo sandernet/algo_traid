@@ -51,9 +51,9 @@ def debugger_strategy():
 
             from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculete_strategy
             
-            direction, z1, z2, fiboLev =    calculete_strategy(data_full)
+            zigzag, fiboLev = calculete_strategy(data_full)
             
-            if direction is None or z1 is None or z2 is None or fiboLev is None:
+            if zigzag is None or fiboLev is None:
                 logger.error(f"Стратегия не вернула корректные результаты для {symbol}.")
                 continue
             

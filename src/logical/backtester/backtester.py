@@ -15,53 +15,6 @@ from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculete_strategy
 
 from src.risk_manager.order_block import TradePosition, TakeProfitLevel
 
-# точка входа для бэктестера
-# ====================================================
-def run_local_backtest():
-    """Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации."""
-
-    # Получение настроек Биржи
-    exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
-    limit = config.get_setting("EXCHANGE_SETTINGS", "LIMIT")
-    data_dir = config.get_setting("MODE_SETTINGS", "DATA_DIR")
-    
-    
-    # 1. Получение массива монет из конфигурации
-    try:
-        coins_list = config.get_section("COINS")
-        logger.info(f"Загружено {len(coins_list)} монет из конфигурации.")
-    except KeyError as e:
-        # Хотя валидация должна была поймать это, это хорошая защита
-        logger.error(f"Критическая ошибка: {e}")
-        coins_list = [] # Устанавливаем пустой список для безопасной работы
-        
-    # Подключение модуля с загрузчиком данных
-    from src.logical.data_fetcher.data_fetcher import DataFetcher
-    # 2. Обработка каждой монеты   
-    for coin in coins_list:
-        logger.info("============================================================================")
-        symbol = coin.get("SYMBOL")+"/USDT"
-        timeframe = coin.get("TIMEFRAME")
-        logger.info(f"🪙 Монета: {symbol}, ↔️ Таймфрейм: {timeframe}")
-        # 1. Инициализируем DataFetcher
-        fetcher = DataFetcher( 
-            symbol=symbol, 
-            timeframe=timeframe, 
-            exchange_id=exchange_id, 
-            limit=limit,
-            directory=data_dir,
-            )
-        # 2. Загрузка из файла
-        data_df = fetcher.load_from_csv(file_type="csv")
-    
-        if data_df is not None:
-            logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
-            select_data = select_range(data_df)
-            #  Здесь вы передаете data_df в ваш модуль стратегии или бэктестера
-            backtest_coin(select_data)
-        else:
-            logger.error(f"Невозможно запустить бэктест для {symbol}: данные не загружены.")
-        
 
 # ====================================================
 # Запуск бэктеста для одной монеты
@@ -78,8 +31,7 @@ def backtest_coin(data_df):
     
     previous_direction = None
     for i in range(MIN_BARS, len(data_df)):
-        logger.info("[yellow]============================================================================[/yellow]")
-        logger.info(f"Обработка бара {data_df.index[i]}")
+        logger.info(f"[yellow]========== Обработка бара {data_df.index[i]}==========[/yellow]")
         current_data = data_df.iloc[i-MIN_BARS : i ]
             
         # Применяем функцию к каждой строке
@@ -102,7 +54,8 @@ def backtest_coin(data_df):
             
             # Создание сделки
             tps= []
-            for level, value in list(fiboLev.items())[:5]:
+            # перебераем все 5 тейков в обратном порядке 
+            for level, value in list(fiboLev.items())[:5][::-1]:
                 # logger.info(f"Уровень Фибоначчи {level}%: {value}")
                 tps.append(TakeProfitLevel(price=value, volume=0.2)) 
         
@@ -114,7 +67,7 @@ def backtest_coin(data_df):
 
             )
             
-            logger.info(f"Сделка создана: {trade}")            
+            logger.info(f"Сделка создана: {trade.__dict__}")            
             # for level, value in fiboLev.items():
             #     logger.info(f"Уровень Фибоначчи {level}%: {value}")
             
@@ -160,3 +113,51 @@ def select_range(data_df):
     filtered_df = data_df[(data_df.index >= start_dt) & (data_df.index <= end_dt)].copy()
     
     return filtered_df
+
+
+# точка входа для бэктестера
+# ====================================================
+def run_local_backtest():
+    """Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации."""
+
+    # Получение настроек Биржи
+    exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
+    limit = config.get_setting("EXCHANGE_SETTINGS", "LIMIT")
+    data_dir = config.get_setting("MODE_SETTINGS", "DATA_DIR")
+        
+    # 1. Получение массива монет из конфигурации
+    try:
+        coins_list = config.get_section("COINS")
+        logger.info(f"Загружено {len(coins_list)} монет из конфигурации.")
+    except KeyError as e:
+        # Хотя валидация должна была поймать это, это хорошая защита
+        logger.error(f"Критическая ошибка: {e}")
+        coins_list = [] # Устанавливаем пустой список для безопасной работы
+        
+    # Подключение модуля с загрузчиком данных
+    from src.logical.data_fetcher.data_fetcher import DataFetcher
+    # 2. Обработка каждой монеты   
+    for coin in coins_list:
+        logger.info("============================================================================")
+        
+        symbol = coin.get("SYMBOL")+"/USDT"
+        timeframe = coin.get("TIMEFRAME")
+        tick_size = coin.get("MINIMAL_TICK_SIZE")
+        logger.info(f"🪙 Монета: [bold red]{symbol}[/bold red], ↔️ Таймфрейм: [bold red]{timeframe}[/bold red], Минимальный шаг цены {tick_size}")
+        # 1. Инициализируем DataFetcher
+        fetcher = DataFetcher( coin,
+            exchange_id=exchange_id, 
+            limit=limit,
+            directory=data_dir,
+            )
+        # 2. Загрузка из файла
+        data_df = fetcher.load_from_csv(file_type="csv")
+    
+        if data_df is not None:
+            logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
+            select_data = select_range(data_df)
+            #  Здесь вы передаете data_df в ваш модуль стратегии или бэктестера
+            backtest_coin(select_data)
+        else:
+            logger.error(f"Невозможно запустить бэктест для {symbol}: данные не загружены.")
+        

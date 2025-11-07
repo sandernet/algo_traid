@@ -42,7 +42,8 @@ REQUIRED_COIN_FIELDS: Dict[str, Any] = {
     "TIMEFRAME": str,
     "AUTO_TRADING": bool,
     "START_DEPOSIT_USDT": (int, float),
-    "ORDERTYPE": str
+    # "ORDERTYPE": str
+    "MINIMAL_TICK_SIZE": (int, float) # Минимальный размер шага цены
 }
 
 class ConfigValidationError(Exception):

@@ -67,7 +67,7 @@ def main():
             logger.info("Загрузка данных с биржи завершена.")
             
         # 2. Запуск бэктестера
-        logger.info(f"Запуск бэктестера с локальными данными из {data_dir}...")
+        logger.info(f"Запуск бэктестера с локальными данными из {data_dir} ...")
         from src.logical.backtester.backtester import run_local_backtest
         run_local_backtest()
         logger.info("Бэктестер завершил работу.")

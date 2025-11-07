@@ -15,11 +15,6 @@ def calculete_strategy(data_df):
     Запуск стратегии ZigZag и уровней Фибоначчи на переданных данных.
     """
     try:
-        #     # берем из конфигурации минимальное количество баров для расчета стратегии
-        # MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
-        # # обрезать нужное количество баров для расчета индикаторов
-        # data_df = data_full.tail(MIN_BARS)
-        
         # Расчет индикаторов ZigZag
         from src.logical.indicators.zigzag import ZigZag
         zigzag_indicator = ZigZag()

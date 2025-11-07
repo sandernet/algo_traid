@@ -16,7 +16,8 @@ COINS:
     TIMEFRAME: "D"
     AUTO_TRADING: true
     START_DEPOSIT_USDT: 100
-    ORDERTYPE: Market
+    MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
+
   # - SYMBOL: BNB
   #   TIMEFRAME: D
   #   AUTO_TRADING: true
