@@ -10,6 +10,8 @@ logger = get_logger(__name__)
 
 from src.config.config import config
 
+from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculete_strategy
+
 # точка входа для бэктестера
 # ====================================================
 def run_local_backtest():
@@ -73,24 +75,25 @@ def backtest_coin(data_df):
     
     previous_direction = None
     for i in range(MIN_BARS, len(data_df)):
-        logger.info("============================================================================")
+        logger.info("[yellow]============================================================================[/yellow]")
         logger.info(f"Обработка бара {data_df.index[i]}")
         current_data = data_df.iloc[i-MIN_BARS : i ]
-        
-        logger.info(f"Взято {len(current_data)} баров для расчета индикаторов.")
-    
-        from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculete_strategy
-        # Применяем функцию к каждой строке
-        direction, z1, z2, fiboLev =    calculete_strategy(current_data)
             
-        if direction is None or z1 is None or z2 is None or fiboLev is None:
-            logger.error(f"Стратегия не вернула корректные результаты для .")
+        # Применяем функцию к каждой строке
+        zigzag, fiboLev = calculete_strategy(current_data)
+       
+        if zigzag is None or fiboLev is None:
+            logger.error(f"Стратегия не вернула корректные результаты.")
             continue
+
+        logger.info(f"z1 =: {zigzag["z1"]}, z2 =: {zigzag["z2"]}, z2_index: {zigzag['z2_index']} direction: {zigzag['direction']}")        
+        logger.info(f"------")        
+        direction = zigzag["direction"]
+        z1 = zigzag["z1"]
+        z2 = zigzag["z2"]
         
         if direction == -1 and (previous_direction == 1 or previous_direction == None):
-            logger.info("🎢 Запуск расчета данных по ордерам по стратегии.")
-            logger.info(f"------------Сигнал на покупку {data_df.index[i]} Buy")
-            logger.info(f"Направление ZigZag: {direction}, z1 = {z1} z1 = {z2}")
+            logger.info(f"🎢 Расчет сделки на [bold green] BUY [/bold green] / на баре - {data_df.index[i]} ")
 
             for level, value in fiboLev.items():
                 logger.info(f"Уровень Фибоначчи {level}%: {value}")
@@ -102,9 +105,7 @@ def backtest_coin(data_df):
             previous_direction = -1
             
         if direction == 1 and (previous_direction == -1 or previous_direction == None):
-            logger.info("🎢 Запуск расчета данных по ордерам по стратегии.")
-            logger.info(f"------------Сигнал на покупку {data_df.index[i]} sell")
-            logger.info(f"Направление ZigZag: {direction}, z1 = {z1} z1 = {z2}")
+            logger.info(f"🎢 Расчет сделки на [bold red] SELL [/bold red] / на баре - {data_df.index[i]} ")    
 
             for level, value in fiboLev.items():
                 logger.info(f"Уровень Фибоначчи {level}%: {value}")

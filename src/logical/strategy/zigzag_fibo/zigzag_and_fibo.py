@@ -10,28 +10,30 @@ from src.config.config import config
 # расчет стратегии ZigZag и Фибоначчи 
 # на выходе получаем dtaframe с рассчитанными индикаторами
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def calculete_strategy(data_full):
+def calculete_strategy(data_df):
     """
     Запуск стратегии ZigZag и уровней Фибоначчи на переданных данных.
     """
     try:
-            # берем из конфигурации минимальное количество баров для расчета стратегии
-        MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
-        # обрезать нужное количество баров для расчета индикаторов
-        data_df = data_full.tail(MIN_BARS)
+        #     # берем из конфигурации минимальное количество баров для расчета стратегии
+        # MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
+        # # обрезать нужное количество баров для расчета индикаторов
+        # data_df = data_full.tail(MIN_BARS)
         
         # Расчет индикаторов ZigZag
         from src.logical.indicators.zigzag import ZigZag
         zigzag_indicator = ZigZag()
-        z1, z2, direction = zigzag_indicator.calculate_zigzag(data_df)
+        # z1, z2, direction, z2_index = zigzag_indicator.calculate_zigzag(data_df)
+        zigzag = zigzag_indicator.calculate_zigzag(data_df)
         
         # Расчет уровней Фибоначчи
-        fiboLev = fibonacci_levels(z1, z2, direction)
+        fiboLev = fibonacci_levels(zigzag["z1"], zigzag["z2"], zigzag["direction"]) # fiboLev = fibonacci_levels(z1, z2, direction)
 
-        return direction, z1, z2, fiboLev
+        # return direction, z1, z2, fiboLev
+        return zigzag, fiboLev
     except Exception as e:
         logger.error(f"Ошибка при запуске стратегии ZigZag и Фибоначчи: {e}")
-        return None, None, None, None
+        return None, None
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++

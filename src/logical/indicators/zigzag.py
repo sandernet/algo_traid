@@ -62,6 +62,7 @@ class ZigZag:
             if dir_curr > 0:
                 if _high[i] > z2:
                     z2 = _high[i]
+                    z2_index = df.index[i]
                     z = _low[i]
                 if _low[i] < z:
                     z = _low[i]
@@ -70,6 +71,7 @@ class ZigZag:
             elif dir_curr < 0:
                 if _low[i] < z2:
                     z2 = _low[i]
+                    z2_index = df.index[i]
                     z = _high[i]
                 if _high[i] > z:
                     z = _high[i]
@@ -80,10 +82,18 @@ class ZigZag:
                     "z": z,
                     "z1": z1,
                     "z2": z2,
+                    "z2_index": z2_index
                 })
             
-        zz = pd.DataFrame(bars)
-        return  z1, z2, zz['direction'].iloc[-1]
+        ZigZag = pd.DataFrame(bars)
+        last_values = {
+            'z1': ZigZag['z1'].iloc[-1],
+            'z2': ZigZag['z2'].iloc[-1],
+            'direction': ZigZag['direction'].iloc[-1],
+            'z2_index': ZigZag['z2_index'].iloc[-1]
+        }
+        
+        return  last_values  #z1, z2, zz['direction'].iloc[-1], z2_index
     
     # ----------------------
     # Вспомогательные методы для работы с точками ZigZag

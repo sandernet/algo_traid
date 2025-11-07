@@ -2,6 +2,7 @@
 import logging
 import logging.handlers
 import os
+from rich.logging import RichHandler
 from src.config.config import config # Импортируем наш модуль конфигурации
 
 class LoggerManager:
@@ -27,8 +28,11 @@ class LoggerManager:
         # 2. Форматтер
         # Добавляем %(name)s (имя логгера, т.е. модуля) для поддержки модульности
         self.formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            '%(message)s'
         )
+        self.formatter_files = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )   
 
         # 3. Базовая настройка
         # Устанавливаем корневой уровень для всего приложения
@@ -53,7 +57,7 @@ class LoggerManager:
             backupCount=self.backup_count,
             encoding='utf-8'
         )
-        file_handler.setFormatter(self.formatter)
+        file_handler.setFormatter(self.formatter_files)
         logging.getLogger().addHandler(file_handler)
         
         self.get_logger(__name__).info(
@@ -62,7 +66,16 @@ class LoggerManager:
 
     def _setup_console_handler(self):
         """Настраивает обработчик для вывода в консоль."""
-        console_handler = logging.StreamHandler()
+        # console_handler = logging.StreamHandler()
+        console_handler = RichHandler(
+            markup=True,
+            rich_tracebacks=True,
+            show_time=True,
+            show_level=True,
+            show_path=True,
+            enable_link_path = True
+             
+        )
         console_handler.setFormatter(self.formatter)
         logging.getLogger().addHandler(console_handler)
 
