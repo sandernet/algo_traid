@@ -17,6 +17,9 @@ COINS:
     AUTO_TRADING: true
     START_DEPOSIT_USDT: 100
     MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
+    LEVERAGE: 5  # Плечо
+    # Размер ордера (в usdt )
+    POSITION_SIZE  : 100    
 
   # - SYMBOL: BNB
   #   TIMEFRAME: D
@@ -66,9 +69,8 @@ STRATEGY_SETTINGS:
     - 1.272  # Уровень 5
     - 1.618  # Уровень 6
     - 2.000  # Уровень 7
-  LEVERAGE: 5  # Плечо
-  # Размер ордера (в usdt )
-  POSITION_SIZE  : 100
+ 
+
 
 # ======================================================================
 # СЕКЦИЯ РИСК-МЕНЕДЖМЕНТА (RISK_SETTINGS)
@@ -103,7 +105,7 @@ LOGGING_SETTINGS:
   # Уровень логирования: DEBUG, INFO, WARNING, ERROR, CRITICAL
   LEVEL: INFO
   # Директория для хранения логов
-  LOG_DIR: logs
+  LOG_DIR: LOGS
   # Имя основного файла логов
   FILENAME: logs.log
   # Максимальный размер файла логов перед ротацией (в байтах: 10МБ = 10485760)

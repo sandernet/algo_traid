@@ -16,13 +16,13 @@ def main():
         action='store_true',  # Флаг (без значения)
         help='Загрузить или обновить исторические данные c биржи'
     )
-    # Добавляем параметр --debugger_strategy
+    # Добавляем параметр --debug
     parser.add_argument(
         '--debug',
         action='store_true',  # Флаг (без значения)
         help='запуск отладки стратегии на локальных данных'
     )
-    # Добавляем параметр --backtester
+    # Добавляем параметр --btest
     data_dir = config.get_setting("MODE_SETTINGS", "DATA_DIR")
     parser.add_argument(
         '--btest',

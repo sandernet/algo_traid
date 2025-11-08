@@ -13,6 +13,7 @@ class TradePosition:
     take_profits: List[TakeProfitLevel] 
     direction: str  # 'BUY' или 'SELL'
     status: str = 'open' # 'open', 'closed', "None"
+    leverage: int = 1
 
 
 class OrderBlock(TradePosition):

@@ -36,13 +36,11 @@ def run_data_update_pipeline():
         timeframe = coin.get("TIMEFRAME")
         logger.info(f"Монета: {symbol}, Таймфрейм: {timeframe}")
        
-        fetcher = DataFetcher(
-            symbol=symbol, 
-            timeframe=timeframe, 
+        fetcher = DataFetcher( coin,
             exchange_id=exchange_id, 
             limit=limit,
             directory=data_dir,
-        )
+            )
         logger.info("Загрузка данных за всю историю...")
         data_df = fetcher.fetch_entire_history()
         

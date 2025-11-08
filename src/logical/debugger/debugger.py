@@ -35,9 +35,7 @@ def debugger_strategy():
         timeframe = coin.get("TIMEFRAME")
         logger.info(f"🪙 Монета: {symbol}, ↔️ Таймфрейм: {timeframe}")
         # 1. Инициализируем DataFetcher
-        fetcher = DataFetcher( 
-            symbol=symbol, 
-            timeframe=timeframe, 
+        fetcher = DataFetcher( coin,
             exchange_id=exchange_id, 
             limit=limit,
             directory=data_dir,
