@@ -92,7 +92,7 @@ MODE_SETTINGS:
   # Директория для хранения исторических данных
   DATA_DIR: DATA_OHLCV/
 
-  FULL_DATAFILE: true
+  FULL_DATAFILE: false
   # начальная ДАТА для бэктеста
   START_DATE: "2024-11-01"
   # конечная ДАТА для бэктеста    

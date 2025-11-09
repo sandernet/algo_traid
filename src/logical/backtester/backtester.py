@@ -13,13 +13,13 @@ from src.config.config import config
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculete_strategy
 
 
-from src.risk_manager.order_block import TradePosition, TakeProfitLevel
+from src.risk_manager.trade_position import Position, TakeProfitLevel, StopLoss
 
 
 # ====================================================
 # Запуск бэктеста для одной монеты
 # ====================================================
-def backtest_coin(data_df):
+def backtest_coin(data_df, symbol, tick_size):
     """
     Запуск бэктеста с данными, загруженными из локального файла.
     """
@@ -31,7 +31,7 @@ def backtest_coin(data_df):
     
     previous_direction = None
     for i in range(MIN_BARS, len(data_df)):
-        logger.info(f"[yellow]========== Обработка бара {data_df.index[i]}==========[/yellow]")
+        logger.info(f"[yellow]== Обработка бара {data_df.index[i]} === open: {data_df['open'].iloc[i]}, high: {data_df['high'].iloc[i]}, low: {data_df['low'].iloc[i]}, close: {data_df['close'].iloc[i]}[/yellow]")
         current_data = data_df.iloc[i-MIN_BARS : i ]
             
         # Применяем функцию к каждой строке
@@ -41,10 +41,9 @@ def backtest_coin(data_df):
             logger.error(f"Стратегия не вернула корректные результаты.")
             continue
 
-        logger.info(f"z1 =: {zigzag["z1"]}, z2 =: {zigzag["z2"]}, z2_index: {zigzag['z2_index']} direction: {zigzag['direction']}")        
-     
-        direction = zigzag["direction"]
+        logger.info(f"ZigZag / z1 =: {zigzag["z1"]}, z2 =: {zigzag["z2"]}, z2_index: {zigzag['z2_index']} direction: {zigzag['direction']}")        
 
+        direction = zigzag["direction"]
         
         if direction == -1 and (previous_direction == 1 or previous_direction == None):
             logger.info(f"🎢 Расчет сделки на [bold green] BUY [/bold green] / на баре - {data_df.index[i]} ")
@@ -57,24 +56,19 @@ def backtest_coin(data_df):
             # перебераем все 5 тейков в обратном порядке 
             for level, value in list(fiboLev.items())[:5][::-1]:
                 # logger.info(f"Уровень Фибоначчи {level}%: {value}")
-                tps.append(TakeProfitLevel(price=value, volume=0.2)) 
+                tps.append(TakeProfitLevel(price=value, volume=0.2, tick_size=tick_size)) 
         
-            trade = TradePosition(
+            position = Position(
+                symbol=symbol,
+                direction='long',
                 entry_price=entry_price,
-                stop_loss=stop_loss,
-                take_profits=tps,
-                direction='long'
-
+                volume=0.2,
+                bar_index=data_df.index[i],
+                tick_size=tick_size,
             )
-            
-            logger.info(f"Сделка создана: {trade.__dict__}")            
-            # for level, value in fiboLev.items():
-            #     logger.info(f"Уровень Фибоначчи {level}%: {value}")
-            
-            # запускаем расчет ордеров по стратегии
-            # from src.risk_manager.risk_manager import RiskManager
-            # risk_manager = RiskManager()
-            # risk_manager.calculate_position_size()
+            position.set_take_profits(tps)
+            position.add_stop_loss(StopLoss(price=stop_loss, volume=1, tick_size=tick_size))
+            logger.info(f"Сделка создана: {position}, {position.status}")            
             previous_direction = -1
             
         if direction == 1 and (previous_direction == -1 or previous_direction == None):
@@ -102,12 +96,14 @@ def select_range(data_df):
     end_date = config.get_setting("MODE_SETTINGS", "END_DATE")
     
     # Если full_datafile = False, то возвращаем исходный DataFrame
-    if not full_datafile:
+    if full_datafile:
+        logger.info("Используется полный исторический диапазон.")
         return data_df
     
     # Преобразование строковых дат в datetime объекты
     start_dt = pd.to_datetime(start_date)
     end_dt = pd.to_datetime(end_date)
+    logger.info(f"+++ Запуск бэктеста на диапазоне с: {start_dt} по {end_dt}")
     
     # Фильтрация DataFrame по диапазону дат
     filtered_df = data_df[(data_df.index >= start_dt) & (data_df.index <= end_dt)].copy()
@@ -157,7 +153,7 @@ def run_local_backtest():
             logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
             select_data = select_range(data_df)
             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктестера
-            backtest_coin(select_data)
+            backtest_coin(select_data, symbol, tick_size)
         else:
             logger.error(f"Невозможно запустить бэктест для {symbol}: данные не загружены.")
         
