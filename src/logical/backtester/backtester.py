@@ -1,4 +1,4 @@
-# backtester	Тестирование стратегии на исторических данных.	
+# backtest	Тестирование стратегии на исторических данных.	
 # Симуляция выполнения сделок. 
 # Расчет метрик производительности (прибыльность, просадка, Sharpe Ratio).
 
@@ -9,10 +9,7 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 from src.config.config import config
-
-from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculete_strategy
-
-
+from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculate_strategy
 from src.risk_manager.trade_position import Position, TakeProfitLevel, StopLoss
 
 
@@ -26,7 +23,7 @@ def backtest_coin(data_df, symbol, tick_size):
     MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
     
     if MIN_BARS > len(data_df):
-        logger.error(f"Невозможно запустить бэктест: не хватает баров для расчета индикаторов.")
+        logger.error(f"Невозможно запустить бектест: не хватает баров для расчета индикаторов.")
         return
     
     previous_direction = None
@@ -34,8 +31,8 @@ def backtest_coin(data_df, symbol, tick_size):
         logger.info(f"[yellow]== Обработка бара {data_df.index[i]} === open: {data_df['open'].iloc[i]}, high: {data_df['high'].iloc[i]}, low: {data_df['low'].iloc[i]}, close: {data_df['close'].iloc[i]}[/yellow]")
         current_data = data_df.iloc[i-MIN_BARS : i ]
             
-        # Применяем функцию к каждой строке
-        zigzag, fiboLev = calculete_strategy(current_data)
+        # рассчитываем индикаторы стратегии
+        zigzag, fiboLev = calculate_strategy(current_data)
        
         if zigzag is None or fiboLev is None:
             logger.error(f"Стратегия не вернула корректные результаты.")
@@ -53,7 +50,7 @@ def backtest_coin(data_df, symbol, tick_size):
             
             # Создание сделки
             tps= []
-            # перебераем все 5 тейков в обратном порядке 
+            # перебираем все 5 тейков в обратном порядке 
             for level, value in list(fiboLev.items())[:5][::-1]:
                 # logger.info(f"Уровень Фибоначчи {level}%: {value}")
                 tps.append(TakeProfitLevel(price=value, volume=0.2, tick_size=tick_size)) 
@@ -111,7 +108,7 @@ def select_range(data_df):
     return filtered_df
 
 
-# точка входа для бэктестера
+# точка входа для бэктеста
 # ====================================================
 def run_local_backtest():
     """Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации."""
@@ -152,8 +149,8 @@ def run_local_backtest():
         if data_df is not None:
             logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
             select_data = select_range(data_df)
-            #  Здесь вы передаете data_df в ваш модуль стратегии или бэктестера
+            #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
             backtest_coin(select_data, symbol, tick_size)
         else:
-            logger.error(f"Невозможно запустить бэктест для {symbol}: данные не загружены.")
+            logger.error(f"Невозможно запустить бектест для {symbol}: данные не загружены.")
         

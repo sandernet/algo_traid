@@ -6,7 +6,7 @@ logger = get_logger(__name__)
 
 from src.config.config import config
 
-# точка входа для бэктестера
+# точка входа для бектеста
 # ====================================================
 def debugger_strategy():
     """Отладка стратегии"""
@@ -45,15 +45,15 @@ def debugger_strategy():
     
         if data_full is not None:
             logger.info(f"🚀 Запуск стратегии 〽️ ZigZag и уровней Фибоначчи. {symbol} с локальными данными.")
-            #  Здесь вы передаете data_full в ваш модуль стратегии или бэктестера
+            #  Здесь вы передаете data_full в ваш модуль стратегии или бектеста
 
-            from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculete_strategy
+            from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculate_strategy
             
-            zigzag, fiboLev = calculete_strategy(data_full)
+            zigzag, fiboLev = calculate_strategy(data_full)
             
             if zigzag is None or fiboLev is None:
                 logger.error(f"Стратегия не вернула корректные результаты для {symbol}.")
                 continue
             
         else:
-            logger.error(f"Невозможно запустить бэктест для {symbol}: данные не загружены.")
+            logger.error(f"Невозможно запустить бектест для {symbol}: данные не загружены.")

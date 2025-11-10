@@ -15,7 +15,7 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-# TODO: Добавить информацию о монете при иницыализации класса
+# TODO: Добавить информацию о монете при инициализации класса
 
 class DataFetcher:
     """
@@ -206,7 +206,7 @@ class DataFetcher:
         df = pd.DataFrame(all_ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         
         # Так как загрузка шла от нового к старому, список all_ohlcv будет обратным.
-        # Сортируем его по таймштампу, чтобы данные были в хронологическом порядке.
+        # Сортируем его по времени, чтобы данные были в хронологическом порядке.
         df.sort_values('timestamp', ascending=True, inplace=True) 
         df.drop_duplicates(subset=['timestamp'], inplace=True) 
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
@@ -332,7 +332,7 @@ class DataFetcher:
             # index_col=0 указывает, что первый столбец (таймштамп) является индексом.
             df = pd.read_csv(file_path, index_col=0)
             
-            # 2. Постобработка (как и после загрузки с биржи)
+            # 2. Пост обработка (как и после загрузки с биржи)
             
             # Конвертация индекса (таймштампа) в datetime
             # Имя индекса должно соответствовать тому, что мы сохраняли ('timestamp')

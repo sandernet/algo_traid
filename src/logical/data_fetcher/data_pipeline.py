@@ -48,8 +48,8 @@ def run_data_update_pipeline():
         if data_df is not None:
             logger.info(f"[{symbol}] Загружено {len(data_df)} свечей, таймфрейм {timeframe} - вся история.")
          
-            # Сохранить в подпапку 'csv_files'
+            # Сохранить в под папку 'csv_files'
             fetcher.export_to_csv(data_df) 
                 
-                # Сохранить в подпапку 'excel_files'
+                # Сохранить в под папку 'excel_files'
             fetcher.export_to_excel(data_df)
