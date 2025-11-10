@@ -9,8 +9,8 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 from src.config.config import config
-from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculate_strategy
-from src.risk_manager.trade_position import Position, TakeProfitLevel, StopLoss
+from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
+
 
 
 # ====================================================
@@ -27,7 +27,9 @@ def backtest_coin(data_df, symbol, tick_size):
         logger.error(f"Невозможно запустить бектест: не хватает баров для расчета индикаторов.")
         return
     
-    previous_direction = None
+    # Инициализация стратегии    
+    strategy = ZigZagAndFibo(symbol, tick_size)
+
     # перебираем все бары начиная с минимального количества
     # Это нужно для того, чтобы индикаторы были заполнены
     for i in range(MIN_BARS, len(data_df)):
@@ -35,52 +37,12 @@ def backtest_coin(data_df, symbol, tick_size):
         current_data = data_df.iloc[i-MIN_BARS : i ]
             
         # рассчитываем индикаторы стратегии
-        zigzag, fiboLev = calculate_strategy(current_data)
+        position = strategy.calculate_strategy(current_data)
        
-        if zigzag is None or fiboLev is None:
-            logger.error(f"Стратегия не вернула корректные результаты.")
-            continue
-
-        logger.info(f"ZigZag / z1 =: {zigzag["z1"]}, z2 =: {zigzag["z2"]}, z2_index: {zigzag['z2_index']} direction: {zigzag['direction']}")        
-
-        direction = zigzag["direction"]
+        if position is not None:
+            logger.info(f"Сигнала нет, текущий бар")
         
-        if direction == -1 and (previous_direction == 1 or previous_direction == None):
-            logger.info(f"🎢 Расчет сделки на [bold green] BUY [/bold green] / на баре - {data_df.index[i]} ")
-            
-            entry_price = data_df["open"].iloc[i]
-            stop_loss = fiboLev[161.8]
-            
-            # Создание сделки
-            tps= []
-            # перебираем все 5 тейков в обратном порядке 
-            for level, value in list(fiboLev.items())[:5][::-1]:
-                # logger.info(f"Уровень Фибоначчи {level}%: {value}")
-                tps.append(TakeProfitLevel(price=value, volume=0.2, tick_size=tick_size)) 
-        
-            position = Position(
-                symbol=symbol,
-                direction='long',
-                entry_price=entry_price,
-                volume=0.2,
-                bar_index=data_df.index[i],
-                tick_size=tick_size,
-            )
-            position.set_take_profits(tps)
-            position.add_stop_loss(StopLoss(price=stop_loss, volume=1, tick_size=tick_size))
-            logger.info(f"Сделка создана: {position}, {position.status}")            
-            previous_direction = -1
-            
-        if direction == 1 and (previous_direction == -1 or previous_direction == None):
-            logger.info(f"🎢 Расчет сделки на [bold red] SELL [/bold red] / на баре - {data_df.index[i]} ")    
 
-            for level, value in fiboLev.items():
-                logger.info(f"Уровень Фибоначчи {level}%: {value}")
-            # запускаем расчет ордеров по стратегии
-            # from src.risk_manager.risk_manager import RiskManager
-            # risk_manager = RiskManager()
-            # risk_manager.calculate_position_size()
-            previous_direction = 1
 
 # ====================================================
 # Выбор диапазона дат для бэктеста

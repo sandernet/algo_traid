@@ -31,7 +31,7 @@ class TakeProfitLevel:
 class StopLoss:
     def __init__(self, price: float, volume: float, tick_size: float ):
         self.price = round_to_step(price, tick_size)  # цена cтоп-лосс
-        self.volume = volume  # обьем (например, 0.2 = 20%) 
+        self.volume = volume  # объем (например, 0.2 = 20%) 
         self.status = Status.ACTIVE  # статус
         self.bar_executed = None  # индекс бара, в котором срабатывает стоп-лосс
         
@@ -50,7 +50,7 @@ class Position:
         self.take_profits: List[TakeProfitLevel] = []  # список Take Profit
         self.stop_loss: Optional[StopLoss] = None  # один стоп-лосс
 
-        self.bar_opened = bar_index  # индекс бара, в котором была открыта позицияы
+        self.bar_opened = bar_index  # индекс бара, в котором была открыта позиция
         self.bar_closed = None  # индекс бара, в котором была закрыта позиция
         self.profit = None
     
