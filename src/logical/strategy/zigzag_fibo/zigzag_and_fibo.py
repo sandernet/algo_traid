@@ -41,40 +41,53 @@ class ZigZagAndFibo:
         
         # Проверяем есть открытую позицию
         if position.status == PositionStatus.NONE:
-            logger.info(f"Открытой позиций нет. Создаем новую позицию.")
+            logger.info(f"Открытой позиций нет. запускаем стратегию")
 
-            logger.info(f"🎢 Расчет сделки на [bold red] SELL [/bold red] / на баре - {data_df.index[-1]} ")
             direction = zigzag["direction"]
+            z2_index = zigzag["z2_index"]
+            index_bar = data_df.index[-1]
+            
+                        
+            # Проверяем индекс бара zigzag он должен совпадать с свечей расчета
+            if index_bar != z2_index:
+                logger.info(f"z2_index {z2_index} бара расчета образовался раньше текущего бара {index_bar}")
+                # logger.info(f"index_bar {index_bar} != z2_index {z2_index}")
+                return position
+            
+            logger.info(f"index_bar {index_bar} == z2_index {z2_index}")
+            
+            # проверяем цену входа в позицию с первым тейком 1 уровня фибоначчи
             
             if direction == -1 and (self.previous_direction == 1 or self.previous_direction == None):
                 logger.info(f"🎢 Расчет сделки на [bold green] BUY [/bold green] / на баре - {data_df.index[-1]} ")
                 
-                entry_price = data_df["open"].iloc[-1]
-                stop_loss = fiboLev[161.8]
+                entry_price = data_df["close"].iloc[-1]
+                stop_loss = fiboLev[161.8]['level_price']
+                stop_loss_volume = fiboLev[161.8]['volume']
                 
                 # Создание сделки
                 tps= []
                 # перебираем все 5 тейков в обратном порядке 
                 for level, value in list(fiboLev.items())[:5][::-1]:
                     # logger.info(f"Уровень Фибоначчи {level}%: {value}")
-                    tps.append(TakeProfitLevel(price=value, volume=0.2, tick_size=self.tick_size)) 
+                    tps.append(TakeProfitLevel(price=value['level_price'], volume=value['volume'], tick_size=self.tick_size)) 
             
-                position.setPosition(self.symbol, direction, entry_price, 1, data_df.index[-1], self.tick_size)
+                position.setPosition(self.symbol, direction, entry_price, stop_loss_volume, data_df.index[-1], self.tick_size)
                 position.set_take_profits(tps)
                 position.add_stop_loss(StopLoss(price=stop_loss, volume=1, tick_size=self.tick_size))
                 logger.info(f"Сделка создана: {position}, {position.status}")            
                 self.previous_direction = -1
                 
-            if direction == 1 and (self.previous_direction == -1 or self.previous_direction == None):
-                logger.info(f"🎢 Расчет сделки на [bold red] SELL [/bold red] / на баре - {data_df.index[-1]} ")    
+            # if direction == 1 and (self.previous_direction == -1 or self.previous_direction == None):
+            #     logger.info(f"🎢 Расчет сделки на [bold red] SELL [/bold red] / на баре - {data_df.index[-1]} ")    
 
-                for level, value in fiboLev.items():
-                    logger.info(f"Уровень Фибоначчи {level}%: {value}")
-                # запускаем расчет ордеров по стратегии
-                # from src.risk_manager.risk_manager import RiskManager
-                # risk_manager = RiskManager()
-                # risk_manager.calculate_position_size()
-                self.previous_direction = 1
+            #     for level, value in fiboLev.items():
+            #         logger.info(f"Уровень Фибоначчи {level}%: {value}")
+            #     # запускаем расчет ордеров по стратегии
+            #     # from src.risk_manager.risk_manager import RiskManager
+            #     # risk_manager = RiskManager()
+            #     # risk_manager.calculate_position_size()
+            #     self.previous_direction = 1
 
             return position
 
@@ -82,12 +95,10 @@ class ZigZagAndFibo:
             logger.info(f"Позиция открыта. делаем расчеты тейков и стопов.")        
 
             return position
-
-        # Проверки
-        # какой сигнал дает zigzag сформирована линия зигзага
-        # Проверяем на какой свече сформирована z2 линии зигзага
-        # проверяем цену входа в позицию с первым тейком 1 уровня фибоначчи
-        # 
+        
+        
+        return position
+        
         
 
     

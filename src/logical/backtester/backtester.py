@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 
 from src.config.config import config
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
-from src.risk_manager.trade_position import Position
+from src.risk_manager.trade_position import Position, PositionStatus
 
 
 # ====================================================
@@ -39,8 +39,14 @@ def backtest_coin(data_df, symbol, tick_size):
         # рассчитываем индикаторы стратегии
         position = strategy.calculate_strategy(current_data, position)
        
-        if position is not None:
+        if position.status == PositionStatus.NONE:
             logger.info(f"Сигнала нет, текущий бар")
+            continue
+            
+        if position.status == PositionStatus.ACTIVE:
+            logger.info(f"Открыта позиция {position}")
+            # logger.info(f"Создана позиция {position}")
+            continue
         
 
 

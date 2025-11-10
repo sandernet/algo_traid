@@ -76,11 +76,11 @@ class Position:
         """Добавляет стоп-лосс (заменяет предыдущий)."""
         self.stop_loss = sl
         
-    # def __repr__(self):
-    #     return (f"Position(symbol={self.symbol}, entry_price={self.entry_price}, volume={self.volume}, \n"
-    #             f"status={self.status.value} \n"
-    #             f"{self.take_profits}\n" 
-    #             f"{self.stop_loss})")
+    def __repr__(self):
+        return (f"Position(symbol={self.symbol}, entry_price={self.entry_price}, volume={self.volume}, \n"
+                f"status={self.status.value} \n"
+                f"{self.take_profits}\n" 
+                f"{self.stop_loss})")
 
 
 @staticmethod

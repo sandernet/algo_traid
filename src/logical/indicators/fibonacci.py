@@ -17,13 +17,13 @@ def fibonacci_levels(z1: float, z2: float, direction: int) -> dict:
     if direction == 1:
         # коррекция вниз
         for r in fib_ratios:
-            level = z1 + (z2 - z1) * r
-            levels[round(r * 100, 1)] = level
+            level = z1 + (z2 - z1) * r['level']
+            levels[round(r['level'] * 100, 1)] = {'level_price': level, 'volume': r['volume']}
     elif direction == -1:
         # коррекция вверх
         for r in fib_ratios:
-            level = z1 - (z1 - z2) * r
-            levels[round(r * 100, 1)] = level
+            level = z1 - (z1 - z2) * r['level']
+            levels[round(r['level'] * 100, 1)] =  {'level_price': level, 'volume': r['volume']}
     else:
         raise ValueError("direction должен быть 'up' или 'down'")
 
