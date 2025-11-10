@@ -9,6 +9,7 @@ class PositionStatus(Enum):
     TAKEN = "taken" # позиция закрыта в прибыль
     STOPPED = "stopped" # позиция закрыта в убыток
     CANCELLED = "cancelled" # позиция отменена
+    NONE = "none" # позиция не инициализирована
     
 # Статусы Take Profit
 class Status(Enum):
@@ -40,7 +41,12 @@ class StopLoss:
 
 
 class Position:
-    def __init__(self, symbol, direction, entry_price: float,  volume, bar_index, tick_size):
+    
+    def __init__(self):
+        self.status = PositionStatus.NONE  # позицыя не создана
+        
+        
+    def setPosition(self, symbol, direction, entry_price: float,  volume, bar_index, tick_size):
         self.symbol = symbol # название монеты
         self.direction = direction
         self.entry_price = round_to_step(entry_price, tick_size) # entry_price  # цена входа
@@ -54,6 +60,10 @@ class Position:
         self.bar_closed = None  # индекс бара, в котором была закрыта позиция
         self.profit = None
     
+    def is_empty(self) -> bool:
+        """Проверяет, является ли позиция пустой (не инициализированной)"""
+        return not hasattr(self, 'symbol') or self.symbol is None
+    
     def set_take_profits(self, take_profits: List[TakeProfitLevel]):
         """Устанавливает все Take Profit уровни разом."""
         self.take_profits = take_profits
@@ -66,11 +76,11 @@ class Position:
         """Добавляет стоп-лосс (заменяет предыдущий)."""
         self.stop_loss = sl
         
-    def __repr__(self):
-        return (f"Position(symbol={self.symbol}, entry_price={self.entry_price}, volume={self.volume}, \n"
-                f"status={self.status.value} \n"
-                f"{self.take_profits}\n" 
-                f"{self.stop_loss})")
+    # def __repr__(self):
+    #     return (f"Position(symbol={self.symbol}, entry_price={self.entry_price}, volume={self.volume}, \n"
+    #             f"status={self.status.value} \n"
+    #             f"{self.take_profits}\n" 
+    #             f"{self.stop_loss})")
 
 
 @staticmethod

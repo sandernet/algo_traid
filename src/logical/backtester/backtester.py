@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 
 from src.config.config import config
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
-
+from src.risk_manager.trade_position import Position
 
 
 # ====================================================
@@ -29,7 +29,7 @@ def backtest_coin(data_df, symbol, tick_size):
     
     # Инициализация стратегии    
     strategy = ZigZagAndFibo(symbol, tick_size)
-
+    position = Position()
     # перебираем все бары начиная с минимального количества
     # Это нужно для того, чтобы индикаторы были заполнены
     for i in range(MIN_BARS, len(data_df)):
@@ -37,7 +37,7 @@ def backtest_coin(data_df, symbol, tick_size):
         current_data = data_df.iloc[i-MIN_BARS : i ]
             
         # рассчитываем индикаторы стратегии
-        position = strategy.calculate_strategy(current_data)
+        position = strategy.calculate_strategy(current_data, position)
        
         if position is not None:
             logger.info(f"Сигнала нет, текущий бар")
