@@ -20,6 +20,7 @@ def backtest_coin(data_df, symbol, tick_size):
     """
     Запуск бэктеста с данными, загруженными из локального файла.
     """
+    # Получение минимальное количество баров из настроек
     MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
     
     if MIN_BARS > len(data_df):
@@ -27,6 +28,8 @@ def backtest_coin(data_df, symbol, tick_size):
         return
     
     previous_direction = None
+    # перебираем все бары начиная с минимального количества
+    # Это нужно для того, чтобы индикаторы были заполнены
     for i in range(MIN_BARS, len(data_df)):
         logger.info(f"[yellow]== Обработка бара {data_df.index[i]} === open: {data_df['open'].iloc[i]}, high: {data_df['high'].iloc[i]}, low: {data_df['low'].iloc[i]}, close: {data_df['close'].iloc[i]}[/yellow]")
         current_data = data_df.iloc[i-MIN_BARS : i ]
@@ -79,10 +82,13 @@ def backtest_coin(data_df, symbol, tick_size):
             # risk_manager.calculate_position_size()
             previous_direction = 1
 
-    
+# ====================================================
+# Выбор диапазона дат для бэктеста
+# ==================================================== 
 def select_range(data_df):
     """
     Фильтрация DataFrame по заданному диапазону дат.
+    Если full_datafile = True, то возвращаем исходный DataFrame
     
     :param data_df: pd.DataFrame — исходный DataFrame с данными
     :return: pd.DataFrame — отфильтрованный DataFrame
@@ -94,7 +100,7 @@ def select_range(data_df):
     
     # Если full_datafile = False, то возвращаем исходный DataFrame
     if full_datafile:
-        logger.info("Используется полный исторический диапазон.")
+        logger.info("Используется полный исторический диапазон. full_datafile = True")
         return data_df
     
     # Преобразование строковых дат в datetime объекты
