@@ -17,6 +17,7 @@ from src.risk_manager.trade_position import Position, TakeProfitLevel, StopLoss
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 class ZigZagAndFibo:
+    # 
     def __init__(self, symbol: str, tick_size: float):
         self.symbol = symbol # название монеты
         self.tick_size = tick_size # размер шага цены и минимальное изменение цены
@@ -28,7 +29,6 @@ class ZigZagAndFibo:
         Запуск стратегии ZigZag и уровней Фибоначчи на переданных данных.
         Определяем есть ли сигнал и если есть создаем позицию
         """
-        
         # Расчет индикаторов
         zigzag, fiboLev = calculate_indicators(data_df)
         
