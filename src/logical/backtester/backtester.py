@@ -16,16 +16,23 @@ from src.risk_manager.trade_position import Position, PositionStatus
 # ====================================================
 # Запуск бэктеста для одной монеты
 # ====================================================
-def backtest_coin(data_df, symbol, tick_size):
+def backtest_coin(data_df, coin) -> list:
     """
     Запуск бэктеста с данными, загруженными из локального файла.
     """
+    
     # Получение минимальное количество баров из настроек
     MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
     
+    symbol = coin.get("SYMBOL")+"/USDT"
+    tick_size = coin.get("MINIMAL_TICK_SIZE")
+    volume_size = coin.get("VOLUME_SIZE")
+    
+    executed_positions = []  # Список для хранения исполненных позиций
+    
     if MIN_BARS > len(data_df):
         logger.error(f"Невозможно запустить бектест: не хватает баров для расчета индикаторов.")
-        return
+        return executed_positions
     
     # Инициализация стратегии    
     strategy = ZigZagAndFibo(symbol, tick_size)
@@ -33,20 +40,47 @@ def backtest_coin(data_df, symbol, tick_size):
     # перебираем все бары начиная с минимального количества
     # Это нужно для того, чтобы индикаторы были заполнены
     for i in range(MIN_BARS, len(data_df)):
+        logger.info(f"[yellow]----------------------------------------------------------- [/yellow]")
         logger.info(f"[yellow]== Обработка бара {data_df.index[i]} === open: {data_df['open'].iloc[i]}, high: {data_df['high'].iloc[i]}, low: {data_df['low'].iloc[i]}, close: {data_df['close'].iloc[i]}[/yellow]")
         current_data = data_df.iloc[i-MIN_BARS : i ]
+        current_bar = data_df.iloc[i]
+        # current_bar = data_df.index[i]
             
         # рассчитываем индикаторы стратегии
-        position = strategy.calculate_strategy(current_data, position)
+        position = strategy.calculate_strategy(current_data,current_bar, position)
        
         if position.status == PositionStatus.NONE:
             logger.info(f"Сигнала нет, текущий бар")
             continue
+        
+        # Если позиция только создана по стратегии добавляем объем позиции    
+        if position.status == PositionStatus.CREATED:
+            # TODO: Добавить в позицию модуль рискМенеджмента
+            position.setVolume_size(volume_size)            
             
+            position.status = PositionStatus.ACTIVE
+            logger.info(f"Создана позиция:  {position}")
+            
+        # Если позиция активна
         if position.status == PositionStatus.ACTIVE:
-            logger.info(f"Открыта позиция {position}")
-            # logger.info(f"Создана позиция {position}")
+            # Добавляем в позицию объем либо подключаем  модуль рискМенеджмента
+            if position.bar_opened  == data_df.index[i-3]: # индекс бара, в котором была открыта позиция - i-3:
+                logger.info(f"Закрытие позиции {position}")
+                position.bar_closed = data_df.index[i] # индекс бара, в котором была закрыта позиция 
+                position.status = PositionStatus.TAKEN
+                
+                # --- Сохраняем копию позиции в отчет ---
+                import copy
+                executed_positions.append(copy.deepcopy(position))
+                
+                logger.info(f"Исполнена позиция статус: {position.status}, объем: {position.volume_size}")
+                logger.info(f"-----------------------------------------------------------------------------")
+                # --- Создаем чистую заготовку для позиции ---
+                position = Position()
+                
             continue
+    
+    return executed_positions
         
 
 
@@ -124,7 +158,11 @@ def run_local_backtest():
             logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
             select_data = select_range(data_df)
             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
-            backtest_coin(select_data, symbol, tick_size)
+            executed_positions = backtest_coin(select_data, coin)
+            
+            executed_positions_df = pd.DataFrame(executed_positions)
+            executed_positions_df.to_csv(f"{data_dir}/{coin.get("SYMBOL")}_positions.csv", index=False)
+            
         else:
             logger.error(f"Невозможно запустить бектест для {symbol}: данные не загружены.")
         

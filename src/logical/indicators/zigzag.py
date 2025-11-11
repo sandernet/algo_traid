@@ -58,6 +58,7 @@ class ZigZag:
             if dir_prev != dir_curr:
                 z1 = z2
                 z2 = z
+                z2_index = df.index[i]
         # === направление вверх ===
             if dir_curr > 0:
                 if _high[i] > z2:

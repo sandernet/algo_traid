@@ -19,7 +19,7 @@ COINS:
     MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
     LEVERAGE: 5  # Плечо
     # Размер ордера (в usdt )
-    POSITION_SIZE  : 100    
+    VOLUME_SIZE  : 100    
 
   # - SYMBOL: BNB
   #   TIMEFRAME: D
