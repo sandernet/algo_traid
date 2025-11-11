@@ -10,7 +10,8 @@ logger = get_logger(__name__)
 
 from src.config.config import config
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
-from src.risk_manager.trade_position import Position, PositionStatus
+from src.risk_manager.trade_position import Position, PositionStatus, TakeProfit_Status
+from src.logical.backtester.repot import TradeReport
 
 
 # ====================================================
@@ -65,15 +66,25 @@ def backtest_coin(data_df, coin) -> list:
         if position.status == PositionStatus.ACTIVE:
             # Добавляем в позицию объем либо подключаем  модуль рискМенеджмента
             if position.bar_opened  == data_df.index[i-3]: # индекс бара, в котором была открыта позиция - i-3:
-                logger.info(f"Закрытие позиции {position}")
+                # logger.info(f"Закрытие позиции {position}")
                 position.bar_closed = data_df.index[i] # индекс бара, в котором была закрыта позиция 
                 position.status = PositionStatus.TAKEN
+                position.take_profits[0].TakeProfit_Status = TakeProfit_Status.PENDING
+                position.take_profits[0].bar_executed = data_df.index[i]
+                position.take_profits[1].TakeProfit_Status = TakeProfit_Status.PENDING
+                position.take_profits[1].bar_executed = data_df.index[i]
+                position.take_profits[2].TakeProfit_Status = TakeProfit_Status.PENDING
+                position.take_profits[2].bar_executed = data_df.index[i]
                 
+                position.Calculate_profit()
+                
+                # logger.info(f"Закрытие позиции {position}")
                 # --- Сохраняем копию позиции в отчет ---
-                import copy
-                executed_positions.append(copy.deepcopy(position))
+
+                report = TradeReport(position)
+                executed_positions.append(report.to_dict())
                 
-                logger.info(f"Исполнена позиция статус: {position.status}, объем: {position.volume_size}")
+                logger.info(f"Исполнена позиция статус: {report.to_json()}")
                 logger.info(f"-----------------------------------------------------------------------------")
                 # --- Создаем чистую заготовку для позиции ---
                 position = Position()

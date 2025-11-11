@@ -29,7 +29,7 @@ class TakeProfitLevel:
         self.volume = volume  # доля от общей позиции (например, 0.2 = 20%)
         self.TakeProfit_Status = TakeProfit_Status.ACTIVE  # статус
         self.bar_executed = None  # индекс бара, в котором был выполнен Take Profit
-        self.profit = None
+        self.profit = Decimal(0.0)
         
     def __repr__(self):
         return f"TakeProfitLevel(price={self.price}, volume={self.volume}, status={self.TakeProfit_Status.value}) \n"
@@ -40,16 +40,15 @@ class StopLoss:
         self.volume = volume  # объем (например, 0.2 = 20%) 
         self.status = TakeProfit_Status.ACTIVE  # статус
         self.bar_executed = None  # индекс бара, в котором срабатывает стоп-лосс
+        self.profit = Decimal(0.0)
         
     def __repr__(self):
         return f"StopLoss(price={self.price}, volume={self.volume}, status={self.status.value})"
 
 
 class Position:
-    
-    
     def __init__(self):
-        self.status = PositionStatus.NONE  # позицыя не создана
+        self.status = PositionStatus.NONE  # позиция не создана
         
         
     def setPosition(self, symbol, direction, entry_price: float, bar_index, tick_size):
@@ -66,6 +65,53 @@ class Position:
         self.bar_closed = None  # индекс бара, в котором была закрыта позиция
         self.profit = None
 
+    def Calculate_profit(self):
+        """
+        Рассчитывает общую прибыль/убыток по позиции
+        исходя из сработавших Take Profit и Stop Loss.
+        """
+        total_profit = Decimal('0.0')
+        total_closed_volume = Decimal('0.0')
+
+        for tp in self.take_profits:
+            if tp.TakeProfit_Status == TakeProfit_Status.CANCELED:
+                continue
+            if tp.bar_executed is not None:
+                closed_volume = Decimal(str(tp.volume)) * Decimal(self.volume_size)
+                if self.direction == Direction.LONG:
+                    profit = Decimal(tp.price - self.entry_price) * closed_volume
+                else:  # SHORT
+                    profit = Decimal(self.entry_price - tp.price) * closed_volume
+                tp.profit = profit
+                total_profit += profit
+                total_closed_volume += closed_volume
+          
+                
+                # Если сработал стоп-лосс — учитываем его
+        if self.stop_loss and self.stop_loss.bar_executed is not None:
+            closed_volume = Decimal(self.volume_size) - total_closed_volume
+            if closed_volume > 0:
+                if self.direction == Direction.LONG:
+                    loss = Decimal(self.stop_loss.price - self.entry_price) * closed_volume
+                else:
+                    loss = Decimal(self.entry_price - self.stop_loss.price) * closed_volume
+                total_profit += loss
+
+        self.profit = total_profit
+        
+
+        # Устанавливаем статус
+        if total_profit > 0:
+            self.profit = total_profit
+            self.status = PositionStatus.TAKEN
+        elif total_profit < 0:
+            self.status = PositionStatus.STOPPED
+            self.profit = total_profit
+        else:
+            self.status = PositionStatus.CANCELLED
+            self.profit = total_profit
+
+        return total_profit
     
     # устанавливает размер позиции
     def setVolume_size(self, volume: float):

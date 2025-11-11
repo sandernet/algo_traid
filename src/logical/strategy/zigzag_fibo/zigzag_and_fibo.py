@@ -64,10 +64,10 @@ class ZigZagAndFibo:
                 logger.info(f"Индикатор zigzag показывает что нужно входить в long {direction_zigzag}")
                 # проверяем цену входа в позицию с первым тейком 1 уровня фибоначчи цена входа должна быть меньше уровня 1
                 if entry_price < fiboLev[78.6]['level_price']:
-                    logger.info(f"Цена входа {entry_price} меньше первого уровня фибоначчи {fiboLev[78.6]['level_price']} [bold green]long[/bold green]")
+                    logger.info(f"Цена входа {entry_price} [bold green]l < [/bold green] {fiboLev[78.6]['level_price']} [bold green]long[/bold green]")
                     direction = Direction.LONG # направление позиции -1 long, 1 short
                 else :
-                    logger.info(f"Цена входа {entry_price} больше первого уровня фибоначчи {fiboLev[78.6]['level_price']}")
+                    logger.info(f"Цена входа {entry_price} [bold red]l > [/bold red] {fiboLev[78.6]['level_price']}")
                     logger.info(f"Пропускаем сигнал на long")
                     return position
 
@@ -75,10 +75,10 @@ class ZigZagAndFibo:
                 logger.info(f"Индикатор zigzag показывает что нужно входить в long {direction_zigzag}")
                 # проверяем цену входа в позицию с первым тейком 1 уровня фибоначчи цена входа должна быть меньше уровня 1
                 if entry_price > fiboLev[78.6]['level_price']:
-                    logger.info(f"Цена входа {entry_price} больше первого уровня фибоначчи {fiboLev[78.6]['level_price']}")
+                    logger.info(f"Цена входа {entry_price} [bold green]l > [/bold green] {fiboLev[78.6]['level_price']}")
                     direction = Direction.SHORT # направление позиции -1 long, 1 short
                 else :
-                    logger.info(f"Цена входа {entry_price} меньше первого уровня фибоначчи {fiboLev[78.6]['level_price']}")
+                    logger.info(f"Цена входа {entry_price} [bold red]l < [/bold red] {fiboLev[78.6]['level_price']}")
                     logger.info(f"Пропускаем сигнал на long")
                     return position
             
