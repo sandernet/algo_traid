@@ -59,11 +59,11 @@ class Position:
         self.status = PositionStatus.CREATED  # статус позиции
         
         self.take_profits: List[TakeProfitLevel] = []  # список Take Profit
-        self.stop_loss: Optional[StopLoss] = None  # один стоп-лосс
+        self.stop_loss: Optional[StopLoss]  = None # один стоп-лосс
 
         self.bar_opened = bar_index  # индекс бара, в котором была открыта позиция
         self.bar_closed = None  # индекс бара, в котором была закрыта позиция
-        self.profit = None
+        self.profit = 0.0
 
     def Calculate_profit(self):
         """

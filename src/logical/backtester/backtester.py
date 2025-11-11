@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 from src.config.config import config
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
 from src.risk_manager.trade_position import Position, PositionStatus, TakeProfit_Status
-from src.logical.backtester.repot import TradeReport
+from src.logical.backtester.repot import TradeReport, generate_html_report
 
 
 # ====================================================
@@ -170,6 +170,9 @@ def run_local_backtest():
             select_data = select_range(data_df)
             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
             executed_positions = backtest_coin(select_data, coin)
+            
+            path = generate_html_report(executed_positions, "trade_report.html")
+            logger.info(f"Saved: {path}")
             
             executed_positions_df = pd.DataFrame(executed_positions)
             executed_positions_df.to_csv(f"{data_dir}/{coin.get("SYMBOL")}_positions.csv", index=False)
