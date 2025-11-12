@@ -161,11 +161,6 @@ class Position:
             # устанавливаем индекс бара в котором был сработан stop_loss
             self.bar_closed = current_bar.name
             full_closed = True  
-                # elif self.direction == Direction.SHORT and low_price <= tp.price:
-                #     # меняем статус
-                #     tp.TakeProfit_Status = TakeProfit_Status.EXECUTED
-                #     # устанавливаем индекс бара в котором был сработан Take Profit
-                #     tp.bar_executed = current_bar.name
         return full_closed
     
     def check_stop_loss(self, current_bar):
