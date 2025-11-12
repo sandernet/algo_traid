@@ -6,6 +6,9 @@ import pandas as pd
 import datetime
 import html
 
+from jinja2 import Environment, FileSystemLoader
+from pathlib import Path
+
 # ====================================================
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
@@ -173,166 +176,48 @@ def to_plain_dict(report_obj: Any) -> dict:
             out[k] = norm(v)
     return out
 
-# -----------------------
-# функция рендера take_profits в HTML строку
-# -----------------------
-def _render_take_profits_html(take_profits: List[dict]) -> str:
-    if not take_profits:
-        return "<i>— нет</i>"
-    rows = []
-    rows.append("<table class='tp-table'><thead><tr>"
-                "<th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th>"
-                "</tr></thead><tbody>")
-    for tp in take_profits:
-        rows.append(
-            "<tr>"
-            f"<td>{html.escape(str(tp.get('id','')))}</td>"
-            f"<td>{html.escape(str(tp.get('price','')))}</td>"
-            f"<td>{html.escape(str(tp.get('volume','')))}</td>"
-            f"<td>{html.escape(str(tp.get('status','')))}</td>"
-            f"<td>{html.escape(str(tp.get('bar_executed','')))}</td>"
-            f"<td>{html.escape(str(tp.get('profit','')))}</td>"
-            "</tr>"
-        )
-    rows.append("</tbody></table>")
-    return "\n".join(rows)
 
 # -----------------------
 # главная функция: генерируем HTML отчет
 # -----------------------
-def generate_html_report(executed_reports: List[Any], target_path: str = "trade_report.html") -> str:
+def generate_html_report(executed_reports, target_path, template_dir):
     """
-    executed_reports: список объектов TradeReport или словарей.
-    target_path: куда сохранить HTML-файл.
-    Вернёт путь к сохранённому файлу.
+    Генерация HTML-отчёта по списку объектов TradeReport или dict.
+    Использует Jinja2-шаблон.
     """
     plain = [to_plain_dict(r) for r in executed_reports]
 
-    # summary stats
-    profits = []
-    for r in plain:
-        p = r.get("profit", 0.0)
-        try:
-            p = float(p)
-        except Exception:
-            p = 0.0
-        profits.append(p)
+    # статистика
+    profits = [float(r.get("profit", 0.0)) for r in plain]
     total_profit = sum(profits)
     trades_count = len(profits)
-    wins = sum(1 for x in profits if x > 0)
-    losses = sum(1 for x in profits if x < 0)
+    wins = sum(1 for p in profits if p > 0)
+    losses = sum(1 for p in profits if p < 0)
     flat = trades_count - wins - losses
     win_rate = (wins / trades_count * 100) if trades_count else 0.0
 
-    # build HTML
-    html_parts = []
-    html_parts.append("""
-<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8"/>
-<title>Trade Report</title>
-<style>
-body{{font-family: Arial, Helvetica, sans-serif; margin:20px; color:#111}}
-h1{{margin-bottom:0.2em}}
-.summary{{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px}}
-.card{{background:#f7f7f9;border:1px solid #e1e1e6;padding:12px;border-radius:8px;min-width:160px}}
-.table{{width:100%;border-collapse:collapse;margin-top:10px}}
-.table th,.table td{{border:1px solid #ddd;padding:8px;text-align:left}}
-.table th{{background:#f0f0f3}}
-.details{{margin-top:10px}}
-.tp-table{{width:100%;border-collapse:collapse}}
-.tp-table th,.tp-table td{{border:1px solid #ddd;padding:6px}}
-.toggle{{cursor:pointer;color:#0056b3;text-decoration:underline}}
-.meta{{font-size:0.9em;color:#555}}
-</style>
-</head>
-<body>
-<h1>Trade Report</h1>
-<div class="summary">
-<div class="card"><strong>Total PnL</strong><div style="font-size:1.4em">{total_profit:.2f}</div></div>
-<div class="card"><strong>Trades</strong><div style="font-size:1.4em">{trades_count}</div></div>
-<div class="card"><strong>Win rate</strong><div style="font-size:1.4em">{win_rate:.2f}%</div></div>
-<div class="card"><strong>Wins / Losses / Flat</strong><div style="font-size:1.1em">{wins} / {losses} / {flat}</div></div>
-</div>
-<table class="table">
-<thead><tr>
-<th>#</th><th>Symbol</th><th>Direction</th><th>Entry</th><th>Volume</th><th>Status</th><th>Opened</th><th>Closed</th><th>Profit</th><th>Details</th>
-</tr></thead><tbody>
-""".format(total_profit=total_profit, trades_count=trades_count, win_rate=win_rate, wins=wins, losses=losses, flat=flat))
+    # создаём окружение Jinja2
+    env = Environment(
+        loader=FileSystemLoader(template_dir),
+        autoescape=True,
+        trim_blocks=True,
+        lstrip_blocks=True
+    )
 
-    # rows
-    for idx, r in enumerate(plain, start=1):
-        symbol = html.escape(str(r.get("symbol","")))
-        direction = html.escape(str(r.get("direction","")))
-        entry = html.escape(str(r.get("entry_price","")))
-        vol = html.escape(str(r.get("volume","")))
-        status = html.escape(str(r.get("status","")))
-        opened = html.escape(str(r.get("bar_opened","")))
-        closed = html.escape(str(r.get("bar_closed","")))
-        profit = r.get("profit", 0.0)
-        try:
-            profit = float(profit)
-        except Exception:
-            profit = 0.0
+    # загружаем шаблон
+    template = env.get_template("trade_report.html")
 
-        # take_profits HTML
-        tps_html = _render_take_profits_html(r.get("take_profits", []))
+    # рендерим HTML
+    html_content = template.render(
+        reports=plain,
+        total_profit=total_profit,
+        trades_count=trades_count,
+        win_rate=win_rate,
+        wins=wins,
+        losses=losses,
+        flat=flat
+    )
 
-        # stop_loss
-        sl = r.get("stop_loss")
-        if sl:
-            sl_html = ("<table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>"
-                       f"<tr><td>{html.escape(str(sl.get('price','')))}</td>"
-                       f"<td>{html.escape(str(sl.get('volume','')))}</td>"
-                       f"<td>{html.escape(str(sl.get('status','')))}</td>"
-                       f"<td>{html.escape(str(sl.get('bar_executed','')))}</td></tr></table>")
-        else:
-            sl_html = "<i>— нет</i>"
-
-        # details block (hidden by JS)
-        details_id = f"det-{idx}"
-        details_block = f"""
-        <div id="{details_id}" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            {tps_html}
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            {sl_html}
-          
-        </div>
-        """
-
-        html_parts.append(
-            "<tr>"
-            f"<td>{idx}</td>"
-            f"<td>{symbol}</td>"
-            f"<td>{direction}</td>"
-            f"<td>{entry}</td>"
-            f"<td>{vol}</td>"
-            f"<td>{status}</td>"
-            f"<td>{opened}</td>"
-            f"<td>{closed}</td>"
-            f"<td>{profit:.2f}</td>"
-            f"<td><span class='toggle' onclick=\"(function(e){{var el=document.getElementById('{details_id}');el.style.display=el.style.display==='none'?'block':'none';}})();\">toggle</span>{details_block}</td>"
-            "</tr>"
-        )
-
-    # footer / scripts
-    html_parts.append("""
-        </tbody></table>
-
-        <script>
-        // (no external dependencies) - simple toggles already embedded inline
-        </script>
-
-        </body></html>
-        """)
-
-    html_content = "\n".join(html_parts)
-
-    with open(target_path, "w", encoding="utf-8") as f:
-        f.write(html_content)
-
+    # сохраняем
+    Path(target_path).write_text(html_content, encoding="utf-8")
     return target_path
-
-        

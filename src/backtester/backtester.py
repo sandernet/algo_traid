@@ -172,7 +172,7 @@ def run_local_backtest():
             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
             executed_positions = backtest_coin(select_data, coin)
             
-            path = generate_html_report(executed_positions, "trade_report.html")
+            path = generate_html_report(executed_positions, "trade_report.html", "src/backtester/templates")
             logger.info(f"Saved: {path}")
             
             executed_positions_df = pd.DataFrame(executed_positions)

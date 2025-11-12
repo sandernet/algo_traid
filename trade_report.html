@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="ru">
 <head>
@@ -10,409 +9,1948 @@ h1{margin-bottom:0.2em}
 .summary{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px}
 .card{background:#f7f7f9;border:1px solid #e1e1e6;padding:12px;border-radius:8px;min-width:160px}
 .table{width:100%;border-collapse:collapse;margin-top:10px}
-.table th,.table td{border:1px solid #ddd;padding:8px;text-align:left}
+.table th,.table td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}
 .table th{background:#f0f0f3}
-.details{margin-top:10px}
-.tp-table{width:100%;border-collapse:collapse}
-.tp-table th,.tp-table td{border:1px solid #ddd;padding:6px}
+.tp-table{width:100%;border-collapse:collapse;margin-top:6px}
+.tp-table th,.tp-table td{border:1px solid #ddd;padding:6px;font-size:0.9em}
 .toggle{cursor:pointer;color:#0056b3;text-decoration:underline}
-.meta{font-size:0.9em;color:#555}
+.meta{font-size:0.9em;color:#555;margin-top:6px}
+.details-row{display:none;background:#fafafa}
+.details-cell{padding:10px;border-top:none}
+tr:hover{background:#f5f5f5}
 </style>
 </head>
 <body>
+
 <h1>Trade Report</h1>
+
 <div class="summary">
-<div class="card"><strong>Total PnL</strong><div style="font-size:1.4em">369278.60</div></div>
-<div class="card"><strong>Trades</strong><div style="font-size:1.4em">25</div></div>
-<div class="card"><strong>Win rate</strong><div style="font-size:1.4em">100.00%</div></div>
-<div class="card"><strong>Wins / Losses / Flat</strong><div style="font-size:1.1em">25 / 0 / 0</div></div>
+  <div class="card"><strong>Total PnL</strong><div style="font-size:1.4em">369278.6</div></div>
+  <div class="card"><strong>Trades</strong><div style="font-size:1.4em">25</div></div>
+  <div class="card"><strong>Win rate</strong><div style="font-size:1.4em">100.0%</div></div>
+  <div class="card"><strong>Wins / Losses / Flat</strong><div style="font-size:1.1em">25 / 0 / 0</div></div>
 </div>
+
 <table class="table">
 <thead><tr>
-<th>#</th><th>Symbol</th><th>Direction</th><th>Entry</th><th>Volume</th><th>Status</th><th>Opened</th><th>Closed</th><th>Profit</th><th>Details</th>
-</tr></thead><tbody>
+<th>#</th><th>Symbol</th><th>Direction</th><th>Entry</th><th>Volume</th><th>Status</th>
+<th>Opened</th><th>Closed</th><th>Profit</th><th>Details</th>
+</tr></thead>
+<tbody>
 
-<tr><td>1</td><td>ETH/USDT</td><td>long</td><td>2335.83</td><td>100</td><td>taken</td><td>2025-02-27T00:00:00</td><td>2025-03-02T00:00:00</td><td>9640.00</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-1');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-1" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>2395.18</td><td>0.2</td><td>executed</td><td>2025-03-02T00:00:00</td><td>1187.000000000001</td></tr>
-<tr><td>2</td><td>2507.66</td><td>0.2</td><td>executed</td><td>2025-03-02T00:00:00</td><td>3436.600000000001</td></tr>
-<tr><td>3</td><td>2586.65</td><td>0.2</td><td>executed</td><td>2025-03-02T00:00:00</td><td>5016.4000000000015</td></tr>
-<tr><td>4</td><td>2665.65</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>2763.4</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>1838.17</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>2</td><td>ETH/USDT</td><td>long</td><td>2171.55</td><td>100</td><td>taken</td><td>2025-03-05T00:00:00</td><td>2025-03-08T00:00:00</td><td>9534.80</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-2');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-2" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>2189.56</td><td>0.2</td><td>executed</td><td>2025-03-08T00:00:00</td><td>360.2000000000009</td></tr>
-<tr><td>2</td><td>2345.98</td><td>0.2</td><td>executed</td><td>2025-03-08T00:00:00</td><td>3488.600000000001</td></tr>
-<tr><td>3</td><td>2455.85</td><td>0.2</td><td>executed</td><td>2025-03-08T00:00:00</td><td>5686.000000000001</td></tr>
-<tr><td>4</td><td>2565.7200000000003</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>2701.66</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>1414.88</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>3</td><td>ETH/USDT</td><td>long</td><td>2020.06</td><td>100</td><td>taken</td><td>2025-03-10T00:00:00</td><td>2025-03-13T00:00:00</td><td>18576.40</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-3');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-3" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>2188.57</td><td>0.2</td><td>executed</td><td>2025-03-13T00:00:00</td><td>3370.2000000000007</td></tr>
-<tr><td>2</td><td>2345.21</td><td>0.2</td><td>executed</td><td>2025-03-13T00:00:00</td><td>6503.000000000001</td></tr>
-<tr><td>3</td><td>2455.2200000000003</td><td>0.2</td><td>executed</td><td>2025-03-13T00:00:00</td><td>8703.2</td></tr>
-<tr><td>4</td><td>2565.2400000000002</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>2701.37</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>1412.8600000000001</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>4</td><td>ETH/USDT</td><td>short</td><td>2066.2</td><td>100</td><td>taken</td><td>2025-03-26T00:00:00</td><td>2025-03-29T00:00:00</td><td>5377.00</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-4');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-4" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>2029.66</td><td>0.2</td><td>executed</td><td>2025-03-29T00:00:00</td><td>730.7999999999992</td></tr>
-<tr><td>2</td><td>1970.74</td><td>0.2</td><td>executed</td><td>2025-03-29T00:00:00</td><td>1909.1999999999991</td></tr>
-<tr><td>3</td><td>1929.3500000000001</td><td>0.2</td><td>executed</td><td>2025-03-29T00:00:00</td><td>2736.999999999999</td></tr>
-<tr><td>4</td><td>1887.96</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>1836.75</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>2321.48</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>5</td><td>ETH/USDT</td><td>long</td><td>1808.11</td><td>100</td><td>taken</td><td>2025-03-31T00:00:00</td><td>2025-04-03T00:00:00</td><td>4951.00</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-5');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-5" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>1839.58</td><td>0.2</td><td>executed</td><td>2025-04-03T00:00:00</td><td>629.4000000000008</td></tr>
-<tr><td>2</td><td>1896.25</td><td>0.2</td><td>executed</td><td>2025-04-03T00:00:00</td><td>1762.8000000000009</td></tr>
-<tr><td>3</td><td>1936.05</td><td>0.2</td><td>executed</td><td>2025-04-03T00:00:00</td><td>2558.8000000000006</td></tr>
-<tr><td>4</td><td>1975.8600000000001</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>2025.1100000000001</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>1558.92</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>6</td><td>ETH/USDT</td><td>long</td><td>1817.2</td><td>100</td><td>taken</td><td>2025-04-04T00:00:00</td><td>2025-04-07T00:00:00</td><td>3713.00</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-6');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-6" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>1825.28</td><td>0.2</td><td>executed</td><td>2025-04-07T00:00:00</td><td>161.60000000000076</td></tr>
-<tr><td>2</td><td>1885.01</td><td>0.2</td><td>executed</td><td>2025-04-07T00:00:00</td><td>1356.2000000000007</td></tr>
-<tr><td>3</td><td>1926.96</td><td>0.2</td><td>executed</td><td>2025-04-07T00:00:00</td><td>2195.2000000000007</td></tr>
-<tr><td>4</td><td>1968.91</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>2020.82</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>1529.49</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>7</td><td>ETH/USDT</td><td>long</td><td>1553.31</td><td>100</td><td>taken</td><td>2025-04-08T00:00:00</td><td>2025-04-11T00:00:00</td><td>6707.00</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-7');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-7" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>1560.27</td><td>0.2</td><td>executed</td><td>2025-04-11T00:00:00</td><td>139.20000000000064</td></tr>
-<tr><td>2</td><td>1676.64</td><td>0.2</td><td>executed</td><td>2025-04-11T00:00:00</td><td>2466.600000000001</td></tr>
-<tr><td>3</td><td>1758.3700000000001</td><td>0.2</td><td>executed</td><td>2025-04-11T00:00:00</td><td>4101.200000000001</td></tr>
-<tr><td>4</td><td>1840.1100000000001</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>1941.25</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>983.95</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>8</td><td>ETH/USDT</td><td>short</td><td>1795.16</td><td>100</td><td>taken</td><td>2025-04-24T00:00:00</td><td>2025-04-27T00:00:00</td><td>7468.00</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-8');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-8" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>1738.8500000000001</td><td>0.2</td><td>executed</td><td>2025-04-27T00:00:00</td><td>1126.1999999999994</td></tr>
-<tr><td>2</td><td>1663.19</td><td>0.2</td><td>executed</td><td>2025-04-27T00:00:00</td><td>2639.399999999999</td></tr>
-<tr><td>3</td><td>1610.04</td><td>0.2</td><td>executed</td><td>2025-04-27T00:00:00</td><td>3702.399999999999</td></tr>
-<tr><td>4</td><td>1556.89</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>1491.13</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>2113.59</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>9</td><td>ETH/USDT</td><td>short</td><td>1791.23</td><td>100</td><td>taken</td><td>2025-04-28T00:00:00</td><td>2025-05-01T00:00:00</td><td>6386.60</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-9');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-9" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>1756.31</td><td>0.2</td><td>executed</td><td>2025-05-01T00:00:00</td><td>698.3999999999993</td></tr>
-<tr><td>2</td><td>1676.91</td><td>0.2</td><td>executed</td><td>2025-05-01T00:00:00</td><td>2286.399999999999</td></tr>
-<tr><td>3</td><td>1621.14</td><td>0.2</td><td>executed</td><td>2025-05-01T00:00:00</td><td>3401.7999999999993</td></tr>
-<tr><td>4</td><td>1565.38</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>1496.38</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>2149.52</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>10</td><td>ETH/USDT</td><td>short</td><td>1838.24</td><td>100</td><td>taken</td><td>2025-05-02T00:00:00</td><td>2025-05-05T00:00:00</td><td>8606.40</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-10');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-10" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>1768.71</td><td>0.2</td><td>executed</td><td>2025-05-05T00:00:00</td><td>1390.5999999999992</td></tr>
-<tr><td>2</td><td>1686.66</td><td>0.2</td><td>executed</td><td>2025-05-05T00:00:00</td><td>3031.5999999999995</td></tr>
-<tr><td>3</td><td>1629.03</td><td>0.2</td><td>executed</td><td>2025-05-05T00:00:00</td><td>4184.199999999999</td></tr>
-<tr><td>4</td><td>1571.4</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>1500.1000000000001</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>2175.04</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>11</td><td>ETH/USDT</td><td>short</td><td>2207.29</td><td>100</td><td>taken</td><td>2025-05-09T00:00:00</td><td>2025-05-12T00:00:00</td><td>17302.00</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-11');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-11" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>2046.27</td><td>0.2</td><td>executed</td><td>2025-05-12T00:00:00</td><td>3220.399999999999</td></tr>
-<tr><td>2</td><td>1904.9</td><td>0.2</td><td>executed</td><td>2025-05-12T00:00:00</td><td>6047.799999999999</td></tr>
-<tr><td>3</td><td>1805.6000000000001</td><td>0.2</td><td>executed</td><td>2025-05-12T00:00:00</td><td>8033.799999999999</td></tr>
-<tr><td>4</td><td>1706.3</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>1583.44</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>2746.42</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>12</td><td>ETH/USDT</td><td>short</td><td>2495.6</td><td>100</td><td>taken</td><td>2025-05-13T00:00:00</td><td>2025-05-16T00:00:00</td><td>19434.40</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-12');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-12" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>2359.31</td><td>0.2</td><td>executed</td><td>2025-05-16T00:00:00</td><td>2725.799999999999</td></tr>
-<tr><td>2</td><td>2151.03</td><td>0.2</td><td>executed</td><td>2025-05-16T00:00:00</td><td>6891.399999999999</td></tr>
-<tr><td>3</td><td>2004.74</td><td>0.2</td><td>executed</td><td>2025-05-16T00:00:00</td><td>9817.199999999999</td></tr>
-<tr><td>4</td><td>1858.44</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>1677.43</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>3390.82</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>13</td><td>ETH/USDT</td><td>short</td><td>2631.6</td><td>100</td><td>taken</td><td>2025-05-30T00:00:00</td><td>2025-06-02T00:00:00</td><td>21352.40</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-13');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-13" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>2488.16</td><td>0.2</td><td>executed</td><td>2025-06-02T00:00:00</td><td>2868.799999999999</td></tr>
-<tr><td>2</td><td>2252.33</td><td>0.2</td><td>executed</td><td>2025-06-02T00:00:00</td><td>7585.399999999999</td></tr>
-<tr><td>3</td><td>2086.69</td><td>0.2</td><td>executed</td><td>2025-06-02T00:00:00</td><td>10898.199999999999</td></tr>
-<tr><td>4</td><td>1921.06</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>1716.1200000000001</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>3656.04</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>14</td><td>ETH/USDT</td><td>long</td><td>2227.73</td><td>100</td><td>taken</td><td>2025-06-23T00:00:00</td><td>2025-06-26T00:00:00</td><td>9862.80</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-14');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-14" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>2276.01</td><td>0.2</td><td>executed</td><td>2025-06-26T00:00:00</td><td>965.6000000000009</td></tr>
-<tr><td>2</td><td>2404.9</td><td>0.2</td><td>executed</td><td>2025-06-26T00:00:00</td><td>3543.400000000001</td></tr>
-<tr><td>3</td><td>2495.42</td><td>0.2</td><td>executed</td><td>2025-06-26T00:00:00</td><td>5353.800000000001</td></tr>
-<tr><td>4</td><td>2585.94</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>2697.9500000000003</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>1637.74</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>15</td><td>ETH/USDT</td><td>short</td><td>2591.1</td><td>100</td><td>taken</td><td>2025-07-04T00:00:00</td><td>2025-07-07T00:00:00</td><td>8795.20</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-15');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-15" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>2523.84</td><td>0.2</td><td>executed</td><td>2025-07-07T00:00:00</td><td>1345.199999999999</td></tr>
-<tr><td>2</td><td>2435.78</td><td>0.2</td><td>executed</td><td>2025-07-07T00:00:00</td><td>3106.399999999999</td></tr>
-<tr><td>3</td><td>2373.92</td><td>0.2</td><td>executed</td><td>2025-07-07T00:00:00</td><td>4343.599999999999</td></tr>
-<tr><td>4</td><td>2312.07</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>2235.54</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>2959.9500000000003</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>16</td><td>ETH/USDT</td><td>short</td><td>2768.48</td><td>100</td><td>taken</td><td>2025-07-10T00:00:00</td><td>2025-07-13T00:00:00</td><td>13383.80</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-16');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-16" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>2648.8</td><td>0.2</td><td>executed</td><td>2025-07-13T00:00:00</td><td>2393.599999999999</td></tr>
-<tr><td>2</td><td>2534.03</td><td>0.2</td><td>executed</td><td>2025-07-13T00:00:00</td><td>4688.999999999999</td></tr>
-<tr><td>3</td><td>2453.42</td><td>0.2</td><td>executed</td><td>2025-07-13T00:00:00</td><td>6301.199999999999</td></tr>
-<tr><td>4</td><td>2372.81</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>2273.07</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>3217.19</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>17</td><td>ETH/USDT</td><td>short</td><td>3013.54</td><td>100</td><td>taken</td><td>2025-07-15T00:00:00</td><td>2025-07-18T00:00:00</td><td>17115.00</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-17');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-17" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>2875.28</td><td>0.2</td><td>executed</td><td>2025-07-18T00:00:00</td><td>2765.199999999999</td></tr>
-<tr><td>2</td><td>2712.1</td><td>0.2</td><td>executed</td><td>2025-07-18T00:00:00</td><td>6028.799999999999</td></tr>
-<tr><td>3</td><td>2597.4900000000002</td><td>0.2</td><td>executed</td><td>2025-07-18T00:00:00</td><td>8320.999999999998</td></tr>
-<tr><td>4</td><td>2482.88</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>2341.07</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>3683.4</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>18</td><td>ETH/USDT</td><td>short</td><td>3546.96</td><td>100</td><td>taken</td><td>2025-07-19T00:00:00</td><td>2025-07-22T00:00:00</td><td>26603.40</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-18');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-18" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>3340.04</td><td>0.2</td><td>executed</td><td>2025-07-22T00:00:00</td><td>4138.399999999999</td></tr>
-<tr><td>2</td><td>3077.53</td><td>0.2</td><td>executed</td><td>2025-07-22T00:00:00</td><td>9388.599999999999</td></tr>
-<tr><td>3</td><td>2893.14</td><td>0.2</td><td>executed</td><td>2025-07-22T00:00:00</td><td>13076.4</td></tr>
-<tr><td>4</td><td>2708.75</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>2480.61</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>4640.13</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>19</td><td>ETH/USDT</td><td>short</td><td>3872.91</td><td>100</td><td>taken</td><td>2025-07-28T00:00:00</td><td>2025-07-31T00:00:00</td><td>38332.80</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-19');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-19" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>3501.61</td><td>0.2</td><td>executed</td><td>2025-07-31T00:00:00</td><td>7425.999999999998</td></tr>
-<tr><td>2</td><td>3204.56</td><td>0.2</td><td>executed</td><td>2025-07-31T00:00:00</td><td>13366.999999999998</td></tr>
-<tr><td>3</td><td>2995.92</td><td>0.2</td><td>executed</td><td>2025-07-31T00:00:00</td><td>17539.8</td></tr>
-<tr><td>4</td><td>2787.28</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>2529.13</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>4972.72</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>20</td><td>ETH/USDT</td><td>short</td><td>4261.28</td><td>100</td><td>taken</td><td>2025-08-10T00:00:00</td><td>2025-08-13T00:00:00</td><td>17400.40</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-20');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-20" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>4118.6</td><td>0.2</td><td>executed</td><td>2025-08-13T00:00:00</td><td>2853.599999999998</td></tr>
-<tr><td>2</td><td>3955.05</td><td>0.2</td><td>executed</td><td>2025-08-13T00:00:00</td><td>6124.5999999999985</td></tr>
-<tr><td>3</td><td>3840.17</td><td>0.2</td><td>executed</td><td>2025-08-13T00:00:00</td><td>8422.199999999999</td></tr>
-<tr><td>4</td><td>3725.3</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>3583.16</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>4928.58</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>21</td><td>ETH/USDT</td><td>short</td><td>4749.29</td><td>100</td><td>taken</td><td>2025-08-14T00:00:00</td><td>2025-08-17T00:00:00</td><td>29276.80</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-21');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-21" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>4477.84</td><td>0.2</td><td>executed</td><td>2025-08-17T00:00:00</td><td>5428.999999999998</td></tr>
-<tr><td>2</td><td>4237.5</td><td>0.2</td><td>executed</td><td>2025-08-17T00:00:00</td><td>10235.799999999997</td></tr>
-<tr><td>3</td><td>4068.69</td><td>0.2</td><td>executed</td><td>2025-08-17T00:00:00</td><td>13611.999999999998</td></tr>
-<tr><td>4</td><td>3899.89</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>3691.02</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>5668.07</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>22</td><td>ETH/USDT</td><td>short</td><td>4831.84</td><td>100</td><td>taken</td><td>2025-08-23T00:00:00</td><td>2025-08-26T00:00:00</td><td>30286.20</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-22');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-22" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>4559.24</td><td>0.2</td><td>executed</td><td>2025-08-26T00:00:00</td><td>5451.999999999998</td></tr>
-<tr><td>2</td><td>4301.5</td><td>0.2</td><td>executed</td><td>2025-08-26T00:00:00</td><td>10606.799999999997</td></tr>
-<tr><td>3</td><td>4120.47</td><td>0.2</td><td>executed</td><td>2025-08-26T00:00:00</td><td>14227.399999999998</td></tr>
-<tr><td>4</td><td>3939.4500000000003</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>3715.46</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>5835.63</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>23</td><td>ETH/USDT</td><td>long</td><td>4152.61</td><td>100</td><td>taken</td><td>2025-09-25T00:00:00</td><td>2025-09-28T00:00:00</td><td>13718.80</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-23');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-23" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>4244.04</td><td>0.2</td><td>executed</td><td>2025-09-28T00:00:00</td><td>1828.6000000000017</td></tr>
-<tr><td>2</td><td>4396.37</td><td>0.2</td><td>executed</td><td>2025-09-28T00:00:00</td><td>4875.200000000002</td></tr>
-<tr><td>3</td><td>4503.36</td><td>0.2</td><td>executed</td><td>2025-09-28T00:00:00</td><td>7015.000000000002</td></tr>
-<tr><td>4</td><td>4610.35</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>4742.7300000000005</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>3489.65</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>24</td><td>ETH/USDT</td><td>short</td><td>4513.16</td><td>100</td><td>taken</td><td>2025-10-04T00:00:00</td><td>2025-10-07T00:00:00</td><td>12112.60</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-24');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-24" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>4427.47</td><td>0.2</td><td>executed</td><td>2025-10-07T00:00:00</td><td>1713.7999999999981</td></tr>
-<tr><td>2</td><td>4298.49</td><td>0.2</td><td>executed</td><td>2025-10-07T00:00:00</td><td>4293.399999999998</td></tr>
-<tr><td>3</td><td>4207.89</td><td>0.2</td><td>executed</td><td>2025-10-07T00:00:00</td><td>6105.399999999998</td></tr>
-<tr><td>4</td><td>4117.29</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>4005.2000000000003</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>5066.25</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
-<tr><td>25</td><td>ETH/USDT</td><td>long</td><td>3603.49</td><td>100</td><td>taken</td><td>2025-11-04T00:00:00</td><td>2025-11-07T00:00:00</td><td>13341.80</td><td><span class='toggle' onclick="(function(e){var el=document.getElementById('det-25');el.style.display=el.style.display==='none'?'block':'none';})();">toggle</span>
-        <div id="det-25" class="details" style="display:none">
-            <div class="meta"><strong>Take Profits:</strong></div>
-            <table class='tp-table'><thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead><tbody>
-<tr><td>1</td><td>3714.66</td><td>0.2</td><td>executed</td><td>2025-11-07T00:00:00</td><td>2223.4000000000015</td></tr>
-<tr><td>2</td><td>3838.1</td><td>0.2</td><td>executed</td><td>2025-11-07T00:00:00</td><td>4692.200000000002</td></tr>
-<tr><td>3</td><td>3924.8</td><td>0.2</td><td>executed</td><td>2025-11-07T00:00:00</td><td>6426.200000000002</td></tr>
-<tr><td>4</td><td>4011.51</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-<tr><td>5</td><td>4118.79</td><td>0.2</td><td>canceled</td><td>None</td><td>0.0</td></tr>
-</tbody></table>
-            <div class="meta" style="margin-top:8px"><strong>Stop Loss:</strong></div>
-            <table class='tp-table'><tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr><tr><td>3103.31</td><td>1.0</td><td>canceled</td><td>None</td></tr></table>
-          
-        </div>
-        </td></tr>
+<tr>
+  <td>1</td>
+  <td>ETH/USDT</td>
+  <td>long</td>
+  <td>2335.83</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-02-27T00:00:00</td>
+  <td>2025-03-02T00:00:00</td>
+  <td>9640.00</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('1')">toggle</span>
+  </td
+</tr>
 
-        </tbody></table>
+<tr id="det-1" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>2395.18</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-03-02T00:00:00</td>
+        <td>1187.00</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>2507.66</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-03-02T00:00:00</td>
+        <td>3436.60</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>2586.65</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-03-02T00:00:00</td>
+        <td>5016.40</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>2665.65</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>2763.4</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
 
-        <script>
-        // (no external dependencies) - simple toggles already embedded inline
-        </script>
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>1838.17</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>ETH/USDT</td>
+  <td>long</td>
+  <td>2171.55</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-03-05T00:00:00</td>
+  <td>2025-03-08T00:00:00</td>
+  <td>9534.80</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('2')">toggle</span>
+  </td
+</tr>
 
-        </body></html>
-        
+<tr id="det-2" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>2189.56</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-03-08T00:00:00</td>
+        <td>360.20</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>2345.98</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-03-08T00:00:00</td>
+        <td>3488.60</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>2455.85</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-03-08T00:00:00</td>
+        <td>5686.00</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>2565.7200000000003</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>2701.66</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>1414.88</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>ETH/USDT</td>
+  <td>long</td>
+  <td>2020.06</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-03-10T00:00:00</td>
+  <td>2025-03-13T00:00:00</td>
+  <td>18576.40</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('3')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-3" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>2188.57</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-03-13T00:00:00</td>
+        <td>3370.20</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>2345.21</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-03-13T00:00:00</td>
+        <td>6503.00</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>2455.2200000000003</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-03-13T00:00:00</td>
+        <td>8703.20</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>2565.2400000000002</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>2701.37</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>1412.8600000000001</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>2066.2</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-03-26T00:00:00</td>
+  <td>2025-03-29T00:00:00</td>
+  <td>5377.00</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('4')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-4" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>2029.66</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-03-29T00:00:00</td>
+        <td>730.80</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>1970.74</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-03-29T00:00:00</td>
+        <td>1909.20</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>1929.3500000000001</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-03-29T00:00:00</td>
+        <td>2737.00</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>1887.96</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>1836.75</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>2321.48</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>ETH/USDT</td>
+  <td>long</td>
+  <td>1808.11</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-03-31T00:00:00</td>
+  <td>2025-04-03T00:00:00</td>
+  <td>4951.00</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('5')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-5" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>1839.58</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-04-03T00:00:00</td>
+        <td>629.40</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>1896.25</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-04-03T00:00:00</td>
+        <td>1762.80</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>1936.05</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-04-03T00:00:00</td>
+        <td>2558.80</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>1975.8600000000001</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>2025.1100000000001</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>1558.92</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>ETH/USDT</td>
+  <td>long</td>
+  <td>1817.2</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-04-04T00:00:00</td>
+  <td>2025-04-07T00:00:00</td>
+  <td>3713.00</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('6')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-6" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>1825.28</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-04-07T00:00:00</td>
+        <td>161.60</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>1885.01</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-04-07T00:00:00</td>
+        <td>1356.20</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>1926.96</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-04-07T00:00:00</td>
+        <td>2195.20</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>1968.91</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>2020.82</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>1529.49</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>7</td>
+  <td>ETH/USDT</td>
+  <td>long</td>
+  <td>1553.31</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-04-08T00:00:00</td>
+  <td>2025-04-11T00:00:00</td>
+  <td>6707.00</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('7')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-7" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>1560.27</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-04-11T00:00:00</td>
+        <td>139.20</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>1676.64</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-04-11T00:00:00</td>
+        <td>2466.60</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>1758.3700000000001</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-04-11T00:00:00</td>
+        <td>4101.20</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>1840.1100000000001</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>1941.25</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>983.95</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>8</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>1795.16</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-04-24T00:00:00</td>
+  <td>2025-04-27T00:00:00</td>
+  <td>7468.00</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('8')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-8" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>1738.8500000000001</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-04-27T00:00:00</td>
+        <td>1126.20</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>1663.19</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-04-27T00:00:00</td>
+        <td>2639.40</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>1610.04</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-04-27T00:00:00</td>
+        <td>3702.40</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>1556.89</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>1491.13</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>2113.59</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>9</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>1791.23</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-04-28T00:00:00</td>
+  <td>2025-05-01T00:00:00</td>
+  <td>6386.60</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('9')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-9" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>1756.31</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-05-01T00:00:00</td>
+        <td>698.40</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>1676.91</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-05-01T00:00:00</td>
+        <td>2286.40</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>1621.14</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-05-01T00:00:00</td>
+        <td>3401.80</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>1565.38</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>1496.38</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>2149.52</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>1838.24</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-05-02T00:00:00</td>
+  <td>2025-05-05T00:00:00</td>
+  <td>8606.40</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('10')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-10" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>1768.71</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-05-05T00:00:00</td>
+        <td>1390.60</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>1686.66</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-05-05T00:00:00</td>
+        <td>3031.60</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>1629.03</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-05-05T00:00:00</td>
+        <td>4184.20</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>1571.4</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>1500.1000000000001</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>2175.04</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>2207.29</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-05-09T00:00:00</td>
+  <td>2025-05-12T00:00:00</td>
+  <td>17302.00</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('11')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-11" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>2046.27</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-05-12T00:00:00</td>
+        <td>3220.40</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>1904.9</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-05-12T00:00:00</td>
+        <td>6047.80</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>1805.6000000000001</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-05-12T00:00:00</td>
+        <td>8033.80</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>1706.3</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>1583.44</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>2746.42</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>2495.6</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-05-13T00:00:00</td>
+  <td>2025-05-16T00:00:00</td>
+  <td>19434.40</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('12')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-12" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>2359.31</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-05-16T00:00:00</td>
+        <td>2725.80</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>2151.03</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-05-16T00:00:00</td>
+        <td>6891.40</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>2004.74</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-05-16T00:00:00</td>
+        <td>9817.20</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>1858.44</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>1677.43</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>3390.82</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>2631.6</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-05-30T00:00:00</td>
+  <td>2025-06-02T00:00:00</td>
+  <td>21352.40</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('13')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-13" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>2488.16</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-06-02T00:00:00</td>
+        <td>2868.80</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>2252.33</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-06-02T00:00:00</td>
+        <td>7585.40</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>2086.69</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-06-02T00:00:00</td>
+        <td>10898.20</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>1921.06</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>1716.1200000000001</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>3656.04</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>ETH/USDT</td>
+  <td>long</td>
+  <td>2227.73</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-06-23T00:00:00</td>
+  <td>2025-06-26T00:00:00</td>
+  <td>9862.80</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('14')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-14" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>2276.01</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-06-26T00:00:00</td>
+        <td>965.60</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>2404.9</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-06-26T00:00:00</td>
+        <td>3543.40</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>2495.42</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-06-26T00:00:00</td>
+        <td>5353.80</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>2585.94</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>2697.9500000000003</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>1637.74</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>2591.1</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-07-04T00:00:00</td>
+  <td>2025-07-07T00:00:00</td>
+  <td>8795.20</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('15')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-15" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>2523.84</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-07T00:00:00</td>
+        <td>1345.20</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>2435.78</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-07T00:00:00</td>
+        <td>3106.40</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>2373.92</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-07T00:00:00</td>
+        <td>4343.60</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>2312.07</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>2235.54</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>2959.9500000000003</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>2768.48</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-07-10T00:00:00</td>
+  <td>2025-07-13T00:00:00</td>
+  <td>13383.80</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('16')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-16" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>2648.8</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-13T00:00:00</td>
+        <td>2393.60</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>2534.03</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-13T00:00:00</td>
+        <td>4689.00</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>2453.42</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-13T00:00:00</td>
+        <td>6301.20</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>2372.81</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>2273.07</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>3217.19</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>3013.54</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-07-15T00:00:00</td>
+  <td>2025-07-18T00:00:00</td>
+  <td>17115.00</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('17')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-17" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>2875.28</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-18T00:00:00</td>
+        <td>2765.20</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>2712.1</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-18T00:00:00</td>
+        <td>6028.80</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>2597.4900000000002</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-18T00:00:00</td>
+        <td>8321.00</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>2482.88</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>2341.07</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>3683.4</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>3546.96</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-07-19T00:00:00</td>
+  <td>2025-07-22T00:00:00</td>
+  <td>26603.40</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('18')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-18" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>3340.04</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-22T00:00:00</td>
+        <td>4138.40</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>3077.53</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-22T00:00:00</td>
+        <td>9388.60</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>2893.14</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-22T00:00:00</td>
+        <td>13076.40</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>2708.75</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>2480.61</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>4640.13</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>3872.91</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-07-28T00:00:00</td>
+  <td>2025-07-31T00:00:00</td>
+  <td>38332.80</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('19')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-19" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>3501.61</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-31T00:00:00</td>
+        <td>7426.00</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>3204.56</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-31T00:00:00</td>
+        <td>13367.00</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>2995.92</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-07-31T00:00:00</td>
+        <td>17539.80</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>2787.28</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>2529.13</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>4972.72</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>20</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>4261.28</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-08-10T00:00:00</td>
+  <td>2025-08-13T00:00:00</td>
+  <td>17400.40</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('20')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-20" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>4118.6</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-08-13T00:00:00</td>
+        <td>2853.60</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>3955.05</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-08-13T00:00:00</td>
+        <td>6124.60</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>3840.17</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-08-13T00:00:00</td>
+        <td>8422.20</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>3725.3</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>3583.16</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>4928.58</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>21</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>4749.29</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-08-14T00:00:00</td>
+  <td>2025-08-17T00:00:00</td>
+  <td>29276.80</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('21')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-21" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>4477.84</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-08-17T00:00:00</td>
+        <td>5429.00</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>4237.5</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-08-17T00:00:00</td>
+        <td>10235.80</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>4068.69</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-08-17T00:00:00</td>
+        <td>13612.00</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>3899.89</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>3691.02</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>5668.07</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>22</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>4831.84</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-08-23T00:00:00</td>
+  <td>2025-08-26T00:00:00</td>
+  <td>30286.20</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('22')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-22" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>4559.24</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-08-26T00:00:00</td>
+        <td>5452.00</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>4301.5</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-08-26T00:00:00</td>
+        <td>10606.80</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>4120.47</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-08-26T00:00:00</td>
+        <td>14227.40</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>3939.4500000000003</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>3715.46</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>5835.63</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>23</td>
+  <td>ETH/USDT</td>
+  <td>long</td>
+  <td>4152.61</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-09-25T00:00:00</td>
+  <td>2025-09-28T00:00:00</td>
+  <td>13718.80</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('23')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-23" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>4244.04</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-09-28T00:00:00</td>
+        <td>1828.60</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>4396.37</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-09-28T00:00:00</td>
+        <td>4875.20</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>4503.36</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-09-28T00:00:00</td>
+        <td>7015.00</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>4610.35</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>4742.7300000000005</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>3489.65</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>24</td>
+  <td>ETH/USDT</td>
+  <td>short</td>
+  <td>4513.16</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-10-04T00:00:00</td>
+  <td>2025-10-07T00:00:00</td>
+  <td>12112.60</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('24')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-24" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>4427.47</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-10-07T00:00:00</td>
+        <td>1713.80</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>4298.49</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-10-07T00:00:00</td>
+        <td>4293.40</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>4207.89</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-10-07T00:00:00</td>
+        <td>6105.40</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>4117.29</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>4005.2000000000003</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>5066.25</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>25</td>
+  <td>ETH/USDT</td>
+  <td>long</td>
+  <td>3603.49</td>
+  <td>100</td>
+  <td>taken</td>
+  <td>2025-11-04T00:00:00</td>
+  <td>2025-11-07T00:00:00</td>
+  <td>13341.80</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('25')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-25" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td>3714.66</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-11-07T00:00:00</td>
+        <td>2223.40</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>3838.1</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-11-07T00:00:00</td>
+        <td>4692.20</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>3924.8</td>
+        <td>0.2</td>
+        <td>executed</td>
+        <td>2025-11-07T00:00:00</td>
+        <td>6426.20</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>4011.51</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>4118.79</td>
+        <td>0.2</td>
+        <td>canceled</td>
+        <td>None</td>
+        <td>0.00</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>3103.31</td>
+        <td>1.0</td>
+        <td>canceled</td>
+        <td>None</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+
+</tbody>
+</table>
+
+<script>
+function toggleDetails(id){
+  const row = document.getElementById('det-' + id);
+  if(row.style.display === 'none' || row.style.display === ''){
+    row.style.display = 'table-row';
+  } else {
+    row.style.display = 'none';
+  }
+}
+</script>
+
+</body></html>
