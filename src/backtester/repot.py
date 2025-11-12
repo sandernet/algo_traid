@@ -12,6 +12,7 @@ from pathlib import Path
 # ====================================================
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
+from src.config.config import config
 
 from src.orders_block.trade_position import Position, PositionStatus, TakeProfitLevel, Direction, TakeProfit_Status 
 
@@ -20,6 +21,7 @@ class TradeReport:
         if position.status in (PositionStatus.NONE, PositionStatus.CREATED, PositionStatus.ACTIVE):
             logger.error("Статус позиции не в завершенном состоянии")
             raise ValueError("TradeReport can only be generated for closed positions.")
+        
         
         self.symbol = position.symbol
         # self.direction = position.direction
@@ -186,6 +188,7 @@ def generate_html_report(executed_reports, symbol, target_path, template_dir):
     Использует Jinja2-шаблон.
     """
     plain = [to_plain_dict(r) for r in executed_reports]
+    reports_directory = config.get_setting("STRATEGY_SETTINGS", "REPORT_DIRECTORY")
 
 
     title = symbol+" Trade Report"

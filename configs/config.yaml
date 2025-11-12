@@ -15,6 +15,7 @@ COINS:
     LEVERAGE: 5  # Плечо
     # Размер ордера (в usdt )
     VOLUME_SIZE  : 100    
+
   - SYMBOL: ETH
     TIMEFRAME: "D"
     AUTO_TRADING: true
@@ -79,8 +80,6 @@ STRATEGY_SETTINGS:
       volume: 1  # Уровень 6 stop
     - level: 2.000
       volume: 0  # Уровень 7
- 
-
 
 # ======================================================================
 # СЕКЦИЯ РИСК-МЕНЕДЖМЕНТА (RISK_SETTINGS)
@@ -101,6 +100,7 @@ MODE_SETTINGS:
   MODE: backtest
   # Директория для хранения исторических данных
   DATA_DIR: DATA_OHLCV/
+  REPORT_DIRECTORY: REPORT/
 
   FULL_DATAFILE: false
   # начальная ДАТА для бэктеста
