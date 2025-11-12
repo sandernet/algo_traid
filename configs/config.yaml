@@ -7,11 +7,14 @@
 # Настройки торговых монет (SYMBOLS)
 # =====================================================================
 COINS:
-  # - SYMBOL: BTC
-  #   TIMEFRAME: "D"
-  #   AUTO_TRADING: true
-  #   START_DEPOSIT_USDT: 100
-  #   ORDERTYPE: Market
+  - SYMBOL: BTC
+    TIMEFRAME: "D"
+    AUTO_TRADING: true
+    START_DEPOSIT_USDT: 100
+    MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
+    LEVERAGE: 5  # Плечо
+    # Размер ордера (в usdt )
+    VOLUME_SIZE  : 100    
   - SYMBOL: ETH
     TIMEFRAME: "D"
     AUTO_TRADING: true
@@ -20,7 +23,6 @@ COINS:
     LEVERAGE: 5  # Плечо
     # Размер ордера (в usdt )
     VOLUME_SIZE  : 100    
-
   # - SYMBOL: BNB
   #   TIMEFRAME: D
   #   AUTO_TRADING: true

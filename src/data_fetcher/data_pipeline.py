@@ -28,7 +28,7 @@ def run_data_update_pipeline():
         coins_list = [] # Устанавливаем пустой список для безопасной работы
         
     # Подключение к Бирже
-    from src.logical.data_fetcher.data_fetcher import DataFetcher
+    from src.data_fetcher.data_fetcher import DataFetcher
     # 2. Обработка каждой монеты   
     for coin in coins_list:
         logger.info("============================================================================")
