@@ -10,8 +10,8 @@ logger = get_logger(__name__)
 
 from src.config.config import config
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
-from src.risk_manager.trade_position import Position, PositionStatus, TakeProfit_Status
-from src.logical.backtester.repot import TradeReport, generate_html_report
+from src.orders_block.trade_position import Position, PositionStatus, TakeProfit_Status
+from src.backtester.repot import TradeReport, generate_html_report
 
 
 # ====================================================
@@ -69,18 +69,19 @@ def backtest_coin(data_df, coin) -> list:
                 # logger.info(f"Закрытие позиции {position}")
                 position.bar_closed = data_df.index[i] # индекс бара, в котором была закрыта позиция 
                 position.status = PositionStatus.TAKEN
-                position.take_profits[0].TakeProfit_Status = TakeProfit_Status.PENDING
+                position.take_profits[0].TakeProfit_Status = TakeProfit_Status.EXECUTED
                 position.take_profits[0].bar_executed = data_df.index[i]
-                position.take_profits[1].TakeProfit_Status = TakeProfit_Status.PENDING
+                position.take_profits[1].TakeProfit_Status = TakeProfit_Status.EXECUTED
                 position.take_profits[1].bar_executed = data_df.index[i]
-                position.take_profits[2].TakeProfit_Status = TakeProfit_Status.PENDING
+                position.take_profits[2].TakeProfit_Status = TakeProfit_Status.EXECUTED
                 position.take_profits[2].bar_executed = data_df.index[i]
                 
+                # рассчитываем прибыль
                 position.Calculate_profit()
-                
-                # logger.info(f"Закрытие позиции {position}")
-                # --- Сохраняем копию позиции в отчет ---
+                # Отменяем все оставшиеся ордера
+                position.cancel_orders()
 
+                # --- Сохраняем копию позиции в отчет ---
                 report = TradeReport(position)
                 executed_positions.append(report.to_dict())
                 
@@ -147,7 +148,7 @@ def run_local_backtest():
         coins_list = [] # Устанавливаем пустой список для безопасной работы
         
     # Подключение модуля с загрузчиком данных
-    from src.logical.data_fetcher.data_fetcher import DataFetcher
+    from src.data_fetcher.data_fetcher import DataFetcher
     # 2. Обработка каждой монеты   
     for coin in coins_list:
         logger.info("============================================================================")

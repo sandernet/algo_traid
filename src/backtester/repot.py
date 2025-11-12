@@ -10,7 +10,7 @@ import html
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
-from src.risk_manager.trade_position import Position, PositionStatus, TakeProfitLevel, Direction
+from src.orders_block.trade_position import Position, PositionStatus, TakeProfitLevel, Direction, TakeProfit_Status 
 
 class TradeReport:
     def __init__(self, position: 'Position'):
@@ -36,29 +36,38 @@ class TradeReport:
         self.take_profits = self._take_profits_report(position.take_profits)
         
         # Добавим стоп-лосс если есть
-        self.stop_loss = (
-            {
-                "price": Decimal(position.stop_loss.price.values),
-                "volume": float(position.stop_loss.volume),
-                "status": position.stop_loss.status.value,
-                "bar_executed": position.stop_loss.bar_executed
-            }
-            if getattr(position, "stop_loss", None)
-            else None
-        )
+        stop_loss = position.stop_loss
+        self.stop_loss = {
+            # безопасно извлекаем значение цены из возможного pandas/numpy объекта или просто берем как есть
+            "price": (lambda p: (None if p is None else (  # p — возможный scalar / Series / ndarray / Decimal
+                (lambda v: (v if v is None else (float(v) if isinstance(v, (int, float, Decimal)) else v)))
+                ( (p.item() if hasattr(p, "item") else (p.values[0] if getattr(p, "values", None) is not None else p)) )
+            )))(getattr(stop_loss, "price", None)),
+            "volume": (lambda v: float(v) if v is not None else None)(getattr(position.stop_loss, "volume", None)),
+            "status": (
+                stop_loss.status.value 
+                if stop_loss is not None and isinstance(stop_loss.status, TakeProfit_Status) 
+                else str(stop_loss.status) if stop_loss is not None else None
+            ),
+            "bar_executed": getattr(position.stop_loss, "bar_executed", None)
+             }
+         
         
     def _take_profits_report(self, take_profits: List[TakeProfitLevel]) -> list[dict]:
         """
         Формирует структуру отчёта по уровням Take Profit.
         """
+        if not take_profits:
+            return []
+        
         take_profits_report = []
 
         for i, take in enumerate(take_profits, start=1):
             report_item = {
                 "id": i,
-                "price": take.price,
+                "price": float(take.price),
                 "volume": take.volume,
-                "status": take.TakeProfit_Status.value,
+                "status": take.TakeProfit_Status.value if isinstance(take.TakeProfit_Status, TakeProfit_Status) else str(take.TakeProfit_Status),
                 "bar_executed": take.bar_executed,
                 "profit": float(take.profit) if take.profit is not None else 0.0
             }
@@ -71,13 +80,14 @@ class TradeReport:
         return {
             "symbol": self.symbol,
             "direction": self.direction,
-            "entry_price": self.entry_price,
+            "entry_price": float(self.entry_price),
             "volume": self.volume,
             "status": self.status,
-            "bar_opened": self.bar_opened,
-            "bar_closed": self.bar_closed,
+            "bar_opened": self.bar_opened.isoformat() if self.bar_opened is not None else None,
+            "bar_closed": self.bar_closed.isoformat() if self.bar_closed is not None else None,
             "profit": self.profit,
-            "take_profits": self.take_profits
+            "take_profits": self.take_profits,
+            "stop_loss": self.stop_loss
         }
 
     def to_json(self, indent: int = 4) -> str:
@@ -95,8 +105,10 @@ class TradeReport:
             else:
                 return str(obj)
         
+        data = self.to_dict()
+        
         return json.dumps(
-            self.to_dict(),
+           data,
             ensure_ascii=False,
             indent=indent,
             default=default_serializer

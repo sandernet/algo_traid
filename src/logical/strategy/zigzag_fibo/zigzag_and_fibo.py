@@ -8,7 +8,7 @@ from src.logical.indicators.fibonacci import fibonacci_levels
 # индикатор zigzag
 from src.logical.indicators.zigzag import ZigZag
 # класс позиции
-from src.risk_manager.trade_position import Position, TakeProfitLevel, StopLoss, PositionStatus, Direction
+from src.orders_block.trade_position import Position, TakeProfitLevel, StopLoss, PositionStatus, Direction
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # data_df - DataFrame с данными для расчета индикаторов Подается нужное кол-во баров для расчета

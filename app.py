@@ -45,7 +45,7 @@ def main():
     # Загрузка исторических данных с биржи
     if args.ldata:
         logger.info("Загрузка и обновление исторических данных...")
-        from src.logical.data_fetcher.data_pipeline import run_data_update_pipeline
+        from src.data_fetcher.data_pipeline import run_data_update_pipeline
         run_data_update_pipeline()
         logger.info("Загрузка и обновление исторических данных завершены.")
     
@@ -62,13 +62,13 @@ def main():
         if not os.path.exists(data_dir+"csv_files"):
             logger.info(f"Нет данных для бэктеста.")
             logger.info("Загружаем данные с биржи...")
-            from src.logical.data_fetcher.data_pipeline import run_data_update_pipeline
+            from src.data_fetcher.data_pipeline import run_data_update_pipeline
             run_data_update_pipeline()
             logger.info("Загрузка данных с биржи завершена.")
             
         # 2. Запуск бэктестера
         logger.info(f"Запуск бэктестера с локальными данными из {data_dir} ...")
-        from src.logical.backtester.backtester import run_local_backtest
+        from src.backtester.backtester import run_local_backtest
         run_local_backtest()
         logger.info("Бэктестер завершил работу.")
     

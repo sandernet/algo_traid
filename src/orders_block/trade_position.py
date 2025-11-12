@@ -1,5 +1,5 @@
 from enum import Enum
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from typing import List, Optional
 
@@ -15,7 +15,7 @@ class PositionStatus(Enum):
 # Статусы Take Profit
 class TakeProfit_Status(Enum):
     ACTIVE = "active"
-    PENDING = "pending"
+    EXECUTED = "executed"
     CANCELED = "canceled"
     
 class Direction(Enum):
@@ -24,8 +24,8 @@ class Direction(Enum):
 
 
 class TakeProfitLevel:
-    def __init__(self, price: Decimal, volume: float, tick_size: float):
-        self.price = round_to_step(price, tick_size) # цена Take Profit
+    def __init__(self, price: Decimal, volume: Decimal, tick_size: float):
+        self.price = round_to_step(price, Decimal(tick_size)) # цена Take Profit
         self.volume = volume  # доля от общей позиции (например, 0.2 = 20%)
         self.TakeProfit_Status = TakeProfit_Status.ACTIVE  # статус
         self.bar_executed = None  # индекс бара, в котором был выполнен Take Profit
@@ -36,14 +36,14 @@ class TakeProfitLevel:
         
 class StopLoss:
     def __init__(self, price: float, volume: float, tick_size: float ):
-        self.price = round_to_step(price, tick_size)  # цена cтоп-лосс
+        self.price = round_to_step(Decimal(price), Decimal(tick_size))  # цена cтоп-лосс
         self.volume = volume  # объем (например, 0.2 = 20%) 
         self.status = TakeProfit_Status.ACTIVE  # статус
         self.bar_executed = None  # индекс бара, в котором срабатывает стоп-лосс
         self.profit = Decimal(0.0)
         
     def __repr__(self):
-        return f"StopLoss(price={self.price}, volume={self.volume}, status={self.status.value})"
+        return f"StopLoss(price={self.price}, volume={self.volume}, status={self.status.value}, bar_executed={self.bar_executed}, profit={self.profit})"
 
 
 class Position:
@@ -54,17 +54,18 @@ class Position:
     def setPosition(self, symbol, direction, entry_price: float, bar_index, tick_size):
         self.symbol = symbol # название монеты
         self.direction = direction # направление позиции long, short
-        self.entry_price = round_to_step(entry_price, tick_size) # entry_price  # цена входа
+        self.entry_price = round_to_step(Decimal(entry_price), tick_size) # entry_price  # цена входа
         
         self.status = PositionStatus.CREATED  # статус позиции
         
         self.take_profits: List[TakeProfitLevel] = []  # список Take Profit
-        self.stop_loss: Optional[StopLoss]  = None # один стоп-лосс
+        self.stop_loss: Optional[StopLoss]  # один стоп-лосс
 
         self.bar_opened = bar_index  # индекс бара, в котором была открыта позиция
         self.bar_closed = None  # индекс бара, в котором была закрыта позиция
         self.profit = 0.0
 
+    # Расчет прибыли позиции по всем тейк-профитам или стоп-лосс
     def Calculate_profit(self):
         """
         Рассчитывает общую прибыль/убыток по позиции
@@ -136,6 +137,22 @@ class Position:
         """Добавляет стоп-лосс (заменяет предыдущий)."""
         self.stop_loss = sl
         
+        
+    def cancel_orders(self):
+        
+        status = PositionStatus.CANCELLED
+        if self.status == PositionStatus.TAKEN:
+            status = PositionStatus.TAKEN
+            for tp in self.take_profits:
+                if tp.TakeProfit_Status == TakeProfit_Status.ACTIVE:
+                    tp.TakeProfit_Status = TakeProfit_Status.CANCELED
+        if self.stop_loss and self.stop_loss.status == TakeProfit_Status.ACTIVE:
+            self.stop_loss.status = TakeProfit_Status.CANCELED
+        elif self.stop_loss and self.stop_loss.status == TakeProfit_Status.EXECUTED:
+            status = PositionStatus.STOPPED
+                
+        self.status = status
+        
     def __repr__(self):
         return (f"Position(symbol={self.symbol}, entry_price={self.entry_price}, direction={self.direction.value}, \n"
                 f"status={self.status.value} \n"
@@ -144,6 +161,14 @@ class Position:
                 f"{self.stop_loss})")
 
 
-@staticmethod
-def round_to_step(value: float, step: float) -> float:
-    return round(value / step) * step
+def round_to_step(value: Decimal, step: Decimal) -> Decimal:
+    """
+    Округление значения по шагу tick_size с использованием Decimal для точности.
+    Возвращает float (как раньше) для совместимости.
+    """
+    if step <= 0:
+        raise ValueError("tick_size must be > 0")
+    v = Decimal(str(value))
+    s = Decimal(str(step))
+    factor = (v / s).to_integral_value(rounding=ROUND_HALF_UP)
+    return Decimal(factor * s)

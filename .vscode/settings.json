@@ -2,7 +2,8 @@
   "rest-client.environmentVariables": {
     "$shared": {},
     "ENV Developer": {
-      "wb_token": "-"
+      "API_KEY": "",
+      "API_SECRET": "",
     }
   }
 }

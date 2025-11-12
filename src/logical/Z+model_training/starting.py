@@ -1,6 +1,6 @@
 import joblib
 
-from src.logical.model_training.education import education
+from src.logical.Z+model_training.education import education
 from src.logical.model_training.predictions import make_prediction
 
 # Логирование
