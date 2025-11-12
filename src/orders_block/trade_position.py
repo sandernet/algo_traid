@@ -6,7 +6,8 @@ from typing import List, Optional
 # Статусы позиции
 class PositionStatus(Enum):
     ACTIVE = "active" # активная позиция
-    TAKEN = "taken" # позиция закрыта в прибыль
+    TAKEN_PART = "part_taken" # позиция закрыта частично
+    TAKEN_FULL = "taken_full" # позиция закрыта в прибыль
     STOPPED = "stopped" # позиция закрыта в убыток
     CANCELLED = "cancelled" # позиция отменена
     NONE = "none" # позиция не инициализирована
@@ -99,19 +100,6 @@ class Position:
                 total_profit += loss
 
         self.profit = total_profit
-        
-
-        # Устанавливаем статус
-        if total_profit > 0:
-            self.profit = total_profit
-            self.status = PositionStatus.TAKEN
-        elif total_profit < 0:
-            self.status = PositionStatus.STOPPED
-            self.profit = total_profit
-        else:
-            self.status = PositionStatus.CANCELLED
-            self.profit = total_profit
-
         return total_profit
     
     # устанавливает размер позиции
@@ -137,12 +125,67 @@ class Position:
         """Добавляет стоп-лосс (заменяет предыдущий)."""
         self.stop_loss = sl
         
+    # Переводим стоп-лосс в без убыток     
+    def stop_loss_not_loss(self):
+        if self.stop_loss and self.stop_loss.bar_executed is None and self.stop_loss.status == TakeProfit_Status.ACTIVE:
+            self.stop_loss.price = self.entry_price
+            
+            
+    # Проверяет, сработал ли Take Profit если закрыты все Take Profit возвращает True
+    def check_take_profit(self, current_bar) -> bool:
+        high_price = Decimal(current_bar["high"])
+        low_price = Decimal(current_bar["low"])
+        full_closed = False
+        # Проверяем каждый Take Profit
+        for tp in self.take_profits:
+            # Если Take Profit ещё не сработал
+            if tp.bar_executed is None and tp.TakeProfit_Status == TakeProfit_Status.ACTIVE:
+                # Если позиция в long и текущая цена выше Take Profit               
+                if (self.direction == Direction.LONG and high_price >= tp.price) or (self.direction == Direction.SHORT and low_price <= tp.price):
+                    # меняем статус
+                    tp.TakeProfit_Status = TakeProfit_Status.EXECUTED
+                    # устанавливаем индекс бара в котором был сработан Take Profit
+                    tp.bar_executed = current_bar.name
         
+        # Проверяем первый  Take Profit 
+        if self.take_profits and self.take_profits[0].TakeProfit_Status == TakeProfit_Status.EXECUTED:
+            # меняем статус
+            self.status = PositionStatus.TAKEN_PART
+            self.stop_loss_not_loss()
+            
+                        
+        # Проверяем последний Take Profit 
+        if self.take_profits and self.take_profits[-1].TakeProfit_Status == TakeProfit_Status.EXECUTED:
+            # меняем статус
+            self.status = PositionStatus.TAKEN_FULL
+            # устанавливаем индекс бара в котором был сработан stop_loss
+            self.bar_closed = current_bar.name
+            full_closed = True  
+                # elif self.direction == Direction.SHORT and low_price <= tp.price:
+                #     # меняем статус
+                #     tp.TakeProfit_Status = TakeProfit_Status.EXECUTED
+                #     # устанавливаем индекс бара в котором был сработан Take Profit
+                #     tp.bar_executed = current_bar.name
+        return full_closed
+    
+    def check_stop_loss(self, current_bar):
+        if self.stop_loss and self.stop_loss.bar_executed is None and self.stop_loss.status == TakeProfit_Status.ACTIVE:
+            if (self.direction == Direction.LONG and current_bar["low"] <= self.stop_loss.price) or (self.direction == Direction.SHORT and current_bar["high"] >= self.stop_loss.price):
+                # меняем статус
+                self.stop_loss.status = TakeProfit_Status.EXECUTED
+                self.status = PositionStatus.STOPPED
+                # устанавливаем индекс бара в котором был сработан stop_loss
+                self.stop_loss.bar_executed = current_bar.name
+                self.bar_closed = current_bar.name
+                
+    
+    # Останавливает позицию
     def cancel_orders(self):
         
         status = PositionStatus.CANCELLED
-        if self.status == PositionStatus.TAKEN:
-            status = PositionStatus.TAKEN
+        
+        if self.status == PositionStatus.TAKEN_PART:
+            status = PositionStatus.TAKEN_PART
             for tp in self.take_profits:
                 if tp.TakeProfit_Status == TakeProfit_Status.ACTIVE:
                     tp.TakeProfit_Status = TakeProfit_Status.CANCELED

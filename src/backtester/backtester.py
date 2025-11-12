@@ -63,34 +63,32 @@ def backtest_coin(data_df, coin) -> list:
             logger.info(f"Создана позиция:  {position}")
             
         # Если позиция активна
-        if position.status == PositionStatus.ACTIVE:
+        if position.status == PositionStatus.ACTIVE or position.status == PositionStatus.TAKEN_PART:
             # Добавляем в позицию объем либо подключаем  модуль рискМенеджмента
-            if position.bar_opened  == data_df.index[i-3]: # индекс бара, в котором была открыта позиция - i-3:
-                # logger.info(f"Закрытие позиции {position}")
-                position.bar_closed = data_df.index[i] # индекс бара, в котором была закрыта позиция 
-                position.status = PositionStatus.TAKEN
-                position.take_profits[0].TakeProfit_Status = TakeProfit_Status.EXECUTED
-                position.take_profits[0].bar_executed = data_df.index[i]
-                position.take_profits[1].TakeProfit_Status = TakeProfit_Status.EXECUTED
-                position.take_profits[1].bar_executed = data_df.index[i]
-                position.take_profits[2].TakeProfit_Status = TakeProfit_Status.EXECUTED
-                position.take_profits[2].bar_executed = data_df.index[i]
-                
-                # рассчитываем прибыль
-                position.Calculate_profit()
-                # Отменяем все оставшиеся ордера
-                position.cancel_orders()
+            # проверяем на текущей свече сработал ли тейк-профит или стоп-лосс
+            position.check_take_profit(current_bar)
+            
+            # position.stop_loss_not_loss(current_bar)
+            position.check_stop_loss(current_bar)
+            
+            
 
-                # --- Сохраняем копию позиции в отчет ---
-                report = TradeReport(position)
-                executed_positions.append(report.to_dict())
+        # рассчитываем прибыль если позиция исполнена
+        if position.status == PositionStatus.TAKEN_FULL or position.status == PositionStatus.STOPPED:
+            position.Calculate_profit()
+            # --- Сохраняем копию позиции в отчет ---
+            report = TradeReport(position)
+            executed_positions.append(report.to_dict())
+            
+            logger.info(f"Исполнена позиция статус: {report.to_json()}")
+            logger.info(f"-----------------------------------------------------------------------------")
+            # --- Создаем чистую заготовку для позиции ---
+            position = Position()
                 
-                logger.info(f"Исполнена позиция статус: {report.to_json()}")
-                logger.info(f"-----------------------------------------------------------------------------")
-                # --- Создаем чистую заготовку для позиции ---
-                position = Position()
-                
-            continue
+            # Отменяем все оставшиеся ордера
+            # position.cancel_orders()
+
+        continue
     
     return executed_positions
         
@@ -172,8 +170,9 @@ def run_local_backtest():
             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
             executed_positions = backtest_coin(select_data, coin)
             
-            path = generate_html_report(executed_positions, "trade_report.html", "src/backtester/templates")
-            logger.info(f"Saved: {path}")
+            files_report = coin.get("SYMBOL")+"_report.html"
+            path = generate_html_report(executed_positions,symbol, files_report, "src/backtester/templates")
+            logger.info(f"Отчет сохранен в: {files_report}")
             
             executed_positions_df = pd.DataFrame(executed_positions)
             executed_positions_df.to_csv(f"{data_dir}/{coin.get("SYMBOL")}_positions.csv", index=False)

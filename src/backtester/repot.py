@@ -180,13 +180,15 @@ def to_plain_dict(report_obj: Any) -> dict:
 # -----------------------
 # главная функция: генерируем HTML отчет
 # -----------------------
-def generate_html_report(executed_reports, target_path, template_dir):
+def generate_html_report(executed_reports, symbol, target_path, template_dir):
     """
     Генерация HTML-отчёта по списку объектов TradeReport или dict.
     Использует Jinja2-шаблон.
     """
     plain = [to_plain_dict(r) for r in executed_reports]
 
+
+    title = symbol+" Trade Report"
     # статистика
     profits = [float(r.get("profit", 0.0)) for r in plain]
     total_profit = sum(profits)
@@ -209,6 +211,7 @@ def generate_html_report(executed_reports, target_path, template_dir):
 
     # рендерим HTML
     html_content = template.render(
+        title=title,
         reports=plain,
         total_profit=total_profit,
         trades_count=trades_count,
