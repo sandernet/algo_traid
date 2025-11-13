@@ -9,7 +9,9 @@ services:
     volumes:
       - ./data:/app/DATA_OHLCV
       - ./configs:/app/configs
-      - ./logs:/app/logs
+      - ./logs:/app/LOGS
+      - ./reports:/app/REPORTS
+      - ./templates:/APP/TEMPLATES
     environment:
       - PYTHONUNBUFFERED=1
     command: python app.py

@@ -94,10 +94,9 @@ RISK_SETTINGS:
 BACKTEST_SETTINGS:
   # Директория для хранения исторических данных
   DATA_DIR: DATA_OHLCV/
-  REPORT_DIRECTORY: REPORT/
+  REPORT_DIRECTORY: REPORTS/
   TEMPLATE_DIRECTORY: TEMPLATES/
-
-  FULL_DATAFILE: false
+  FULL_DATAFILE: false # Если True, то бэктест будет использовать полный исторический диапазон
   # начальная ДАТА для бэктеста
   START_DATE: "2024-11-01"
   # конечная ДАТА для бэктеста    

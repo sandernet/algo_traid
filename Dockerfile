@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Указываем тома, чтобы данные можно было монтировать извне
-VOLUME ["/app/DATA_OHLCV", "/app/logs", "/app/configs"]
+VOLUME ["/app/DATA_OHLCV", "/app/LOGS", "/app/configs, /app/REPORTS", "/app/TEMPLATES"]
 
 
 # Команда запуска

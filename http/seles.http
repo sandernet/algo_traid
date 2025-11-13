@@ -1,5 +1,0 @@
-@API_KEY = 'Sovuowc4bDG7qOIh1C'
-@API_SECRET = 'oDmulpezGeGrPMFYhsMS98iGfD2Vm1QUHeeX'
-
-@server = api.bybit.com
-

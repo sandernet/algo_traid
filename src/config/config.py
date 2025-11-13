@@ -31,6 +31,7 @@ REQUIRED_SETTINGS: Dict[str, Dict[str, Any]] = {
     "BACKTEST_SETTINGS": {
         "DATA_DIR": str,
         "REPORT_DIRECTORY": str,
+        "TEMPLATE_DIRECTORY": str,
         "FULL_DATAFILE": bool
     },
     "LOGGING_SETTINGS": {

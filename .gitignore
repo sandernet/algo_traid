@@ -1,6 +1,6 @@
 /.env
 /DATA_OHLCV
-/REPORT
+/REPORTS
 /logs
 /.venv
 **/__pycache__
