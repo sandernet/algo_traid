@@ -25,8 +25,8 @@ class Direction(Enum):
 
 
 class TakeProfitLevel:
-    def __init__(self, price: Decimal, volume: Decimal, tick_size: float):
-        self.price = round_to_step(price, Decimal(tick_size)) # цена Take Profit
+    def __init__(self, price: Decimal, volume: Decimal):
+        self.price = price # цена Take Profit
         self.volume = volume  # доля от общей позиции (например, 0.2 = 20%)
         self.TakeProfit_Status = TakeProfit_Status.ACTIVE  # статус
         self.bar_executed = None  # индекс бара, в котором был выполнен Take Profit
@@ -36,8 +36,8 @@ class TakeProfitLevel:
         return f"TakeProfitLevel(price={self.price}, volume={self.volume}, status={self.TakeProfit_Status.value}) \n"
         
 class StopLoss:
-    def __init__(self, price: float, volume: float, tick_size: float ):
-        self.price = round_to_step(Decimal(price), Decimal(tick_size))  # цена cтоп-лосс
+    def __init__(self, price: Decimal, volume: float):
+        self.price = price  # цена cтоп-лосс
         self.volume = volume  # объем (например, 0.2 = 20%) 
         self.status = TakeProfit_Status.ACTIVE  # статус
         self.bar_executed = None  # индекс бара, в котором срабатывает стоп-лосс
@@ -48,14 +48,15 @@ class StopLoss:
 
 
 class Position:
-    def __init__(self):
+    def __init__(self, tick_size: float):
         self.status = PositionStatus.NONE  # позиция не создана
+        self.tick_size = tick_size
         
         
-    def setPosition(self, symbol, direction, entry_price: float, bar_index, tick_size):
+    def setPosition(self, symbol, direction, entry_price: Decimal, bar_index):
         self.symbol = symbol # название монеты
         self.direction = direction # направление позиции long, short
-        self.entry_price = round_to_step(Decimal(entry_price), tick_size) # entry_price  # цена входа
+        self.entry_price = entry_price # entry_price  # цена входа
         
         self.status = PositionStatus.CREATED  # статус позиции
         
@@ -81,7 +82,7 @@ class Position:
             if tp.bar_executed is not None:
                 closed_volume = Decimal(str(tp.volume)) * Decimal(self.volume_size)
                 if self.direction == Direction.LONG:
-                    profit = Decimal(tp.price - self.entry_price) * closed_volume
+                    profit = self.round_to_step(tp.price) - self.entry_price * closed_volume
                 else:  # SHORT
                     profit = Decimal(self.entry_price - tp.price) * closed_volume
                 tp.profit = profit
@@ -199,14 +200,20 @@ class Position:
                 f"{self.stop_loss})")
 
 
-def round_to_step(value: Decimal, step: Decimal) -> Decimal:
-    """
-    Округление значения по шагу tick_size с использованием Decimal для точности.
-    Возвращает float (как раньше) для совместимости.
-    """
-    if step <= 0:
-        raise ValueError("tick_size must be > 0")
-    v = Decimal(str(value))
-    s = Decimal(str(step))
-    factor = (v / s).to_integral_value(rounding=ROUND_HALF_UP)
-    return Decimal(factor * s)
+    def round_to_step(self, value: float) -> Decimal:
+        """
+        Округляет значение до ближайшего кратного tick_size с использованием точной арифметики Decimal.
+        Возвращает Decimal.
+        """
+        if self.tick_size <= 0:
+            raise ValueError("tick_size must be > 0")
+        if value < 0:
+            raise ValueError("value must be non-negative")  # опционально, если поддерживаете только >=0
+        value_decimal = float_to_decimal(value)
+        tick_size = float_to_decimal(self.tick_size)
+        # Округляем (value / tick_size) до целого числа с явным указанием режима округления
+        multiplier = (value_decimal / tick_size).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+        return multiplier * tick_size
+    
+def float_to_decimal(f: float) -> Decimal:
+    return Decimal(str(f))

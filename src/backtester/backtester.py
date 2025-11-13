@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 
 from src.config.config import config
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
-from src.orders_block.trade_position import Position, PositionStatus, TakeProfit_Status
+from src.orders_block.trade_position import Position, PositionStatus, TakeProfit_Status, StopLoss
 from src.backtester.repot import TradeReport, generate_html_report, get_export_path
 
 
@@ -36,8 +36,8 @@ def backtest_coin(data_df, coin) -> list:
         return executed_positions
     
     # Инициализация стратегии    
-    strategy = ZigZagAndFibo(symbol, tick_size)
-    position = Position()
+    strategy = ZigZagAndFibo(symbol)
+    position = Position(tick_size)
     # перебираем все бары начиная с минимального количества
     # Это нужно для того, чтобы индикаторы были заполнены
     for i in range(MIN_BARS, len(data_df)):
@@ -47,12 +47,27 @@ def backtest_coin(data_df, coin) -> list:
         current_bar = data_df.iloc[i]
         # current_bar = data_df.index[i]
             
-        # рассчитываем индикаторы стратегии
-        position = strategy.calculate_strategy(current_data,current_bar, position)
+        # рассчитываем индикаторы стратегии ищем точку входа
+        signal = strategy.find_entry_point(current_data)
+        
+        if signal and position.status == PositionStatus.NONE:
+            logger.info(f"Сигнала {signal.get("direction")} на баре {current_bar}")
+            position = Position(tick_size)
+            # def setPosition(self, symbol, direction, entry_price: Decimal, bar_index):
+            position.setPosition(symbol, signal.get("direction"), position.round_to_step(current_bar["open"]), current_bar.name)
+            if signal.get("take_profits") is not None:
+                position.set_take_profits(signal.get("take_profits", []))
+            
+            if signal.get("stop_loss") is not None:
+                stop_loss = signal["stop_loss"]
+                stop_loss_volume = signal["stop_loss_volume"]
+                position.set_stop_loss(StopLoss(price=position.round_to_step(stop_loss), volume=stop_loss_volume))        
+                continue
+        
+        
        
-        if position.status == PositionStatus.NONE:
-            logger.info(f"Сигнала нет, текущий бар")
-            continue
+        
+        # Алгоритм ведение и выхода из позиции
         
         # Если позиция только создана по стратегии добавляем объем позиции    
         if position.status == PositionStatus.CREATED:
@@ -83,7 +98,7 @@ def backtest_coin(data_df, coin) -> list:
             logger.info(f"Исполнена позиция статус: {report.to_json()}")
             logger.info(f"-----------------------------------------------------------------------------")
             # --- Создаем чистую заготовку для позиции ---
-            position = Position()
+            position = Position(tick_size)
                 
             # Отменяем все оставшиеся ордера
             # position.cancel_orders()
