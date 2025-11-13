@@ -41,7 +41,7 @@ class StopLoss:
         self.volume = volume  # объем (например, 0.2 = 20%) 
         self.status = TakeProfit_Status.ACTIVE  # статус
         self.bar_executed = None  # индекс бара, в котором срабатывает стоп-лосс
-        self.profit = Decimal(0.0)
+        self.profit = 0.0
         
     def __repr__(self):
         return f"StopLoss(price={self.price}, volume={self.volume}, status={self.status.value}, bar_executed={self.bar_executed}, profit={self.profit})"
@@ -73,18 +73,18 @@ class Position:
         Рассчитывает общую прибыль/убыток по позиции
         исходя из сработавших Take Profit и Stop Loss.
         """
-        total_profit = Decimal('0.0')
-        total_closed_volume = Decimal('0.0')
+        total_profit = 0.0
+        total_closed_volume = 0.0
 
         for tp in self.take_profits:
             if tp.TakeProfit_Status == TakeProfit_Status.CANCELED and tp.TakeProfit_Status == TakeProfit_Status.ACTIVE:
                 continue
             if tp.bar_executed is not None:
-                closed_volume = float_to_decimal(self.volume_size * float(tp.volume))
+                closed_volume = self.volume_size * float(tp.volume)
                 if self.direction == Direction.LONG:
-                    profit = (float_to_decimal(tp.price) - self.entry_price) * closed_volume
+                    profit = float(float_to_decimal(tp.price) - self.entry_price) * closed_volume
                 else:  # SHORT
-                    profit = (self.entry_price - tp.price) * closed_volume
+                    profit = float(self.entry_price - float_to_decimal(tp.price)) * closed_volume
                 tp.profit = float(profit)
                 total_profit += profit
                 total_closed_volume += closed_volume
@@ -92,12 +92,12 @@ class Position:
                 
                 # Если сработал стоп-лосс — учитываем его
         if self.stop_loss and self.stop_loss.bar_executed is not None:
-            closed_volume = Decimal(self.volume_size) - total_closed_volume
+            closed_volume = self.volume_size - total_closed_volume
             if closed_volume > 0:
                 if self.direction == Direction.LONG:
-                    loss = Decimal(self.stop_loss.price - self.entry_price) * closed_volume
+                    loss = float(self.stop_loss.price - self.entry_price) * closed_volume
                 else:
-                    loss = Decimal(self.entry_price - self.stop_loss.price) * closed_volume
+                    loss = float(self.entry_price - self.stop_loss.price) * closed_volume
                 total_profit += loss
 
         self.profit = total_profit
