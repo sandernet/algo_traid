@@ -133,7 +133,7 @@ def select_range(data_df):
     # Преобразование строковых дат в datetime объекты
     start_dt = pd.to_datetime(start_date)
     end_dt = pd.to_datetime(end_date)
-    logger.info(f"+++ Запуск бэктеста на диапазоне с: {start_dt} по {end_dt}")
+    logger.info(f"📅 Период тестированияыы: {start_dt} ↔️   {end_dt}")
     
     # Фильтрация DataFrame по диапазону дат
     filtered_df = data_df[(data_df.index >= start_dt) & (data_df.index <= end_dt)].copy()
@@ -170,7 +170,7 @@ def run_local_backtest():
         symbol = coin.get("SYMBOL")+"/USDT"
         timeframe = coin.get("TIMEFRAME")
         tick_size = coin.get("MINIMAL_TICK_SIZE")
-        logger.info(f"🪙 Монета: [bold red]{symbol}[/bold red], ↔️ Таймфрейм: [bold red]{timeframe}[/bold red], Минимальный шаг цены {tick_size}")
+        logger.info(f"🪙 Монета: [bold yellow]{symbol}[/bold yellow], ↔️ Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный шаг цены {tick_size}")
         # 1. Инициализируем DataFetcher
         fetcher = DataFetcher( coin,
             exchange_id=exchange_id, 

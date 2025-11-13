@@ -30,7 +30,7 @@ class TakeProfitLevel:
         self.volume = volume  # доля от общей позиции (например, 0.2 = 20%)
         self.TakeProfit_Status = TakeProfit_Status.ACTIVE  # статус
         self.bar_executed = None  # индекс бара, в котором был выполнен Take Profit
-        self.profit = Decimal(0.0)
+        self.profit = 0.0
         
     def __repr__(self):
         return f"TakeProfitLevel(price={self.price}, volume={self.volume}, status={self.TakeProfit_Status.value}) \n"
@@ -77,15 +77,15 @@ class Position:
         total_closed_volume = Decimal('0.0')
 
         for tp in self.take_profits:
-            if tp.TakeProfit_Status == TakeProfit_Status.CANCELED:
+            if tp.TakeProfit_Status == TakeProfit_Status.CANCELED and tp.TakeProfit_Status == TakeProfit_Status.ACTIVE:
                 continue
             if tp.bar_executed is not None:
-                closed_volume = Decimal(str(tp.volume)) * Decimal(self.volume_size)
+                closed_volume = float_to_decimal(self.volume_size * float(tp.volume))
                 if self.direction == Direction.LONG:
-                    profit = self.round_to_step(tp.price) - self.entry_price * closed_volume
+                    profit = (float_to_decimal(tp.price) - self.entry_price) * closed_volume
                 else:  # SHORT
-                    profit = Decimal(self.entry_price - tp.price) * closed_volume
-                tp.profit = profit
+                    profit = (self.entry_price - tp.price) * closed_volume
+                tp.profit = float(profit)
                 total_profit += profit
                 total_closed_volume += closed_volume
           
