@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<title>Trade Report</title>
+<style>
+body{font-family: Arial, Helvetica, sans-serif; margin:20px; color:#111}
+h1{margin-bottom:0.2em}
+.summary{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+.card{background:#f7f7f9;border:1px solid #e1e1e6;padding:12px;border-radius:8px;min-width:160px}
+.table{width:100%;border-collapse:collapse;margin-top:10px}
+.table th,.table td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}
+.table th{background:#f0f0f3}
+.tp-table{width:100%;border-collapse:collapse;margin-top:6px}
+.tp-table th,.tp-table td{border:1px solid #ddd;padding:6px;font-size:0.9em}
+.toggle{cursor:pointer;color:#0056b3;text-decoration:underline}
+.meta{font-size:0.9em;color:#555;margin-top:6px}
+.details-row{display:none;background:#fafafa}
+.details-cell{padding:10px;border-top:none}
+tr:hover{background:#f5f5f5}
+</style>
+</head>
+<body>
+
+<h1>{{ title }}</h1>
+
+<div class="summary">
+  <div class="card"><strong>Total PnL</strong><div style="font-size:1.4em">{{ total_profit | round(2) }}</div></div>
+  <div class="card"><strong>Trades</strong><div style="font-size:1.4em">{{ trades_count }}</div></div>
+  <div class="card"><strong>Win rate</strong><div style="font-size:1.4em">{{ win_rate | round(2) }}%</div></div>
+  <div class="card"><strong>Wins / Losses / Flat</strong><div style="font-size:1.1em">{{ wins }} / {{ losses }} / {{ flat }}</div></div>
+</div>
+
+<table class="table">
+<thead><tr>
+<th>#</th><th>Symbol</th><th>Direction</th><th>Entry</th><th>Volume</th><th>Status</th>
+<th>Opened</th><th>Closed</th><th>Profit</th><th>Details</th>
+</tr></thead>
+<tbody>
+
+{% for r in reports %}
+<tr>
+  <td>{{ loop.index }}</td>
+  <td>{{ r.symbol }}</td>
+  <td>{{ r.direction }}</td>
+  <td>{{ r.entry_price }}</td>
+  <td>{{ r.volume }}</td>
+  <td>{{ r.status }}</td>
+  <td>{{ r.bar_opened }}</td>
+  <td>{{ r.bar_closed }}</td>
+  <td>{{ "%.2f"|format(r.profit) }}</td>
+  <td>
+    <span class="toggle" onclick="toggleDetails('{{ loop.index }}')">toggle</span>
+  </td
+</tr>
+
+<tr id="det-{{ loop.index }}" class="details-row">
+  <td colspan="10" class="details-cell">
+    <div class="meta"><strong>Take Profits:</strong></div>
+    {% if r.take_profits %}
+    <table class="tp-table">
+      <thead><tr><th>ID</th><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th><th>Profit</th></tr></thead>
+      <tbody>
+      {% for tp in r.take_profits %}
+      <tr>
+        <td>{{ tp.id }}</td>
+        <td>{{ tp.price }}</td>
+        <td>{{ tp.volume }}</td>
+        <td>{{ tp.status }}</td>
+        <td>{{ tp.bar_executed }}</td>
+        <td>{{ "%.2f"|format(tp.profit) }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <i>— нет</i>
+    {% endif %}
+
+    <div class="meta"><strong>Stop Loss:</strong></div>
+    {% if r.stop_loss %}
+    <table class="tp-table">
+      <tr><th>Price</th><th>Volume</th><th>Status</th><th>Bar Executed</th></tr>
+      <tr>
+        <td>{{ r.stop_loss.price }}</td>
+        <td>{{ r.stop_loss.volume }}</td>
+        <td>{{ r.stop_loss.status }}</td>
+        <td>{{ r.stop_loss.bar_executed }}</td>
+      </tr>
+    </table>
+    {% else %}
+    <i>— нет</i>
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}
+
+</tbody>
+</table>
+
+<script>
+function toggleDetails(id){
+  const row = document.getElementById('det-' + id);
+  if(row.style.display === 'none' || row.style.display === ''){
+    row.style.display = 'table-row';
+  } else {
+    row.style.display = 'none';
+  }
+}
+</script>
+
+</body></html>
