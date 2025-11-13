@@ -91,7 +91,7 @@ python app.py --btest
 - `EXCHANGE_SETTINGS` - настройки биржи
 - `STRATEGY_SETTINGS` - параметры стратегий
 - `RISK_SETTINGS` - настройки риск-менеджмента
-- `MODE_SETTINGS` - режим работы (live/backtest)
+- `BACKTEST_SETTINGS` - режим работы (live/backtest)
 - `LOGGING_SETTINGS` - настройки логирования
 - `TELEGRAM_SETTINGS` - настройки Telegram бота
 

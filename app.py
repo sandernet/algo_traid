@@ -23,7 +23,7 @@ def main():
         help='запуск отладки стратегии на локальных данных'
     )
     # Добавляем параметр --btest
-    data_dir = config.get_setting("MODE_SETTINGS", "DATA_DIR")
+    data_dir = config.get_setting("BACKTEST_SETTINGS", "DATA_DIR")
     parser.add_argument(
         '--btest',
         action='store_true',  # Флаг (без значения)

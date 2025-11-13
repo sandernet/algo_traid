@@ -7,14 +7,14 @@
 # Настройки торговых монет (SYMBOLS)
 # =====================================================================
 COINS:
-  - SYMBOL: BTC
-    TIMEFRAME: "D"
-    AUTO_TRADING: true
-    START_DEPOSIT_USDT: 100
-    MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
-    LEVERAGE: 5  # Плечо
-    # Размер ордера (в usdt )
-    VOLUME_SIZE  : 100    
+  # - SYMBOL: BTC
+  #   TIMEFRAME: "D"
+  #   AUTO_TRADING: true
+  #   START_DEPOSIT_USDT: 100
+  #   MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
+  #   LEVERAGE: 5  # Плечо
+  #   # Размер ордера (в usdt )
+  #   VOLUME_SIZE  : 100
 
   - SYMBOL: ETH
     TIMEFRAME: "D"
@@ -44,13 +44,10 @@ EXCHANGE_SETTINGS:
   API_KEY: "MgrXLxN6GPT3j7Bqu2"
   API_SECRET: "vB2j0v4zQU8oafG5eVCh7Nem1pKu8iUqde6b"
   CATEGORY: "spot"
-  TIMEFRAME: "D"
+  # TIMEFRAME: "D"
   LIMIT: 1000
   TESTNET: false
   DEMO: true
-  START_DATETIME: null
-  END_DATETIME: null
-  INTERVAL_DAY: 365
 
 # ======================================================================
 # СЕКЦИЯ СТРАТЕГИИ (STRATEGY_SETTINGS)
@@ -58,7 +55,6 @@ EXCHANGE_SETTINGS:
 STRATEGY_SETTINGS:
   MINIMAL_BARS: 100 # Минимальное количество баров для расчета индикаторов
   # Параметр отклонения ZigZag
-  # ZIGZAG_DISTANCE: 12
   ZIGZAG_DEPTH: 12
   ZIGZAG_DEVIATION: 5
   ZIGZAG_BACKTEP: 2
@@ -93,14 +89,13 @@ RISK_SETTINGS:
   MAX_POSITIONS: 3
 
 # ======================================================================
-# СЕКЦИЯ ТЕСТИРОВАНИЯ/РАБОТЫ (MODE_SETTINGS)
+# СЕКЦИЯ ТЕСТИРОВАНИЯ/РАБОТЫ (BACKTEST_SETTINGS)
 # ======================================================================
-MODE_SETTINGS:
-  # Режим работы: 'live', 'backtest', 'paper'
-  MODE: backtest
+BACKTEST_SETTINGS:
   # Директория для хранения исторических данных
   DATA_DIR: DATA_OHLCV/
   REPORT_DIRECTORY: REPORT/
+  TEMPLATE_DIRECTORY: TEMPLATES/
 
   FULL_DATAFILE: false
   # начальная ДАТА для бэктеста
@@ -122,9 +117,7 @@ LOGGING_SETTINGS:
   MAX_BYTES: 10485760
   # Количество хранимых резервных файлов логов
   BACKUP_COUNT: 5
-
-   
-  
+ 
 # ======================================================================
 # СЕКЦИЯ ТЕЛЕГРАМ (TELEGRAM_SETTINGS)
 # ======================================================================

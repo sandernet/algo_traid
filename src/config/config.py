@@ -12,11 +12,12 @@ REQUIRED_SETTINGS: Dict[str, Dict[str, Any]] = {
         "EXCHANGE_ID": str,
         "API_KEY": str,
         "API_SECRET": str,
-        "TIMEFRAME": str,
+        # "TIMEFRAME": str,
         "CATEGORY": str,
         "LIMIT": int,
     },
     "STRATEGY_SETTINGS": {
+        "MINIMAL_BARS": int,
         "ZIGZAG_DEPTH": (int, float),
         "ZIGZAG_DEVIATION": (int, float),
         "ZIGZAG_BACKTEP": (int, float),
@@ -27,13 +28,26 @@ REQUIRED_SETTINGS: Dict[str, Dict[str, Any]] = {
         "TAKE_PROFIT_PERCENT": (int, float),
         "MAX_POSITIONS": int,
     },
-    "MODE_SETTINGS": {
-        "MODE": str,
+    "BACKTEST_SETTINGS": {
+        "DATA_DIR": str,
+        "REPORT_DIRECTORY": str,
+        "FULL_DATAFILE": bool
+    },
+    "LOGGING_SETTINGS": {
+        "LEVEL": str,
+        "LOG_DIR": str,
+        "FILENAME": str,
+        "MAX_BYTES": int,
+        "BACKUP_COUNT": int
     },
     "TELEGRAM_SETTINGS": {
         "TOKEN": str,
         "ADMIN_ID": int,
         "CHANNEL_ID": int
+    },
+    "SCHEDULER_SETTINGS": {
+        "ENABLED": bool,
+        "TIMEZONE": str
     }
 }
 # Определение ожидаемых параметров и их типов для каждого элемента в массиве COINS
@@ -42,8 +56,9 @@ REQUIRED_COIN_FIELDS: Dict[str, Any] = {
     "TIMEFRAME": str,
     "AUTO_TRADING": bool,
     "START_DEPOSIT_USDT": (int, float),
-    # "ORDERTYPE": str
-    "MINIMAL_TICK_SIZE": (int, float) # Минимальный размер шага цены
+    "LEVERAGE": (int, float),
+    "MINIMAL_TICK_SIZE": (int, float), # Минимальный размер шага цены
+    "VOLUME_SIZE": (int, float)
 }
 
 class ConfigValidationError(Exception):
@@ -77,8 +92,7 @@ class ConfigManager:
         """Проверяет наличие и тип всех обязательных параметров."""
         print("🔍 Запуск валидации конфигурации...")
         errors = []
-        mode = self.get_setting("MODE_SETTINGS", "MODE").lower()
-
+        
         # 1. Проверка наличия и типа основных параметров
         for section, settings in REQUIRED_SETTINGS.items():
             if section not in self._config:
@@ -126,19 +140,19 @@ class ConfigManager:
                             errors.append(f"[COINS][{i}] ({coin.get('SYMBOL', 'UNKNOWN')}): Некорректный тип для '{key}'. Ожидается {expected_type.__name__}, но получено {type(value).__name__}.")
             
         
-        # Проверка API-ключей, если это Live или Paper Trading
-        if mode in ['live', 'paper']:
-            api_key = self._config.get("EXCHANGE_SETTINGS", {}).get("API_KEY")
-            secret_key = self._config.get("EXCHANGE_SETTINGS", {}).get("SECRET_KEY")
+        # # Проверка API-ключей, если это Live или Paper Trading
+        # if mode in ['live', 'paper']:
+        #     api_key = self._config.get("EXCHANGE_SETTINGS", {}).get("API_KEY")
+        #     secret_key = self._config.get("EXCHANGE_SETTINGS", {}).get("SECRET_KEY")
             
-            if not api_key:
-                errors.append("Для режима 'live'/'paper' требуется API_KEY.")
-            if not secret_key:
-                errors.append("Для режима 'live'/'paper' требуется SECRET_KEY.")
+        #     if not api_key:
+        #         errors.append("Для режима 'live'/'paper' требуется API_KEY.")
+        #     if not secret_key:
+        #         errors.append("Для режима 'live'/'paper' требуется SECRET_KEY.")
                 
         # # Проверка параметров бэктестинга
         # if mode == 'backtest':
-        #     if not self.get_setting("MODE_SETTINGS", "BACKTEST_START_DATE"):
+        #     if not self.get_setting("BACKTEST_SETTINGS", "BACKTEST_START_DATE"):
         #         errors.append("Для режима 'backtest' требуется BACKTEST_START_DATE.")
         #     # Здесь можно добавить проверку формата даты
         
@@ -161,7 +175,7 @@ class ConfigManager:
         
         print("✅ Валидация конфигурации успешно пройдена.")
     
-    def get_setting(self, section: str, key: str):
+    def get_setting(self, section: str, key: str, logger=None):
         """Возвращает конкретную настройку по секции и ключу."""
         # ... (Код без изменений)
         if section in self._config and key in self._config[section]:
@@ -169,14 +183,20 @@ class ConfigManager:
         else:
             # Во время runtime мы предполагаем, что _validate_config уже нашел все критические ошибки,
             # но для безопасности можно оставить эту проверку.
+            if logger:
+                logger.error(f"❌ Настройка '{key}' не найдена в секции '{section}'.")
             # return None 
             raise KeyError(f"Настройка '{key}' не найдена в секции '{section}'.")
 
-    def get_section(self, section: str) -> dict:
+    def get_section(self, section: str, logger=None) -> dict:
         """Возвращает всю секцию настроек."""
         if section in self._config:
             return self._config[section]
         else:
+            
+            if logger:
+                logger.error(f"❌ Секция '{section}' не найдена в файле конфигурации.")
+
             raise KeyError(f"❌ Секция '{section}' не найдена в файле конфигурации.")
 
 try:

@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 from src.config.config import config
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
 from src.orders_block.trade_position import Position, PositionStatus, TakeProfit_Status
-from src.backtester.repot import TradeReport, generate_html_report
+from src.backtester.repot import TradeReport, generate_html_report, get_export_path
 
 
 # ====================================================
@@ -106,9 +106,9 @@ def select_range(data_df):
     :return: pd.DataFrame — отфильтрованный DataFrame
     """
     
-    full_datafile = config.get_setting("MODE_SETTINGS", "FULL_DATAFILE")
-    start_date = config.get_setting("MODE_SETTINGS", "START_DATE")  
-    end_date = config.get_setting("MODE_SETTINGS", "END_DATE")
+    full_datafile = config.get_setting("BACKTEST_SETTINGS", "FULL_DATAFILE")
+    start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")  
+    end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
     
     # Если full_datafile = False, то возвращаем исходный DataFrame
     if full_datafile:
@@ -134,7 +134,8 @@ def run_local_backtest():
     # Получение настроек Биржи
     exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
     limit = config.get_setting("EXCHANGE_SETTINGS", "LIMIT")
-    data_dir = config.get_setting("MODE_SETTINGS", "DATA_DIR")
+    data_dir = config.get_setting("BACKTEST_SETTINGS", "DATA_DIR")
+    template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
         
     # 1. Получение массива монет из конфигурации
     try:
@@ -170,12 +171,13 @@ def run_local_backtest():
             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
             executed_positions = backtest_coin(select_data, coin)
             
-            files_report = coin.get("SYMBOL")+"_report.html"
-            path = generate_html_report(executed_positions,symbol, files_report, "src/backtester/templates")
-            logger.info(f"Отчет сохранен в: {files_report}")
+            files_report = get_export_path(symbol=symbol, file_extension="html")
+            files_report_csv = get_export_path(symbol=symbol, file_extension="csv")
+            path = generate_html_report(executed_positions,symbol, files_report, template_dir)
+            logger.info(f"Отчет сохранен в: {path}")
             
             executed_positions_df = pd.DataFrame(executed_positions)
-            executed_positions_df.to_csv(f"{data_dir}/{coin.get("SYMBOL")}_positions.csv", index=False)
+            executed_positions_df.to_csv(files_report_csv, index=False)
             
         else:
             logger.error(f"Невозможно запустить бектест для {symbol}: данные не загружены.")

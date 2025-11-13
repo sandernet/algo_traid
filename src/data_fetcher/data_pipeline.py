@@ -15,7 +15,7 @@ def run_data_update_pipeline():
     # Получение настроек Биржи
     exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
     limit = config.get_setting("EXCHANGE_SETTINGS", "LIMIT")
-    data_dir = config.get_setting("MODE_SETTINGS", "DATA_DIR")
+    data_dir = config.get_setting("BACKTEST_SETTINGS", "DATA_DIR")
     
     
     # 1. Получение массива монет

@@ -1,10 +1,10 @@
+import os
 import json
 from typing import List, Any
 from decimal import Decimal
 from enum import Enum
 import pandas as pd
 import datetime
-import html
 
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
@@ -21,8 +21,7 @@ class TradeReport:
         if position.status in (PositionStatus.NONE, PositionStatus.CREATED, PositionStatus.ACTIVE):
             logger.error("Статус позиции не в завершенном состоянии")
             raise ValueError("TradeReport can only be generated for closed positions.")
-        
-        
+
         self.symbol = position.symbol
         # self.direction = position.direction
         # 🔹 Безопасно преобразуем Enum в строку
@@ -118,6 +117,27 @@ class TradeReport:
             indent=indent,
             default=default_serializer
         )
+    
+# -------------------------------------------------------------
+# Формирование пути для экспорта и импорта файлов
+# -------------------------------------------------------------
+def get_export_path(symbol, file_extension: str ="html" ) -> str:
+    """
+    Формирует полный путь для сохранения файла и гарантирует существование директории.
+    """
+    file_prefix = f"{symbol.replace('/', '_')} report"
+    path = config.get_setting("BACKTEST_SETTINGS", "REPORT_DIRECTORY") 
+    
+    # 1. Создание директории, если она не существует
+    if not os.path.exists(path):
+        os.makedirs(path)
+        logger.info(f"Создана директория для экспорта: {path}")
+
+    # 2. Формирование имени файла
+    # Пример: BTC_USDT_15m_OHLCV.csv
+    file_name = f"{file_prefix}.{file_extension}"
+    
+    return os.path.join(path, file_name)
 
 
 # -----------------------
@@ -188,7 +208,6 @@ def generate_html_report(executed_reports, symbol, target_path, template_dir):
     Использует Jinja2-шаблон.
     """
     plain = [to_plain_dict(r) for r in executed_reports]
-    reports_directory = config.get_setting("STRATEGY_SETTINGS", "REPORT_DIRECTORY")
 
 
     title = symbol+" Trade Report"
