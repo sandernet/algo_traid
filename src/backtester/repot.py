@@ -41,20 +41,54 @@ class TradeReport:
         
         # Добавим стоп-лосс если есть
         stop_loss = position.stop_loss
+
+        if stop_loss is not None:
+            # Извлекаем price
+            price_val = self._to_float(getattr(stop_loss, 'price', None))
+            # Извлекаем volume
+            volume_val = self._to_float(getattr(stop_loss, 'volume', None))
+            # Извлекаем статус
+            status_val = getattr(stop_loss, 'status', None)
+            
+            # status_val = (
+            #     status_attr.value if hasattr(status_attr, 'value') else str(status_attr)
+            # ) if status_attr is not None else None
+            # Извлекаем bar_executed (предполагаем, что это int или None)
+            bar_executed_val = getattr(stop_loss, 'bar_executed', None)
+            if bar_executed_val is not None:
+                bar_executed_val = (
+                    bar_executed_val.isoformat()
+                    if hasattr(bar_executed_val, 'isoformat')
+                    else str(bar_executed_val)
+                )
+                
+            profit_sl = self._to_float(getattr(stop_loss, 'profit', Decimal('0.0')))
+        else:
+            price_val = volume_val = status_val = bar_executed_val  = None
+            profit_sl = Decimal('0.0')
+
         self.stop_loss = {
-            # безопасно извлекаем значение цены из возможного pandas/numpy объекта или просто берем как есть
-            "price": (lambda p: (None if p is None else (  # p — возможный scalar / Series / ndarray / Decimal
-                (lambda v: (v if v is None else (float(v) if isinstance(v, (int, float, Decimal)) else v)))
-                ( (p.item() if hasattr(p, "item") else (p.values[0] if getattr(p, "values", None) is not None else p)) )
-            )))(getattr(stop_loss, "price", None)),
-            "volume": (lambda v: float(v) if v is not None else None)(getattr(position.stop_loss, "volume", None)),
-            "status": (
-                stop_loss.status.value 
-                if stop_loss is not None and isinstance(stop_loss.status, TakeProfit_Status) 
-                else str(stop_loss.status) if stop_loss is not None else None
-            ),
-            "bar_executed": getattr(position.stop_loss, "bar_executed", None)
-             }
+            "price": price_val,
+            "volume": volume_val,
+            "status": status_val,
+            "bar_executed": bar_executed_val,
+            "profit": profit_sl
+        }
+        
+    @staticmethod
+    def _to_float(value):
+        """Безопасно преобразует Decimal, numpy, pandas scalar -> float или None."""
+        if value is None:
+            return None
+        # Обработка numpy/pandas
+        if hasattr(value, 'item'):
+            value = value.item()
+        elif hasattr(value, 'values') and len(getattr(value, 'values', [])) > 0:
+            value = value.values[0]
+        # Преобразование числовых типов
+        if isinstance(value, (int, float, Decimal)):
+            return float(value)
+        return None  # или raise ValueError, если строго
          
         
     def _take_profits_report(self, take_profits: List[TakeProfitLevel]) -> list[dict]:
@@ -70,7 +104,7 @@ class TradeReport:
             report_item = {
                 "id": i,
                 "price": float(take.price),
-                "volume": take.volume,
+                "volume": float(take.volume),
                 "status": take.TakeProfit_Status.value if isinstance(take.TakeProfit_Status, TakeProfit_Status) else str(take.TakeProfit_Status),
                 "bar_executed": take.bar_executed,
                 "profit": float(take.profit) if take.profit is not None else 0.0
@@ -85,11 +119,11 @@ class TradeReport:
             "symbol": self.symbol,
             "direction": self.direction,
             "entry_price": float(self.entry_price),
-            "volume": self.volume,
+            "volume": float(self.volume),
             "status": self.status,
             "bar_opened": self.bar_opened.isoformat() if self.bar_opened is not None else None,
             "bar_closed": self.bar_closed.isoformat() if self.bar_closed is not None else None,
-            "profit": self.profit,
+            "profit": float(self.profit),
             "take_profits": self.take_profits,
             "stop_loss": self.stop_loss
         }

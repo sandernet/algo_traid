@@ -41,29 +41,35 @@ def backtest_coin(data_df, coin) -> list:
     # перебираем все бары начиная с минимального количества
     # Это нужно для того, чтобы индикаторы были заполнены
     for i in range(MIN_BARS, len(data_df)):
-        logger.info(f"[yellow]----------------------------------------------------------- [/yellow]")
-        logger.info(f"[yellow]== Обработка бара {data_df.index[i]} === open: {data_df['open'].iloc[i]}, high: {data_df['high'].iloc[i]}, low: {data_df['low'].iloc[i]}, close: {data_df['close'].iloc[i]}[/yellow]")
+        
         current_data = data_df.iloc[i-MIN_BARS : i ]
-        current_bar = data_df.iloc[i]
-        # current_bar = data_df.index[i]
-            
+        current_bar = data_df.iloc[i] # текущий бар который обрабатывается
+        max_bars = current_data.iloc[-1]
+        print(max_bars)
+        current_index = current_bar.name
+        current_open = current_bar["open"]
+        current_high = current_bar["high"]
+        current_low = current_bar["low"]
+        current_close = current_bar["close"]
+        
+        
+        logger.info(f"[yellow]----------------------------------------------------------- [/yellow]")
+        logger.info(f"[yellow]== Обработка бара {current_index} === open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
         # рассчитываем индикаторы стратегии ищем точку входа
         signal = strategy.find_entry_point(current_data)
         
         if signal and position.status == PositionStatus.NONE:
-            logger.info(f"Сигнала {signal.get("direction")} на баре {current_bar}")
-            # def setPosition(self, symbol, direction, entry_price: Decimal, bar_index):
-            position.setPosition(symbol, signal.get("direction"), position.round_to_step(current_bar["open"]), current_bar.name)
+            logger.info(f"Сигнала {signal.get("direction")} на баре {current_index}")
+            # def setPosition(self, symbol, direction, entry_price: float, bar_index):
+            position.setPosition(symbol, signal.get("direction"), float(current_open), current_index)
             if signal.get("take_profits") is not None:
                 position.set_take_profits(signal.get("take_profits", []))
             
             if signal.get("stop_loss") is not None:
                 stop_loss = signal["stop_loss"]
                 stop_loss_volume = signal["stop_loss_volume"]
-                position.set_stop_loss(StopLoss(price=position.round_to_step(stop_loss), volume=stop_loss_volume))        
-                continue
-        
-        
+                position.set_stop_loss(StopLoss(price=float(stop_loss), volume=stop_loss_volume))        
+            
        
         
         # Алгоритм ведение и выхода из позиции
@@ -80,10 +86,13 @@ def backtest_coin(data_df, coin) -> list:
         if position.status == PositionStatus.ACTIVE or position.status == PositionStatus.TAKEN_PART:
             # Добавляем в позицию объем либо подключаем  модуль рискМенеджмента
             # проверяем на текущей свече сработал ли тейк-профит или стоп-лосс
-            position.check_take_profit(current_bar)
+            check = position.check_take_profit(current_bar)
             
             # position.stop_loss_not_loss(current_bar)
-            position.check_stop_loss(current_bar)
+            check = position.check_stop_loss(current_bar)
+            
+            if check:
+                position.close_orders(current_bar)
             
             
 
@@ -100,7 +109,7 @@ def backtest_coin(data_df, coin) -> list:
             position = Position(tick_size)
                 
             # Отменяем все оставшиеся ордера
-            # position.cancel_orders()
+            # position.close_orders()
 
         continue
     
