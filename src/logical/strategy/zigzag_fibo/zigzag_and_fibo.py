@@ -12,17 +12,12 @@ from src.logical.indicators.zigzag import ZigZag
 from src.orders_block.trade_position import TakeProfitLevel, Direction
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# data_df - DataFrame с данными для расчета индикаторов Подается нужное кол-во баров для расчета
-# расчет стратегии ZigZag и Фибоначчи 
-# на выходе получаем dataframe с рассчитанными индикаторами
+# Класс стратегии
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 class ZigZagAndFibo:
     # 
     def __init__(self, symbol: str):
         self.symbol = symbol # название монеты
-        
-        
 
     # Ищем точку входа по стратегии
     def find_entry_point(self, data_df) -> dict:
@@ -45,8 +40,6 @@ class ZigZagAndFibo:
 
         direction_zigzag = zigzag["direction"] # направление позиции -1 long, 1 short
         z2_index = zigzag["z2_index"] # индекс ближайшей точки z2 
-        signal_bar = data_df.index[-1] # индекс последнего бара
-        # current_index = current_bar.name # индекс текущего бара
         entry_price = data_df["close"].iloc[-1] # цена входа
         stop_loss = fiboLev[161.8]['level_price'] # уровень стоп лосс
         stop_loss_volume = fiboLev[161.8]['volume'] # объем стоп лосс
@@ -64,10 +57,10 @@ class ZigZagAndFibo:
             logger.info(f"Индикатор zigzag показывает что нужно входить в long {direction_zigzag}")
             # проверяем цену входа в позицию с первым тейком 1 уровня фибоначчи цена входа должна быть меньше уровня 1
             if entry_price < fiboLev[78.6]['level_price']:
-                logger.info(f"Цена входа {entry_price} [bold green]l < [/bold green] {fiboLev[78.6]['level_price']} [bold green]long[/bold green]")
+                logger.info(f"Цена входа {entry_price} [bold green] < [/bold green] {fiboLev[78.6]['level_price']} [bold green]long[/bold green]")
                 direction = Direction.LONG # направление позиции -1 long, 1 short
             else :
-                logger.info(f"Цена входа {entry_price} [bold red]l > [/bold red] {fiboLev[78.6]['level_price']}")
+                logger.info(f"Цена входа {entry_price} [bold red] > [/bold red] {fiboLev[78.6]['level_price']}")
                 logger.info(f"Пропускаем сигнал на long")
                 return {}
 
@@ -75,10 +68,10 @@ class ZigZagAndFibo:
             logger.info(f"Индикатор zigzag показывает что нужно входить в long {direction_zigzag}")
             # проверяем цену входа в позицию с первым тейком 1 уровня фибоначчи цена входа должна быть меньше уровня 1
             if entry_price > fiboLev[78.6]['level_price']:
-                logger.info(f"Цена входа {entry_price} [bold green]l > [/bold green] {fiboLev[78.6]['level_price']}")
+                logger.info(f"Цена входа {entry_price} [bold green] > [/bold green] {fiboLev[78.6]['level_price']}")
                 direction = Direction.SHORT # направление позиции -1 long, 1 short
             else :
-                logger.info(f"Цена входа {entry_price} [bold red]l < [/bold red] {fiboLev[78.6]['level_price']}")
+                logger.info(f"Цена входа {entry_price} [bold red] < [/bold red] {fiboLev[78.6]['level_price']}")
                 logger.info(f"Пропускаем сигнал на long")
                 return {}
             
@@ -98,14 +91,14 @@ class ZigZagAndFibo:
             "take_profits": tps,
             "stop_loss": stop_loss,
             "stop_loss_volume": stop_loss_volume,
+            "z2_index": z2_index
             }
 
         return signal
-        
-        
 
-    
+# ------------------------------------------
 # Расчет индикаторов
+# ------------------------------------------
 def calculate_indicators(data_df):
     try:
         

@@ -52,7 +52,6 @@ def backtest_coin(data_df, coin) -> list:
         
         if signal and position.status == PositionStatus.NONE:
             logger.info(f"Сигнала {signal.get("direction")} на баре {current_bar}")
-            position = Position(tick_size)
             # def setPosition(self, symbol, direction, entry_price: Decimal, bar_index):
             position.setPosition(symbol, signal.get("direction"), position.round_to_step(current_bar["open"]), current_bar.name)
             if signal.get("take_profits") is not None:

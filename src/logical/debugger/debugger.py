@@ -27,7 +27,7 @@ def debugger_strategy():
         coins_list = [] # Устанавливаем пустой список для безопасной работы
         
     # Подключение модуля с загрузчиком данных
-    from src.logical.data_fetcher.data_fetcher import DataFetcher
+    from src.data_fetcher.data_fetcher import DataFetcher
     # 2. Обработка каждой монеты   
     for coin in coins_list:
         logger.info("============================================================================")
@@ -47,9 +47,10 @@ def debugger_strategy():
             logger.info(f"🚀 Запуск стратегии 〽️ ZigZag и уровней Фибоначчи. {symbol} с локальными данными.")
             #  Здесь вы передаете data_full в ваш модуль стратегии или бектеста
 
-            from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import calculate_strategy
+            from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
+            strategy = ZigZagAndFibo(symbol)
             
-            zigzag, fiboLev = calculate_strategy(data_full)
+            zigzag, fiboLev = strategy.find_entry_point(data_full)
             
             if zigzag is None or fiboLev is None:
                 logger.error(f"Стратегия не вернула корректные результаты для {symbol}.")
