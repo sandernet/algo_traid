@@ -35,9 +35,6 @@ class ZigZagAndFibo:
 
         logger.info(f"ZigZag / z1 =: {zigzag["z1"]}, z2 =: {zigzag["z2"]}, z2_index: {zigzag['z2_index']} direction: {zigzag['direction']}")        
         
-
-        logger.info(f"Открытой позиций нет. запускаем стратегию")
-
         direction_zigzag = zigzag["direction"] # направление позиции -1 long, 1 short
         z2_index = zigzag["z2_index"] # индекс ближайшей точки z2 
         entry_price = data_df["close"].iloc[-1] # цена входа

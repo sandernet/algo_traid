@@ -45,20 +45,27 @@ def backtest_coin(data_df, coin) -> list:
         current_data = data_df.iloc[i-MIN_BARS : i ]
         current_bar = data_df.iloc[i] # текущий бар который обрабатывается
         max_bars = current_data.iloc[-1]
-        print(max_bars)
         current_index = current_bar.name
         current_open = current_bar["open"]
         current_high = current_bar["high"]
         current_low = current_bar["low"]
         current_close = current_bar["close"]
         
-        
         logger.info(f"[yellow]----------------------------------------------------------- [/yellow]")
         logger.info(f"[yellow]== Обработка бара {current_index} === open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
+        
+        #-------------------------------------------------------------
+        # Алгоритм входа в позицию и создание позиции
+        #-------------------------------------------------------------
+        
         # рассчитываем индикаторы стратегии ищем точку входа
         signal = strategy.find_entry_point(current_data)
         
+        # TODO Проверить подходит ли сигнал для создания позиции
+        
+        # Если сигнал есть и позиция еще не создана
         if signal and position.status == PositionStatus.NONE:
+            logger.info(f"Status позиции {position.status}")
             logger.info(f"Сигнала {signal.get("direction")} на баре {current_index}")
             # def setPosition(self, symbol, direction, entry_price: float, bar_index):
             position.setPosition(symbol, signal.get("direction"), float(current_open), current_index)
@@ -69,37 +76,39 @@ def backtest_coin(data_df, coin) -> list:
                 stop_loss = signal["stop_loss"]
                 stop_loss_volume = signal["stop_loss_volume"]
                 position.set_stop_loss(StopLoss(price=float(stop_loss), volume=stop_loss_volume))        
-            
-       
         
-        # Алгоритм ведение и выхода из позиции
-        
-        # Если позиция только создана по стратегии добавляем объем позиции    
+        # Если позиция только создана статус CREATED
+        # Рассчитываем по риск менеджмент объем позиции    
         if position.status == PositionStatus.CREATED:
+            logger.info(f"Status позиции {position.status}")
             # TODO: Добавить в позицию модуль рискМенеджмента
             position.setVolume_size(volume_size)            
             
             position.status = PositionStatus.ACTIVE
             logger.info(f"Создана позиция:  {position}")
-            
+        
+        #-------------------------------------------------------------
+        # Алгоритм ведение и выхода из позиции
+        #-------------------------------------------------------------
+                    
         # Если позиция активна
         if position.status == PositionStatus.ACTIVE or position.status == PositionStatus.TAKEN_PART:
-            # Добавляем в позицию объем либо подключаем  модуль рискМенеджмента
+            logger.info(f"Status позиции {position.status}")
             # проверяем на текущей свече сработал ли тейк-профит или стоп-лосс
-            check = position.check_take_profit(current_bar)
+            close_TP = position.check_take_profit(current_bar)
             
-            # position.stop_loss_not_loss(current_bar)
-            check = position.check_stop_loss(current_bar)
+            close_SL = position.check_stop_loss(current_bar)
             
-            if check:
+            # если закрыты все take_profits или stop_loss закрываем позицию
+            if close_TP or close_SL:
                 position.close_orders(current_bar)
             
-            
-
-        # рассчитываем прибыль если позиция исполнена
+        # если позиция выполнена вся
         if position.status == PositionStatus.TAKEN_FULL or position.status == PositionStatus.STOPPED:
+            logger.info(f"Status позиции {position.status}")
+            # рассчитываем прибыль
             position.Calculate_profit()
-            # --- Сохраняем копию позиции в отчет ---
+            # --- Сохраняем позицию в отчет ---
             report = TradeReport(position)
             executed_positions.append(report.to_dict())
             
@@ -107,12 +116,7 @@ def backtest_coin(data_df, coin) -> list:
             logger.info(f"-----------------------------------------------------------------------------")
             # --- Создаем чистую заготовку для позиции ---
             position = Position(tick_size)
-                
-            # Отменяем все оставшиеся ордера
-            # position.close_orders()
-
-        continue
-    
+   
     return executed_positions
         
 
