@@ -68,7 +68,10 @@ def backtest_coin(data_df, data_df_1m, coin) -> list:
         # рассчитываем индикаторы стратегии ищем точку входа
         signal = strategy.find_entry_point(current_data)
         
-        
+        # Если сигнал есть и позиция еще не закрыта
+        if signal and position.bar_closed is None:
+            # TODO проверить если сигнал в обратную стророну надо закрыть позицию
+            pass
         
         # Если сигнал есть и позиция еще не создана
         if signal and position.status == Position_Status.NONE:
