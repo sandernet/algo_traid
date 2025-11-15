@@ -17,7 +17,7 @@ COINS:
   #   VOLUME_SIZE  : 100
 
   - SYMBOL: ETH
-    TIMEFRAME: "1"
+    TIMEFRAME: "D"
     AUTO_TRADING: true
     START_DEPOSIT_USDT: 100
     MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены

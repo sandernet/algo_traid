@@ -14,11 +14,11 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 from src.config.config import config
 
-from src.orders_block.trade_position import Position, PositionStatus, TakeProfitLevel, Direction, TakeProfit_Status 
+from src.orders_block.trade_position import Position, Position_Status, TakeProfit, Direction, TakeProfit_Status 
 
 class TradeReport:
     def __init__(self, position: 'Position'):
-        if position.status in (PositionStatus.NONE, PositionStatus.CREATED, PositionStatus.ACTIVE):
+        if position.status in (Position_Status.NONE, Position_Status.CREATED, Position_Status.ACTIVE):
             logger.error("Статус позиции не в завершенном состоянии")
             raise ValueError("TradeReport can only be generated for closed positions.")
 
@@ -32,7 +32,7 @@ class TradeReport:
         self.volume = position.volume_size
         # self.status = position.status
         self.status = (
-            position.status.value if isinstance(position.status, PositionStatus) else str(position.status)
+            position.status.value if isinstance(position.status, Position_Status) else str(position.status)
         )
         self.bar_opened = position.bar_opened
         self.bar_closed = position.bar_closed
@@ -91,7 +91,7 @@ class TradeReport:
         return None  # или raise ValueError, если строго
          
         
-    def _take_profits_report(self, take_profits: List[TakeProfitLevel]) -> list[dict]:
+    def _take_profits_report(self, take_profits: List[TakeProfit]) -> list[dict]:
         """
         Формирует структуру отчёта по уровням Take Profit.
         """
@@ -105,7 +105,7 @@ class TradeReport:
                 "id": i,
                 "price": float(take.price),
                 "volume": float(take.volume),
-                "status": take.TakeProfit_Status.value if isinstance(take.TakeProfit_Status, TakeProfit_Status) else str(take.TakeProfit_Status),
+                "status": take.Status.value if isinstance(take.Status, TakeProfit_Status) else str(take.Status),
                 "bar_executed": take.bar_executed,
                 "profit": float(take.profit) if take.profit is not None else 0.0
             }

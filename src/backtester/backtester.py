@@ -3,15 +3,91 @@
 # Расчет метрик производительности (прибыльность, просадка, Sharpe Ratio).
 
 import pandas as pd
+from pandas import Timedelta, DateOffset
 # Логирование
 # ====================================================
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 from src.config.config import config
-from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
-from src.orders_block.trade_position import Position, PositionStatus, TakeProfit_Status, StopLoss
+from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo, PositionsManager
+from src.orders_block.trade_position import Position, Position_Status, TakeProfit_Status, StopLoss
+
 from src.backtester.repot import TradeReport, generate_html_report, get_export_path
+
+ALLOWED_Z2_OFFSET = 1  # допустимый сдвиг индекса z2 относительно current_index
+
+
+def shift_timestamp(index, bars: int, timeframe: str, direction: int = -1):
+    """
+    Сдвигает метку времени на заданное количество баров для заданного таймфрейма.
+
+    index: pandas.Timestamp или числовой индекс (int)
+    bars: число баров (int, >=0)
+    timeframe: строка таймфрейма, поддерживает: числовые минуты ('1','3','5','15',...),
+               единицы 'D','W','M' или форматы с суффиксом ('15m','1h').
+    direction: -1 для сдвига назад (index - bars*tf), +1 для вперёд.
+
+    Возвращает новый индекс того же типа, что и входной (Timestamp или int).
+    """
+    # если индекс не временной (например, целочисленный индекс), просто сдвигаем по числу баров
+    if not isinstance(index, (pd.Timestamp, pd.DatetimeIndex)):
+        try:
+            # предполагаем, что index — целое число (позиция/номер строки)
+            return index + direction * bars
+        except Exception:
+            return index
+
+    tf = str(timeframe).strip()
+    # normalize
+    tf_upper = tf.upper()
+
+    # минутные значения — либо чисто число ("15"), либо с суффиксом m ("15m")
+    try:
+        if tf_upper.endswith('M') and not tf_upper.isdigit():
+            # could be '15M' meaning minutes or 'M' meaning month -> distinguish
+            # if single 'M' treat as month
+            if tf_upper == 'M':
+                delta = DateOffset(months=bars)
+            else:
+                # numeric part
+                num = int(tf_upper[:-1])
+                delta = Timedelta(minutes=num * bars)
+        elif tf_upper.endswith('H'):
+            num = int(tf_upper[:-1])
+            delta = Timedelta(minutes=60 * num * bars)
+        elif tf_upper in ('D', 'W', 'M'):
+            if tf_upper == 'D':
+                delta = DateOffset(days=bars)
+            elif tf_upper == 'W':
+                delta = DateOffset(weeks=bars)
+            else:  # 'M'
+                delta = DateOffset(months=bars)
+        else:
+            # try parse as integer minutes
+            num = int(tf_upper)
+            delta = Timedelta(minutes=num * bars)
+    except Exception:
+        # fallback: try parsing common patterns like '15m', '1h'
+        s = tf_upper
+        if s.endswith('M') and len(s) > 1:
+            num = int(s[:-1])
+            delta = Timedelta(minutes=num * bars)
+        elif s.endswith('H'):
+            num = int(s[:-1])
+            delta = Timedelta(minutes=60 * num * bars)
+        else:
+            # as last resort — treat timeframe as minutes if numeric part exists
+            digits = ''.join(ch for ch in s if ch.isdigit())
+            if digits:
+                delta = Timedelta(minutes=int(digits) * bars)
+            else:
+                # Unknown timeframe — возврат оригинального индекса
+                return index
+
+    if direction < 0:
+        return index - delta
+    return index + delta
 
 
 # ====================================================
@@ -28,6 +104,8 @@ def backtest_coin(data_df, coin) -> list:
     symbol = coin.get("SYMBOL")+"/USDT"
     tick_size = coin.get("MINIMAL_TICK_SIZE")
     volume_size = coin.get("VOLUME_SIZE")
+    timeframe = coin.get("TIMEFRAME")
+    
     
     executed_positions = []  # Список для хранения исполненных позиций
     
@@ -37,14 +115,16 @@ def backtest_coin(data_df, coin) -> list:
     
     # Инициализация стратегии    
     strategy = ZigZagAndFibo(symbol)
+    # Создаём модель позиции и менеджер, который управляет этой позицией
     position = Position(tick_size)
+    pos_mgr = PositionsManager(position)
     # перебираем все бары начиная с минимального количества
     # Это нужно для того, чтобы индикаторы были заполнены
     for i in range(MIN_BARS, len(data_df)):
         
         current_data = data_df.iloc[i-MIN_BARS : i ]
         current_bar = data_df.iloc[i] # текущий бар который обрабатывается
-        max_bars = current_data.iloc[-1]
+        signal_bar = current_data.iloc[-1]
         current_index = current_bar.name
         current_open = current_bar["open"]
         current_high = current_bar["high"]
@@ -61,30 +141,57 @@ def backtest_coin(data_df, coin) -> list:
         # рассчитываем индикаторы стратегии ищем точку входа
         signal = strategy.find_entry_point(current_data)
         
-        # TODO Проверить подходит ли сигнал для создания позиции
+        
         
         # Если сигнал есть и позиция еще не создана
-        if signal and position.status == PositionStatus.NONE:
-            logger.info(f"Status позиции {position.status}")
-            logger.info(f"Сигнала {signal.get("direction")} на баре {current_index}")
+        if signal and position.status == Position_Status.NONE:
+            # TODO Проверить подходит ли сигнал для создания позиции
+            # Условия для создания позиции
+            # 1 свеча крайней точки сигнала индикатора ZigZag (signal.get("z2_index")) должна быть совпадать с текущим баром, либо быть меньше на 1 бар
+            # 2 точка входа в long должна быть меньше точки первого уровня фибо
+            # 3 точка входа в short должна быть больше точки первого уровня фибо    
+                        
+            # безопасные извлечения
+            z2_index = signal.get("z2_index")
+            direction = signal.get("direction")
+            tps = signal.get("take_profits") or []
+            sl_price = signal.get("stop_loss")
+            sl_volume = signal.get("stop_loss_volume")
+            entry_price = float(current_open)  # приводим к Decimal, берем цену открытия бара как предполагаемую цену входа
+
+            # 1) обязательный z2_index
+            if z2_index is None:
+                logger.debug(f"Пропускаем сигнал: отсутствует z2_index")
+                continue
+
+            # 2) z2_index должен быть текущим баром или не более чем на ALLOWED_Z2_OFFSET баров раньше
+            allowed_shifted = shift_timestamp(current_index, ALLOWED_Z2_OFFSET, timeframe, direction=-1)
+            if not (z2_index == current_index or z2_index == allowed_shifted):
+                logger.debug(f"Пропускаем сигнал: z2_index={z2_index} не в допустимом окне (текущий={current_index})")
+                continue
+    
+
+            logger.info(f"Сигнала {signal.get("direction")} z2 = {z2_index} на баре  ({current_index})")
             # def setPosition(self, symbol, direction, entry_price: float, bar_index):
             position.setPosition(symbol, signal.get("direction"), float(current_open), current_index)
             if signal.get("take_profits") is not None:
                 position.set_take_profits(signal.get("take_profits", []))
+
             
             if signal.get("stop_loss") is not None:
                 stop_loss = signal["stop_loss"]
                 stop_loss_volume = signal["stop_loss_volume"]
                 position.set_stop_loss(StopLoss(price=float(stop_loss), volume=stop_loss_volume))        
         
-        # Если позиция только создана статус CREATED
-        # Рассчитываем по риск менеджмент объем позиции    
-        if position.status == PositionStatus.CREATED:
-            logger.info(f"Status позиции {position.status}")
+            # # Если позиция только создана статус CREATED
+            # # Рассчитываем по риск менеджмент объем позиции    
+            # if position.status == Position_Status.CREATED:
+            # 
             # TODO: Добавить в позицию модуль рискМенеджмента
             position.setVolume_size(volume_size)            
             
-            position.status = PositionStatus.ACTIVE
+            
+            position.status = Position_Status.ACTIVE
             logger.info(f"Создана позиция:  {position}")
         
         #-------------------------------------------------------------
@@ -92,30 +199,31 @@ def backtest_coin(data_df, coin) -> list:
         #-------------------------------------------------------------
                     
         # Если позиция активна
-        if position.status == PositionStatus.ACTIVE or position.status == PositionStatus.TAKEN_PART:
+        if position.bar_closed is None and position.status == Position_Status.ACTIVE or position.status == Position_Status.TAKEN_PART:
             logger.info(f"Status позиции {position.status}")
             # проверяем на текущей свече сработал ли тейк-профит или стоп-лосс
-            close_TP = position.check_take_profit(current_bar)
-            
-            close_SL = position.check_stop_loss(current_bar)
-            
+            close_TP = pos_mgr.check_take_profit(current_bar)
+
+            close_SL = pos_mgr.check_stop_loss(current_bar)
+
             # если закрыты все take_profits или stop_loss закрываем позицию
             if close_TP or close_SL:
-                position.close_orders(current_bar)
+                pos_mgr.close_orders(current_bar)
+                logger.info(f"Закрываем позициию {position} по {current_bar}")
             
-        # если позиция выполнена вся
-        if position.status == PositionStatus.TAKEN_FULL or position.status == PositionStatus.STOPPED:
-            logger.info(f"Status позиции {position.status}")
+        # если позиция выполнена и заполнена дата закрытия
+        if position.bar_closed is not None:
+            
             # рассчитываем прибыль
-            position.Calculate_profit()
+            pos_mgr.Calculate_profit()
             # --- Сохраняем позицию в отчет ---
             report = TradeReport(position)
             executed_positions.append(report.to_dict())
             
-            logger.info(f"Исполнена позиция статус: {report.to_json()}")
             logger.info(f"-----------------------------------------------------------------------------")
             # --- Создаем чистую заготовку для позиции ---
             position = Position(tick_size)
+            pos_mgr = PositionsManager(position)
    
     return executed_positions
         
