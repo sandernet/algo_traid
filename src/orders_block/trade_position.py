@@ -24,7 +24,7 @@ class StopLoss_Status(Enum):
     ACTIVE = "active"
     EXECUTED = "executed"
     CANCELED = "canceled"
-    NO_LOSS = "no_loss" # Без убытка, при закрытии первого тейка-профит
+    NO_LOSS = "no_loss" # Без убытка, при закрытии первого take_profit
     
 class Direction(Enum):
     LONG = "long"
@@ -146,7 +146,7 @@ class Position:
     # Проверяет, сработал ли Stop Loss
     # если закрыт стоп-лосс возвращает True
     def check_stop_loss(self, current_bar) -> bool:
-        # если статус стоп-лосса Активный
+        # если статус stop_loss Активный
         if self.stop_loss and self.stop_loss.bar_executed is None and self.stop_loss.status == StopLoss_Status.ACTIVE:
             # проверяем с текущим баром
             if (self.direction == Direction.LONG and current_bar["low"] <= self.stop_loss.price) or (self.direction == Direction.SHORT and current_bar["high"] >= self.stop_loss.price):
@@ -157,7 +157,7 @@ class Position:
                 self.stop_loss.bar_executed = current_bar.name
                 self.bar_closed = current_bar.name
                 return True
-        # если статус стоп-лосса Без убыток
+        # если статус stop_loss Без убыток
         if self.stop_loss and self.stop_loss.bar_executed is None and self.stop_loss.status == StopLoss_Status.NO_LOSS:
             if (self.direction == Direction.LONG and current_bar["low"] <= self.entry_price) or (self.direction == Direction.SHORT and current_bar["high"] >= self.entry_price):
                 # меняем статус
@@ -169,9 +169,17 @@ class Position:
         return False
     
     # Останавливает позицию
+    # если у позиции остался обьем не закрытый закрываем его по текущей цене (в бэктесте берем открытие текущей свечи)
     def close_orders(self, current_bar):
         
         status = PositionStatus.CANCELLED
+        # если стоп-лосс не исполнен
+        if self.stop_loss and self.stop_loss.bar_executed is None:
+            status = PositionStatus.CANCELLED
+            self.stop_loss.status = StopLoss_Status.CANCELED
+            self.stop_loss.bar_executed = current_bar.name
+            self.stop_loss.price = current_bar["open"]
+
         
         if self.status == PositionStatus.TAKEN_PART:
             status = PositionStatus.TAKEN_PART
@@ -182,15 +190,8 @@ class Position:
         
         if self.status == PositionStatus.TAKEN_FULL:
             status = PositionStatus.TAKEN_FULL
-        # ==========================================
-        # ==========================================
-        # ==========================================
-        # ==========================================
-        if self.stop_loss and self.stop_loss.status == TakeProfit_Status.ACTIVE:
-            status = PositionStatus.CANCELLED
-            self.stop_loss.status = StopLoss_Status.CANCELED
 
-        
+
         self.bar_closed = current_bar.name
         self.status = status
         
@@ -227,7 +228,7 @@ class Position:
                 # Прибыль/убыток по данному TP (Decimal)
                 profit_decimal = price_diff * closed_volume_tp
                 
-                # Сохраняем результат в атрибутах класса (можно сохранить в float для консистентности)
+                # Сохраняем результат в атрибутах класса
                 tp.profit = profit_decimal
                 total_profit_decimal += profit_decimal
                 total_closed_volume += closed_volume_tp
@@ -256,7 +257,7 @@ class Position:
                 loss_decimal = price_diff * remaining_volume
                 
                 self.stop_loss.profit = loss_decimal
-                self.stop_loss.volume = remaining_volume # закрываем оставшийся обьем
+                self.stop_loss.volume = remaining_volume # закрываем оставшийся объем
                 total_profit_decimal += loss_decimal
         
         # # 3. Обновление итоговой прибыли позиции
