@@ -15,9 +15,255 @@ from src.orders_block.trade_position import Position, Position_Status, TakeProfi
 
 from src.backtester.repot import TradeReport, generate_html_report, get_export_path
 
-ALLOWED_Z2_OFFSET = 1  # допустимый сдвиг индекса z2 относительно current_index
+ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускается последняя точка zigzag
+
+# ====================================================
+# Запуск бэктеста для одной монеты
+# ====================================================
+def backtest_coin(data_df, data_df_1m, coin) -> list:
+    """
+    Запуск бэктеста с данными, загруженными из локального файла.
+    """
+    
+    # Получение минимальное количество баров из настроек
+    MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
+    
+    symbol = coin.get("SYMBOL")+"/USDT"
+    tick_size = coin.get("MINIMAL_TICK_SIZE")
+    volume_size = coin.get("VOLUME_SIZE")
+    timeframe = coin.get("TIMEFRAME")
+    
+    
+    executed_positions = []  # Список для хранения исполненных позиций
+    
+    if MIN_BARS > len(data_df):
+        logger.error(f"Невозможно запустить бектест: не хватает баров для расчета индикаторов.")
+        return executed_positions
+    
+    # Инициализация стратегии    
+    strategy = ZigZagAndFibo(symbol)
+    # Создаём модель позиции и менеджер, который управляет этой позицией
+    position = Position(tick_size)
+    pos_mgr = PositionsManager(position)
+    # перебираем все бары начиная с минимального количества
+    # Это нужно для того, чтобы индикаторы были заполнены
+    for i in range(MIN_BARS, len(data_df)):
+        
+        current_data = data_df.iloc[i-MIN_BARS : i ]
+        current_bar = data_df.iloc[i] # текущий бар который обрабатывается
+        signal_bar = current_data.iloc[-1]
+        current_index = current_bar.name
+        current_open = current_bar["open"]
+        current_high = current_bar["high"]
+        current_low = current_bar["low"]
+        current_close = current_bar["close"]
+        
+        logger.info(f"[yellow]----------------------------------------------------------- [/yellow]")
+        logger.info(f"[yellow]== Обработка бара {current_index} signal_bar {signal_bar.name} === open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
+        
+        #-------------------------------------------------------------
+        # Алгоритм входа в позицию и создание позиции
+        #-------------------------------------------------------------
+        
+        # рассчитываем индикаторы стратегии ищем точку входа
+        signal = strategy.find_entry_point(current_data)
+        
+        
+        
+        # Если сигнал есть и позиция еще не создана
+        if signal and position.status == Position_Status.NONE:
+            # TODO Проверить подходит ли сигнал для создания позиции
+            # Условия для создания позиции
+            # 1 свеча крайней точки сигнала индикатора ZigZag (signal.get("z2_index")) должна быть совпадать с текущим баром, либо быть меньше на 1 бар
+            # 2 точка входа в long должна быть меньше точки первого уровня фибо
+            # 3 точка входа в short должна быть больше точки первого уровня фибо    
+                        
+            # безопасные извлечения
+            z2_index = signal.get("z2_index")
+            direction = signal.get("direction")
+            tps = signal.get("take_profits") or []
+            sl_price = signal.get("stop_loss")
+            sl_volume = signal.get("stop_loss_volume")
+            entry_price = float(current_open)  # приводим к Decimal, берем цену открытия бара как предполагаемую цену входа
+
+            # 1) обязательный z2_index
+            if z2_index is None:
+                logger.debug(f"Пропускаем сигнал: отсутствует z2_index")
+                continue
+
+            # 2) z2_index должен быть текущим баром или не более чем на ALLOWED_Z2_OFFSET баров раньше
+            allowed_shifted = shift_timestamp(current_index, ALLOWED_Z2_OFFSET, timeframe, direction=-1)
+            if not (z2_index == current_index or z2_index == allowed_shifted):
+                logger.debug(f"Пропускаем сигнал: z2_index={z2_index} не в допустимом окне (текущий={current_index})")
+                continue
+    
+
+            logger.info(f"Сигнала {signal.get("direction")} z2 = {z2_index} на баре  ({current_index})")
+            # def setPosition(self, symbol, direction, entry_price: float, bar_index):
+            position.setPosition(symbol, signal.get("direction"), float(current_open), current_index)
+            if signal.get("take_profits") is not None:
+                position.set_take_profits(signal.get("take_profits", []))
+
+            
+            if signal.get("stop_loss") is not None:
+                stop_loss = signal["stop_loss"]
+                stop_loss_volume = signal["stop_loss_volume"]
+                position.set_stop_loss(StopLoss(price=float(stop_loss), volume=stop_loss_volume))        
+        
+            # # Если позиция только создана статус CREATED
+            # # Рассчитываем по риск менеджмент объем позиции    
+            # if position.status == Position_Status.CREATED:
+            # 
+            # TODO: Добавить в позицию модуль рискМенеджмента
+            position.setVolume_size(volume_size)            
+            
+            
+            position.status = Position_Status.ACTIVE
+            logger.info(f"Создана позиция:  {position}")
+        
+        #-------------------------------------------------------------
+        # Алгоритм ведение и выхода из позиции
+        #-------------------------------------------------------------
+                    
+        # Если позиция активна
+        if position.bar_closed is None and position.status == Position_Status.ACTIVE or position.status == Position_Status.TAKEN_PART:
+            logger.info(f"Status позиции {position.status}")
+            # проверяем на текущей свече сработал ли тейк-профит или стоп-лосс
+            
+            # перебираем минутный таймфрейм
+            start_ts = current_index
+            end_ts = shift_timestamp(current_index, 1, timeframe, direction=+1)
+            
+            # end_ts   = data_df.loc[i + 1, "timestamp"]
+            current_range_1m = select_range(data_df_1m, start_ts, end_ts)
+            for j in range(len(current_range_1m)):
+                
+                current_bar_1m = current_range_1m.iloc[j]
+                 
+                close_TP = pos_mgr.check_take_profit(current_bar_1m)
+
+                close_SL = pos_mgr.check_stop_loss(current_bar_1m)
+
+                # если закрыты все take_profits или stop_loss закрываем позицию
+                if close_TP or close_SL:
+                    pos_mgr.close_orders(current_bar)
+                    logger.info(f"Закрываем позициию {position} по {current_bar}")
+
+            
+        # если позиция выполнена и заполнена дата закрытия
+        if position.bar_closed is not None:
+            
+            # рассчитываем прибыль
+            pos_mgr.Calculate_profit()
+            # --- Сохраняем позицию в отчет ---
+            report = TradeReport(position)
+            executed_positions.append(report.to_dict())
+            
+            logger.info(f"-----------------------------------------------------------------------------")
+            # --- Создаем чистую заготовку для позиции ---
+            position = Position(tick_size)
+            pos_mgr = PositionsManager(position)
+   
+    return executed_positions
+        
 
 
+# ====================================================
+# Выбор диапазона дат для бэктеста
+# ==================================================== 
+def select_range_becktest(data_df):
+    """
+    Фильтрация DataFrame по заданному диапазону дат.
+    Если full_datafile = True, то возвращаем исходный DataFrame
+    
+    :param data_df: pd.DataFrame — исходный DataFrame с данными
+    :return: pd.DataFrame — отфильтрованный DataFrame
+    """
+    
+    full_datafile = config.get_setting("BACKTEST_SETTINGS", "FULL_DATAFILE")
+    start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")  
+    end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
+    
+    # Если full_datafile = False, то возвращаем исходный DataFrame
+    if full_datafile:
+        logger.info("Используется полный исторический диапазон. full_datafile = True")
+        return data_df
+    else:
+        logger.info(f"📅 Период тестированияыы: {start_date} ↔️   {end_date}")
+        return select_range(data_df, start_date, end_date)
+    
+def select_range(data_df, start_date, end_date):
+    # Преобразование строковых дат в datetime объекты
+    start_dt = pd.to_datetime(start_date)
+    end_dt = pd.to_datetime(end_date)
+
+    
+    # Фильтрация DataFrame по диапазону дат
+    filtered_df = data_df[(data_df.index >= start_dt) & (data_df.index <= end_dt)].copy()
+    
+    return filtered_df
+
+
+# точка входа для бэктеста
+# ====================================================
+def run_local_backtest():
+    """Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации."""
+
+    # Получение настроек Биржи
+    exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
+    limit = config.get_setting("EXCHANGE_SETTINGS", "LIMIT")
+    data_dir = config.get_setting("BACKTEST_SETTINGS", "DATA_DIR")
+    template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
+        
+    # 1. Получение массива монет из конфигурации
+    try:
+        coins_list = config.get_section("COINS")
+        logger.info(f"Загружено {len(coins_list)} монет из конфигурации.")
+    except KeyError as e:
+        # Хотя валидация должна была поймать это, это хорошая защита
+        logger.error(f"Критическая ошибка: {e}")
+        coins_list = [] # Устанавливаем пустой список для безопасной работы
+        
+    # Подключение модуля с загрузчиком данных
+    from src.data_fetcher.data_fetcher import DataFetcher
+    # 2. Обработка каждой монеты   
+    for coin in coins_list:
+        logger.info("============================================================================")
+        
+        symbol = coin.get("SYMBOL")+"/USDT"
+        timeframe = coin.get("TIMEFRAME")
+        tick_size = coin.get("MINIMAL_TICK_SIZE")
+        logger.info(f"🪙 Монета: [bold yellow]{symbol}[/bold yellow], ↔️ Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный шаг цены {tick_size}")
+        # 1. Инициализируем DataFetcher
+        fetcher = DataFetcher( coin,
+            exchange_id=exchange_id, 
+            limit=limit,
+            directory=data_dir,
+            )
+        # 2. Загрузка из файла
+        data_df = fetcher.load_from_csv(file_type="csv", timeframe=timeframe)
+        data_df_1m = fetcher.load_from_csv(file_type="csv")
+    
+        if data_df is not None:
+            logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
+            
+            select_data = select_range_becktest(data_df)
+            
+            #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
+            executed_positions = backtest_coin(select_data,data_df_1m, coin)
+            
+            files_report = get_export_path(symbol=symbol, file_extension="html")
+            files_report_csv = get_export_path(symbol=symbol, file_extension="csv")
+            path = generate_html_report(executed_positions,symbol, files_report, template_dir)
+            logger.info(f"Отчет сохранен в: {path}")
+            
+            executed_positions_df = pd.DataFrame(executed_positions)
+            executed_positions_df.to_csv(files_report_csv, index=False)
+            
+        else:
+            logger.error(f"Невозможно запустить бектест для {symbol}: данные не загружены.")
+        
+# сдвиг метки времени
 def shift_timestamp(index, bars: int, timeframe: str, direction: int = -1):
     """
     Сдвигает метку времени на заданное количество баров для заданного таймфрейма.
@@ -88,232 +334,3 @@ def shift_timestamp(index, bars: int, timeframe: str, direction: int = -1):
     if direction < 0:
         return index - delta
     return index + delta
-
-
-# ====================================================
-# Запуск бэктеста для одной монеты
-# ====================================================
-def backtest_coin(data_df, coin) -> list:
-    """
-    Запуск бэктеста с данными, загруженными из локального файла.
-    """
-    
-    # Получение минимальное количество баров из настроек
-    MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
-    
-    symbol = coin.get("SYMBOL")+"/USDT"
-    tick_size = coin.get("MINIMAL_TICK_SIZE")
-    volume_size = coin.get("VOLUME_SIZE")
-    timeframe = coin.get("TIMEFRAME")
-    
-    
-    executed_positions = []  # Список для хранения исполненных позиций
-    
-    if MIN_BARS > len(data_df):
-        logger.error(f"Невозможно запустить бектест: не хватает баров для расчета индикаторов.")
-        return executed_positions
-    
-    # Инициализация стратегии    
-    strategy = ZigZagAndFibo(symbol)
-    # Создаём модель позиции и менеджер, который управляет этой позицией
-    position = Position(tick_size)
-    pos_mgr = PositionsManager(position)
-    # перебираем все бары начиная с минимального количества
-    # Это нужно для того, чтобы индикаторы были заполнены
-    for i in range(MIN_BARS, len(data_df)):
-        
-        current_data = data_df.iloc[i-MIN_BARS : i ]
-        current_bar = data_df.iloc[i] # текущий бар который обрабатывается
-        signal_bar = current_data.iloc[-1]
-        current_index = current_bar.name
-        current_open = current_bar["open"]
-        current_high = current_bar["high"]
-        current_low = current_bar["low"]
-        current_close = current_bar["close"]
-        
-        logger.info(f"[yellow]----------------------------------------------------------- [/yellow]")
-        logger.info(f"[yellow]== Обработка бара {current_index} === open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
-        
-        #-------------------------------------------------------------
-        # Алгоритм входа в позицию и создание позиции
-        #-------------------------------------------------------------
-        
-        # рассчитываем индикаторы стратегии ищем точку входа
-        signal = strategy.find_entry_point(current_data)
-        
-        
-        
-        # Если сигнал есть и позиция еще не создана
-        if signal and position.status == Position_Status.NONE:
-            # TODO Проверить подходит ли сигнал для создания позиции
-            # Условия для создания позиции
-            # 1 свеча крайней точки сигнала индикатора ZigZag (signal.get("z2_index")) должна быть совпадать с текущим баром, либо быть меньше на 1 бар
-            # 2 точка входа в long должна быть меньше точки первого уровня фибо
-            # 3 точка входа в short должна быть больше точки первого уровня фибо    
-                        
-            # безопасные извлечения
-            z2_index = signal.get("z2_index")
-            direction = signal.get("direction")
-            tps = signal.get("take_profits") or []
-            sl_price = signal.get("stop_loss")
-            sl_volume = signal.get("stop_loss_volume")
-            entry_price = float(current_open)  # приводим к Decimal, берем цену открытия бара как предполагаемую цену входа
-
-            # 1) обязательный z2_index
-            if z2_index is None:
-                logger.debug(f"Пропускаем сигнал: отсутствует z2_index")
-                continue
-
-            # 2) z2_index должен быть текущим баром или не более чем на ALLOWED_Z2_OFFSET баров раньше
-            allowed_shifted = shift_timestamp(current_index, ALLOWED_Z2_OFFSET, timeframe, direction=-1)
-            if not (z2_index == current_index or z2_index == allowed_shifted):
-                logger.debug(f"Пропускаем сигнал: z2_index={z2_index} не в допустимом окне (текущий={current_index})")
-                continue
-    
-
-            logger.info(f"Сигнала {signal.get("direction")} z2 = {z2_index} на баре  ({current_index})")
-            # def setPosition(self, symbol, direction, entry_price: float, bar_index):
-            position.setPosition(symbol, signal.get("direction"), float(current_open), current_index)
-            if signal.get("take_profits") is not None:
-                position.set_take_profits(signal.get("take_profits", []))
-
-            
-            if signal.get("stop_loss") is not None:
-                stop_loss = signal["stop_loss"]
-                stop_loss_volume = signal["stop_loss_volume"]
-                position.set_stop_loss(StopLoss(price=float(stop_loss), volume=stop_loss_volume))        
-        
-            # # Если позиция только создана статус CREATED
-            # # Рассчитываем по риск менеджмент объем позиции    
-            # if position.status == Position_Status.CREATED:
-            # 
-            # TODO: Добавить в позицию модуль рискМенеджмента
-            position.setVolume_size(volume_size)            
-            
-            
-            position.status = Position_Status.ACTIVE
-            logger.info(f"Создана позиция:  {position}")
-        
-        #-------------------------------------------------------------
-        # Алгоритм ведение и выхода из позиции
-        #-------------------------------------------------------------
-                    
-        # Если позиция активна
-        if position.bar_closed is None and position.status == Position_Status.ACTIVE or position.status == Position_Status.TAKEN_PART:
-            logger.info(f"Status позиции {position.status}")
-            # проверяем на текущей свече сработал ли тейк-профит или стоп-лосс
-            close_TP = pos_mgr.check_take_profit(current_bar)
-
-            close_SL = pos_mgr.check_stop_loss(current_bar)
-
-            # если закрыты все take_profits или stop_loss закрываем позицию
-            if close_TP or close_SL:
-                pos_mgr.close_orders(current_bar)
-                logger.info(f"Закрываем позициию {position} по {current_bar}")
-            
-        # если позиция выполнена и заполнена дата закрытия
-        if position.bar_closed is not None:
-            
-            # рассчитываем прибыль
-            pos_mgr.Calculate_profit()
-            # --- Сохраняем позицию в отчет ---
-            report = TradeReport(position)
-            executed_positions.append(report.to_dict())
-            
-            logger.info(f"-----------------------------------------------------------------------------")
-            # --- Создаем чистую заготовку для позиции ---
-            position = Position(tick_size)
-            pos_mgr = PositionsManager(position)
-   
-    return executed_positions
-        
-
-
-# ====================================================
-# Выбор диапазона дат для бэктеста
-# ==================================================== 
-def select_range(data_df):
-    """
-    Фильтрация DataFrame по заданному диапазону дат.
-    Если full_datafile = True, то возвращаем исходный DataFrame
-    
-    :param data_df: pd.DataFrame — исходный DataFrame с данными
-    :return: pd.DataFrame — отфильтрованный DataFrame
-    """
-    
-    full_datafile = config.get_setting("BACKTEST_SETTINGS", "FULL_DATAFILE")
-    start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")  
-    end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
-    
-    # Если full_datafile = False, то возвращаем исходный DataFrame
-    if full_datafile:
-        logger.info("Используется полный исторический диапазон. full_datafile = True")
-        return data_df
-    
-    # Преобразование строковых дат в datetime объекты
-    start_dt = pd.to_datetime(start_date)
-    end_dt = pd.to_datetime(end_date)
-    logger.info(f"📅 Период тестированияыы: {start_dt} ↔️   {end_dt}")
-    
-    # Фильтрация DataFrame по диапазону дат
-    filtered_df = data_df[(data_df.index >= start_dt) & (data_df.index <= end_dt)].copy()
-    
-    return filtered_df
-
-
-# точка входа для бэктеста
-# ====================================================
-def run_local_backtest():
-    """Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации."""
-
-    # Получение настроек Биржи
-    exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
-    limit = config.get_setting("EXCHANGE_SETTINGS", "LIMIT")
-    data_dir = config.get_setting("BACKTEST_SETTINGS", "DATA_DIR")
-    template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
-        
-    # 1. Получение массива монет из конфигурации
-    try:
-        coins_list = config.get_section("COINS")
-        logger.info(f"Загружено {len(coins_list)} монет из конфигурации.")
-    except KeyError as e:
-        # Хотя валидация должна была поймать это, это хорошая защита
-        logger.error(f"Критическая ошибка: {e}")
-        coins_list = [] # Устанавливаем пустой список для безопасной работы
-        
-    # Подключение модуля с загрузчиком данных
-    from src.data_fetcher.data_fetcher import DataFetcher
-    # 2. Обработка каждой монеты   
-    for coin in coins_list:
-        logger.info("============================================================================")
-        
-        symbol = coin.get("SYMBOL")+"/USDT"
-        timeframe = coin.get("TIMEFRAME")
-        tick_size = coin.get("MINIMAL_TICK_SIZE")
-        logger.info(f"🪙 Монета: [bold yellow]{symbol}[/bold yellow], ↔️ Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный шаг цены {tick_size}")
-        # 1. Инициализируем DataFetcher
-        fetcher = DataFetcher( coin,
-            exchange_id=exchange_id, 
-            limit=limit,
-            directory=data_dir,
-            )
-        # 2. Загрузка из файла
-        data_df = fetcher.load_from_csv(file_type="csv")
-    
-        if data_df is not None:
-            logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
-            select_data = select_range(data_df)
-            #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
-            executed_positions = backtest_coin(select_data, coin)
-            
-            files_report = get_export_path(symbol=symbol, file_extension="html")
-            files_report_csv = get_export_path(symbol=symbol, file_extension="csv")
-            path = generate_html_report(executed_positions,symbol, files_report, template_dir)
-            logger.info(f"Отчет сохранен в: {path}")
-            
-            executed_positions_df = pd.DataFrame(executed_positions)
-            executed_positions_df.to_csv(files_report_csv, index=False)
-            
-        else:
-            logger.error(f"Невозможно запустить бектест для {symbol}: данные не загружены.")
-        

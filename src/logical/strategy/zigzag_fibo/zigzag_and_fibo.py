@@ -138,13 +138,13 @@ class PositionsManager():
                     tp.bar_executed = current_bar.name
                     logger.info(f"Take Profit с объемом {tp.volume} от позиции, ценой {tp.price} исполнен в баре {tp.bar_executed}")
         
-        # Проверяем первый  Take Profit 
-        if position.take_profits and position.take_profits[0].Status == TakeProfit_Status.EXECUTED:
-            # меняем статус
-            position.status = Position_Status.TAKEN_PART
-            logger.info(f"Исполнен первый Take Profit")
-            position.stop_loss_not_loss() # переводим стоп-лосс в без убыток
-            logger.info(f"Переводим стоп-лосс в без убыток")
+                    # Проверяем первый  Take Profit 
+                    if position.status == Position_Status.ACTIVE:
+                        # меняем статус
+                        position.status = Position_Status.TAKEN_PART
+                        logger.info(f"Исполнен первый Take Profit")
+                        position.stop_loss_not_loss() # переводим стоп-лосс в без убыток
+                        logger.info(f"Переводим стоп-лосс в без убыток")
             
                         
         # Проверяем последний Take Profit исполнен
@@ -192,7 +192,7 @@ class PositionsManager():
         
         position = self.position
         
-        status = Position_Status.CANCELLED
+        status = Position_Status.STOPPED
         # если стоп-лосс не исполнен
         if position.stop_loss and position.stop_loss.bar_executed is None:
             status = Position_Status.CANCELLED

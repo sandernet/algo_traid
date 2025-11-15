@@ -66,11 +66,11 @@ class DataFetcher:
     # -------------------------------------------------------------
     # ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Формирование пути для экспорта и импорта файлов
     # -------------------------------------------------------------
-    def _get_export_path(self, file_extension: str = "csv") -> str:
+    def _get_export_path(self, timeframe: str, file_extension: str = "csv") -> str:
         """
         Формирует полный путь для сохранения файла и гарантирует существование директории.
         """
-        file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}_{self.exchange_id}"
+        file_prefix = f"{self.symbol.replace('/', '_')}_{timeframe}_{self.exchange_id}"
         path = ""
         if file_extension == "csv":
             path = self.directory+"csv_files"
@@ -249,7 +249,7 @@ class DataFetcher:
     # -------------------------------------------------------------
     # 3. МЕТОД: Экспорт в CSV
     # -------------------------------------------------------------
-    def export_to_csv(self, df: pd.DataFrame) -> Optional[str]:
+    def export_to_csv(self, df: pd.DataFrame, timeframe: str = "1") -> Optional[str]:
         """
         Сохраняет DataFrame с данными в файл формата CSV.
         
@@ -262,7 +262,7 @@ class DataFetcher:
         
         # Префикс имени файла
         # file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}_{self.exchange_id}"
-        file_path = self._get_export_path()
+        file_path = self._get_export_path("csv", timeframe)
         
         try:
             # index=True сохранит индекс (таймштамп) как первый столбец
@@ -290,7 +290,7 @@ class DataFetcher:
         # Префикс имени файла
         # file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}"
         # file_path = self._get_export_path(directory, file_prefix, "xlsx")
-        file_path = self._get_export_path("xlsx")
+        file_path = self._get_export_path(file_extension="xlsx", timeframe=self.timeframe)
         
         try:
             # Используем ExcelWriter, чтобы избежать предупреждений
@@ -310,7 +310,7 @@ class DataFetcher:
     # -------------------------------------------------------------
     # 5. МЕТОД: Загрузка данных из CSV-файла
     # -------------------------------------------------------------
-    def load_from_csv(self, file_type: str) -> Optional[pd.DataFrame]:
+    def load_from_csv(self, file_type: str, timeframe: str = "1") -> Optional[pd.DataFrame]:
         """
         Загружает исторические данные из локального CSV-файла.
 
@@ -319,7 +319,7 @@ class DataFetcher:
         """
         # Префикс имени файла
         # file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}"
-        file_path = self._get_export_path(file_extension=file_type)
+        file_path = self._get_export_path(file_extension=file_type, timeframe=timeframe)
         
         if not os.path.exists(file_path):
             logger.error(f"❌ Файл данных не найден по пути: {file_path}")
