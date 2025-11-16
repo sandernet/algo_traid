@@ -69,9 +69,14 @@ def backtest_coin(data_df, data_df_1m, coin) -> list:
         signal = strategy.find_entry_point(current_data)
         
         # Если сигнал есть и позиция еще не закрыта
-        if signal and position.bar_closed is None:
+        if signal and position.bar_closed is None and position.bar_opened is not None:
             # TODO проверить если сигнал в обратную стророну надо закрыть позицию
-            pass
+            if signal.get("direction") != position.direction:
+                pos_mgr.close_orders(current_bar)
+                position = Position(tick_size)
+                pos_mgr = PositionsManager(position)
+
+
         
         # Если сигнал есть и позиция еще не создана
         if signal and position.status == Position_Status.NONE:
