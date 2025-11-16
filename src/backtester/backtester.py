@@ -20,13 +20,16 @@ ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускает
 # ====================================================
 # Запуск бэктеста для одной монеты
 # ====================================================
-def backtest_coin(data_df, data_df_1m, coin) -> list:
+def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
     """
     Запуск бэктеста с данными, загруженными из локального файла.
     """
     
-    # Получение минимальное количество баров из настроек
-    MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
+    full_datafile = config.get_setting("BACKTEST_SETTINGS", "FULL_DATAFILE")
+    start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")  
+    end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
+    
+
     
     symbol = coin.get("SYMBOL")+"/USDT"
     tick_size = coin.get("MINIMAL_TICK_SIZE")
@@ -36,7 +39,7 @@ def backtest_coin(data_df, data_df_1m, coin) -> list:
     
     executed_positions = []  # Список для хранения исполненных позиций
     
-    if MIN_BARS > len(data_df):
+    if allowed_min_bars > len(data_df):
         logger.error(f"Невозможно запустить бектест: не хватает баров для расчета индикаторов.")
         return executed_positions
     
@@ -47,9 +50,9 @@ def backtest_coin(data_df, data_df_1m, coin) -> list:
     pos_mgr = PositionsManager(position)
     # перебираем все бары начиная с минимального количества
     # Это нужно для того, чтобы индикаторы были заполнены
-    for i in range(MIN_BARS, len(data_df)):
+    for i in range(allowed_min_bars, len(data_df)):
         
-        current_data = data_df.iloc[i-MIN_BARS : i ]
+        current_data = data_df.iloc[i-allowed_min_bars : i ]
         current_bar = data_df.iloc[i] # текущий бар который обрабатывается
         signal_bar = current_data.iloc[-1]
         current_index = current_bar.name
@@ -179,7 +182,7 @@ def backtest_coin(data_df, data_df_1m, coin) -> list:
 # ====================================================
 # Выбор диапазона дат для бэктеста
 # ==================================================== 
-def select_range_becktest(data_df):
+def select_range_becktest(data_df, timeframe, full_datafile, allowed_min_bars, start_date = None, end_date = None)  -> pd.DataFrame:
     """
     Фильтрация DataFrame по заданному диапазону дат.
     Если full_datafile = True, то возвращаем исходный DataFrame
@@ -188,15 +191,12 @@ def select_range_becktest(data_df):
     :return: pd.DataFrame — отфильтрованный DataFrame
     """
     
-    full_datafile = config.get_setting("BACKTEST_SETTINGS", "FULL_DATAFILE")
-    start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")  
-    end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
-    
-    # Если full_datafile = False, то возвращаем исходный DataFrame
+
     if full_datafile:
         logger.info("Используется полный исторический диапазон. full_datafile = True")
         return data_df
     else:
+        start_date = shift_timestamp(start_date, allowed_min_bars, timeframe, direction=-1)
         logger.info(f"📅 Период тестированияыы: {start_date} ↔️   {end_date}")
         return select_range(data_df, start_date, end_date)
     
@@ -222,6 +222,12 @@ def run_local_backtest():
     limit = config.get_setting("EXCHANGE_SETTINGS", "LIMIT")
     data_dir = config.get_setting("BACKTEST_SETTINGS", "DATA_DIR")
     template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
+    
+    full_datafile = config.get_setting("BACKTEST_SETTINGS", "FULL_DATAFILE")
+    start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")
+    end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
+        # Получение минимальное количество баров из настроек
+    MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
         
     # 1. Получение массива монет из конфигурации
     try:
@@ -255,14 +261,25 @@ def run_local_backtest():
         if data_df is not None:
             logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
             
-            select_data = select_range_becktest(data_df)
+            # 3. Выбор периода для бэктеста
+            select_data = select_range_becktest(data_df, timeframe, full_datafile, MIN_BARS, start_date, end_date)
             
             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
-            executed_positions = backtest_coin(select_data,data_df_1m, coin)
+            executed_positions = backtest_coin(select_data,data_df_1m, coin, MIN_BARS)
             
             files_report = get_export_path(symbol=symbol, file_extension="html")
             files_report_csv = get_export_path(symbol=symbol, file_extension="csv")
-            path = generate_html_report(executed_positions,symbol, files_report, template_dir)
+            
+            path = generate_html_report(
+                executed_reports = executed_positions,
+                symbol = symbol, 
+                period_start =start_date,
+                period_end =end_date,
+                target_path = files_report, 
+                template_dir = template_dir
+                )
+            
+            
             logger.info(f"Отчет сохранен в: {path}")
             
             executed_positions_df = pd.DataFrame(executed_positions)
@@ -284,6 +301,7 @@ def shift_timestamp(index, bars: int, timeframe: str, direction: int = -1):
 
     Возвращает новый индекс того же типа, что и входной (Timestamp или int).
     """
+    index = pd.Timestamp(index)
     # если индекс не временной (например, целочисленный индекс), просто сдвигаем по числу баров
     if not isinstance(index, (pd.Timestamp, pd.DatetimeIndex)):
         try:

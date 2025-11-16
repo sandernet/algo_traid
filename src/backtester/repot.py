@@ -22,7 +22,7 @@ class TradeReport:
             logger.error("Статус позиции не в завершенном состоянии")
             raise ValueError("TradeReport can only be generated for closed positions.")
 
-        self.symbol = position.symbol
+        self.symbol         = position.symbol
         # self.direction = position.direction
         # 🔹 Безопасно преобразуем Enum в строку
         self.direction = (
@@ -159,7 +159,9 @@ def get_export_path(symbol, file_extension: str ="html" ) -> str:
     """
     Формирует полный путь для сохранения файла и гарантирует существование директории.
     """
-    file_prefix = f"{symbol.replace('/', '_')} report"
+    # добавляем дату формирования отчёта в имя файла (формат YYYY-MM-DD)
+    report_date = datetime.date.today().isoformat()
+    file_prefix = f"{symbol.replace('/', '_')} report {report_date}"
     path = config.get_setting("BACKTEST_SETTINGS", "REPORT_DIRECTORY") 
     
     # 1. Создание директории, если она не существует
@@ -167,8 +169,8 @@ def get_export_path(symbol, file_extension: str ="html" ) -> str:
         os.makedirs(path)
         logger.info(f"Создана директория для экспорта: {path}")
 
-    # 2. Формирование имени файла
-    # Пример: BTC_USDT_15m_OHLCV.csv
+    # 2. Формирование имени файла с датой
+    # Пример: BTC_USDT report 2025-11-16.html
     file_name = f"{file_prefix}.{file_extension}"
     
     return os.path.join(path, file_name)
@@ -236,7 +238,7 @@ def to_plain_dict(report_obj: Any) -> dict:
 # -----------------------
 # главная функция: генерируем HTML отчет
 # -----------------------
-def generate_html_report(executed_reports, symbol, target_path, template_dir):
+def generate_html_report(executed_reports, symbol, period_start, period_end, target_path, template_dir):
     """
     Генерация HTML-отчёта по списку объектов TradeReport или dict.
     Использует Jinja2-шаблон.
@@ -245,6 +247,10 @@ def generate_html_report(executed_reports, symbol, target_path, template_dir):
 
 
     title = symbol+" Trade Report"
+    # period_start, period_end = period_start.strftime("%Y-%m-%d"), period_end.strftime("%Y-%m-%d")
+    period_start = pd.to_datetime(period_start).strftime("%Y-%m-%d")
+    period_end = pd.to_datetime(period_end).strftime("%Y-%m-%d")
+
     # статистика
     profits = [float(r.get("profit", 0.0)) for r in plain]
     total_profit = sum(profits)
@@ -268,6 +274,8 @@ def generate_html_report(executed_reports, symbol, target_path, template_dir):
     # рендерим HTML
     html_content = template.render(
         title=title,
+        period_start=period_start,
+        period_end=period_end,
         reports=plain,
         total_profit=total_profit,
         trades_count=trades_count,

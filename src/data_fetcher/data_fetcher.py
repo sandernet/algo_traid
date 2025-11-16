@@ -40,6 +40,7 @@ class DataFetcher:
         # Параметры, зависящие от монеты
         self.symbol = coin.get("SYMBOL")+"/USDT" 
         self.timeframe = coin.get("TIMEFRAME") 
+        self.min_timeframe = coin.get("MIN_TIMEFRAME") if coin.get("MIN_TIMEFRAME") else "1"
         
         # Параметры биржи
         self.exchange_id = exchange_id
@@ -107,7 +108,7 @@ class DataFetcher:
             logger.error(f"Неверный формат даты: {date_str}. Ожидается 'YYYY-MM-DD'.")
             raise
         
-    def _generic_fetcher(self, start_date_ms: Optional[int] = None, end_date_ms: Optional[int] = None) -> Optional[pd.DataFrame]:
+    def _generic_fetcher(self, timeframe, start_date_ms: Optional[int] = None, end_date_ms: Optional[int] = None) -> Optional[pd.DataFrame]:
         """
         Универсальный метод для загрузки данных с пагинацией НАЗАД ВО ВРЕМЕНИ.
         
@@ -128,7 +129,7 @@ class DataFetcher:
         
         start_log = datetime.fromtimestamp(stop_ms / 1000).strftime('%Y-%m-%d') if stop_ms > 0 else "начала доступной истории"
         end_log = datetime.fromtimestamp(since_ms / 1000).strftime('%Y-%m-%d %H:%M:%S')
-        logger.info(f"Начало загрузки {self.symbol} ({self.timeframe}) НАЗАД с {end_log} до {start_log}...")
+        logger.info(f"Начало загрузки {self.symbol} ({timeframe}) НАЗАД с {end_log} до {start_log}...")
 
 
         while True:
@@ -140,7 +141,7 @@ class DataFetcher:
                 # или полагаемся на внутреннюю логику ccxt.
                 ohlcv_chunk = self.exchange.fetch_ohlcv(
                     symbol=self.symbol,
-                    timeframe=self.timeframe,
+                    timeframe=timeframe,
                     since=since_ms - 1000 * 60 * 60 * 24 * 365 * 10, # Приблизительная дата, чтобы ccxt мог начать, не критично, но лучше
                     limit=self.limit,
                     params={'until': since_ms} # Используем until/since, если биржа это поддерживает
@@ -219,18 +220,18 @@ class DataFetcher:
     # -------------------------------------------------------------
     # 1. МЕТОД: Загрузка за весь период
     # -------------------------------------------------------------
-    def fetch_entire_history(self) -> Optional[pd.DataFrame]:
+    def fetch_entire_history(self, timeframe)-> Optional[pd.DataFrame]:
         """
         Загружает максимально доступную историю (от самой ранней до текущей).
         """
         self._set_exchange()
         # start_date_ms=None и end_date_ms=None активируют логику "весь период" в _generic_fetcher
-        return self._generic_fetcher(start_date_ms=None, end_date_ms=None)
+        return self._generic_fetcher(timeframe, start_date_ms=None, end_date_ms=None)
     
     # -------------------------------------------------------------
     # 2. МЕТОД: Загрузка за определенный период
     # -------------------------------------------------------------
-    def fetch_history_range(self, start_date: str, end_date: str) -> Optional[pd.DataFrame]:
+    def fetch_history_range(self, timeframe, start_date: str, end_date: str) -> Optional[pd.DataFrame]:
         """
         Загружает данные за указанный период (включительно). 
         Формат даты: 'YYYY-MM-DD'.
@@ -243,13 +244,13 @@ class DataFetcher:
             return None
         
         self._set_exchange()
-        return self._generic_fetcher(start_date_ms=start_ms, end_date_ms=end_ms)
+        return self._generic_fetcher(timeframe, start_date_ms=start_ms, end_date_ms=end_ms)
     
 
     # -------------------------------------------------------------
     # 3. МЕТОД: Экспорт в CSV
     # -------------------------------------------------------------
-    def export_to_csv(self, df: pd.DataFrame, timeframe: str = "1") -> Optional[str]:
+    def export_to_csv(self, df: pd.DataFrame, timeframe: str) -> Optional[str]:
         """
         Сохраняет DataFrame с данными в файл формата CSV.
         
@@ -262,7 +263,7 @@ class DataFetcher:
         
         # Префикс имени файла
         # file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}_{self.exchange_id}"
-        file_path = self._get_export_path("csv", timeframe)
+        file_path = self._get_export_path(timeframe, file_extension="csv" )
         
         try:
             # index=True сохранит индекс (таймштамп) как первый столбец
@@ -276,7 +277,7 @@ class DataFetcher:
     # -------------------------------------------------------------
     # 4. МЕТОД: Экспорт в Excel
     # -------------------------------------------------------------
-    def export_to_excel(self, df: pd.DataFrame ) -> Optional[str]:
+    def export_to_excel(self, df: pd.DataFrame , timeframe: str = "1") -> Optional[str]:
         """
         Сохраняет DataFrame с данными в файл формата Excel (xlsx).
         
@@ -290,7 +291,7 @@ class DataFetcher:
         # Префикс имени файла
         # file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}"
         # file_path = self._get_export_path(directory, file_prefix, "xlsx")
-        file_path = self._get_export_path(file_extension="xlsx", timeframe=self.timeframe)
+        file_path = self._get_export_path(timeframe=timeframe,file_extension="xlsx")
         
         try:
             # Используем ExcelWriter, чтобы избежать предупреждений
@@ -319,7 +320,7 @@ class DataFetcher:
         """
         # Префикс имени файла
         # file_prefix = f"{self.symbol.replace('/', '_')}_{self.timeframe}"
-        file_path = self._get_export_path(file_extension=file_type, timeframe=timeframe)
+        file_path = self._get_export_path(timeframe=timeframe, file_extension=file_type )
         
         if not os.path.exists(file_path):
             logger.error(f"❌ Файл данных не найден по пути: {file_path}")

@@ -34,7 +34,8 @@ def run_data_update_pipeline():
         logger.info("============================================================================")
         symbol = coin.get("SYMBOL")+"/USDT"
         timeframe = coin.get("TIMEFRAME")
-        logger.info(f"Монета: {symbol}, Таймфрейм: {timeframe}")
+        min_timeframe = coin.get("MIN_TIMEFRAME")
+        logger.info(f"Монета: {symbol}, Таймфрейм: {timeframe}, Минимальный таймфрейм: {min_timeframe}")
        
         fetcher = DataFetcher( coin,
             exchange_id=exchange_id, 
@@ -42,14 +43,24 @@ def run_data_update_pipeline():
             directory=data_dir,
             )
         logger.info("Загрузка данных за всю историю...")
-        data_df = fetcher.fetch_entire_history()
+        data_df = fetcher.fetch_entire_history(timeframe)
         
         # Сохранение данных
         if data_df is not None:
             logger.info(f"[{symbol}] Загружено {len(data_df)} свечей, таймфрейм {timeframe} - вся история.")
          
             # Сохранить в под папку 'csv_files'
-            fetcher.export_to_csv(data_df) 
+            fetcher.export_to_csv(data_df, timeframe) 
                 
                 # Сохранить в под папку 'excel_files'
-            fetcher.export_to_excel(data_df)
+            fetcher.export_to_excel(data_df, timeframe)
+            
+            
+        # data_df_min = fetcher.fetch_entire_history(min_timeframe)
+        # # Сохранение данных
+        # if data_df_min is not None:
+        #     logger.info(f"[{symbol}] Загружено {len(data_df_min)} свечей, таймфрейм {min_timeframe} - вся история.")
+         
+        #     # Сохранить в под папку 'csv_files'
+        #     fetcher.export_to_csv(data_df_min, timeframe=min_timeframe) 
+                
