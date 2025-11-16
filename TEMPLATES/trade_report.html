@@ -18,11 +18,66 @@ h1{margin-bottom:0.2em}
 .details-row{display:none;background:#fafafa}
 .details-cell{padding:10px;border-top:none}
 tr:hover{background:#f5f5f5}
+
+/* Статусы — мягкие пастельные фоновые цвета */
+.status, .tp-status, .sl-status{
+  display:inline-block;
+  padding:6px 8px;
+  border-radius:8px;
+  font-weight:600;
+  font-size:0.95em;
+  color:#0b2b2b;
+  background:#eef6f4; /* базовый очень мягкий фон */
+}
+.status.open, .tp-status.open{ background:#e6f7ff; color:#083a51 }    /* мягкий голубой */
+.status.closed, .tp-status.filled, .tp-status.closed{ background:#e8f6ea; color:#1f6c2f } /* мягкий зелёный */
+.status.win, .tp-status.win{ background:#e8f6ea; color:#1f6c2f } /* выигрыш */
+.status.loss, .tp-status.loss, .sl-status.loss{ background:#fff1f0; color:#7a1b00 } /* проигрыш — мягкий красный */
+.status.flat, .tp-status.flat{ background:#f3f4f6; color:#374151 } /* нейтральный */
+.status.partial, .tp-status.partial{ background:#fff7e6; color:#7a4f01 } /* частичный */
+.tp-status{ padding:4px 6px; border-radius:6px; font-weight:600; font-size:0.9em }
+.sl-status{ padding:5px 7px; border-radius:6px; font-weight:600; font-size:0.92em }
+
+/* Конкретные правила для enum-статусов (имена нормализуются: '_' -> '-') */
+.status.active { background:#e6f7ff; color:#083a51 }        /* active — голубой */
+.status.part-taken { background:#fff7e6; color:#7a4f01 }    /* part_taken — мягкий янтарный */
+.status.taken-full { background:#e8f6ea; color:#1f6c2f }    /* taken_full — зелёный */
+.status.stopped { background:#fff1f0; color:#7a1b00 }       /* stopped — мягкий красный */
+.status.cancelled, .status.canceled { background:#f3f4f6; color:#374151 } /* cancelled/canceled — серый */
+.status.none { background:#f8fafc; color:#475569 }          /* none — очень светлый */
+.status.created { background:#eef6f4; color:#0b2b2b }       /* created — нейтрально */
+
+.tp-status.active { background:#e6f7ff; color:#083a51 }
+.tp-status.executed { background:#e8f6ea; color:#1f6c2f }
+.tp-status.canceled, .tp-status.cancelled { background:#f3f4f6; color:#374151 }
+
+.sl-status.active { background:#fff7e6; color:#7a4f01 }
+.sl-status.executed { background:#fff1f0; color:#7a1b00 }
+.sl-status.canceled, .sl-status.cancelled { background:#f3f4f6; color:#374151 }
+.sl-status.no-loss { background:#eef9f3; color:#24523a }
+
+/* Подсветка колонки Profit */
+.profit{ display:inline-block; padding:4px 8px; border-radius:6px; font-weight:600 }
+.profit.positive{ background:#e8f6ea; color:#114f2d }   /* мягкий зелёный */
+.profit.negative{ background:#fff1f0; color:#7a1b00 }   /* мягкий красный */
+.profit.neutral{ background:#f3f4f6; color:#374151 }
+
+/* Подсветка направления */
+.direction{ display:inline-block; padding:4px 8px; border-radius:8px; font-weight:700; font-size:0.95em }
+.direction.long{ background:#e8f6ea; color:#14532d }   /* long — мягкий зелёный */
+.direction.short{ background:#fff1f0; color:#7a1b00 }  /* short — мягкий красный */
+
 </style>
 </head>
 <body>
 
 <h1>{{ title }}</h1>
+
+{% if period_start and period_end %}
+<div class="meta"><strong>Период:</strong> {{ period_start }} — {{ period_end }}</div>
+{% elif period %}
+<div class="meta"><strong>Период:</strong> {{ period }}</div>
+{% endif %}
 
 <div class="summary">
   <div class="card"><strong>Total PnL</strong><div style="font-size:1.4em">{{ total_profit | round(2) }}</div></div>
@@ -42,13 +97,21 @@ tr:hover{background:#f5f5f5}
 <tr>
   <td>{{ loop.index }}</td>
   <td>{{ r.symbol }}</td>
-  <td>{{ r.direction }}</td>
+  <td><span class="direction {{ r.direction|lower|replace(' ', '-')|replace('_','-') }}">{{ r.direction }}</span></td>
   <td>{{ r.entry_price }}</td>
   <td>{{ r.volume }}</td>
-  <td>{{ r.status }}</td>
+  <td><span class="status {{ r.status|lower|replace(' ', '-')|replace('_','-') }}">{{ r.status }}</span></td>
   <td>{{ r.bar_opened }}</td>
   <td>{{ r.bar_closed }}</td>
-  <td>{{ "%.2f"|format(r.profit) }}</td>
+  <td>
+    {% if r.profit is defined and (r.profit|float) < 0 %}
+      <span class="profit negative">{{ "%.2f"|format(r.profit) }}</span>
+    {% elif r.profit is defined and (r.profit|float) > 0 %}
+      <span class="profit positive">{{ "%.2f"|format(r.profit) }}</span>
+    {% else %}
+      <span class="profit neutral">{{ "%.2f"|format(r.profit) }}</span>
+    {% endif %}
+  </td>
   <td>
     <span class="toggle" onclick="toggleDetails('{{ loop.index }}')">toggle</span>
   </td
@@ -66,7 +129,7 @@ tr:hover{background:#f5f5f5}
         <td>{{ tp.id }}</td>
         <td>{{ tp.price }}</td>
         <td>{{ tp.volume * 100 }} %</td>
-        <td>{{ tp.status }}</td>
+  <td><span class="tp-status {{ tp.status|lower|replace(' ', '-')|replace('_','-') }}">{{ tp.status }}</span></td>
         <td>{{ tp.bar_executed }}</td>
         <td>{{ "%.2f"|format(tp.profit) }}</td>
       </tr>
@@ -84,7 +147,7 @@ tr:hover{background:#f5f5f5}
       <tr>
         <td>{{ r.stop_loss.price }}</td>
         <td>{{ r.stop_loss.volume }}%</td>
-        <td>{{ r.stop_loss.status }}</td>
+  <td><span class="sl-status {{ r.stop_loss.status|lower|replace(' ', '-')|replace('_','-') }}">{{ r.stop_loss.status }}</span></td>
         <td>{{ r.stop_loss.bar_executed }}</td>
         <td>{{ "%.2f"|format(r.stop_loss.profit) }}</td>
       </tr>
