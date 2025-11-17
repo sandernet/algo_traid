@@ -154,9 +154,7 @@ class PositionsManager():
             logger.info(f"Исполнен последний Take Profit [bold green] DONE [/bold green]")
             # устанавливаем индекс бара в котором был сработан stop_loss
             position.bar_closed = current_bar.name
-            if position.stop_loss:
-                position.stop_loss.status = StopLoss_Status.CANCELED
-            full_closed = True  
+            full_closed = True      
         return full_closed
     
     # Проверяет, сработал ли Stop Loss
@@ -192,28 +190,21 @@ class PositionsManager():
         
         position = self.position
         
-        status = Position_Status.STOPPED
-        # если стоп-лосс не исполнен
-        if position.stop_loss and position.stop_loss.bar_executed is None:
-            status = Position_Status.CANCELLED
-            position.stop_loss.status = StopLoss_Status.CANCELED
-            position.stop_loss.bar_executed = current_bar.name
-            position.stop_loss.price = current_bar["open"]
-
+        # status = Position_Status.STOPPED
+        # если позиция отменена
+        if position.status == Position_Status.CANCELED or position.status == Position_Status.TAKEN_PART or position.status == Position_Status.TAKEN_FULL:
         
-        if position.status == Position_Status.TAKEN_PART:
-            status = Position_Status.TAKEN_PART
+            if position.stop_loss and position.stop_loss.bar_executed is None:
+                position.stop_loss.status = StopLoss_Status.CANCELED
+                
             for tp in position.take_profits:
                 if tp.Status == TakeProfit_Status.ACTIVE:
                     tp.Status = TakeProfit_Status.CANCELED
                     tp.bar_executed = current_bar.name
-        
-        if position.status == Position_Status.TAKEN_FULL:
-            status = Position_Status.TAKEN_FULL
 
+                    
+               
 
-        position.bar_closed = current_bar.name
-        position.status = status
         
     # Расчет прибыли позиции по всем тейк-профитам или стоп-лосс
     def Calculate_profit(self):
@@ -264,6 +255,8 @@ class PositionsManager():
             
             remaining_volume = position.volume_size - closed_volume
             
+            
+            sl_price = Decimal()
             if remaining_volume > Decimal('0.0'):
                 if position.stop_loss.status == StopLoss_Status.NO_LOSS:
                     sl_price = position.entry_price

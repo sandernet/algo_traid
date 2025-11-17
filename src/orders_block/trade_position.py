@@ -9,7 +9,7 @@ class Position_Status(Enum):
     TAKEN_PART = "part_taken" # позиция закрыта частично
     TAKEN_FULL = "taken_full" # позиция закрыта в прибыль
     STOPPED = "stopped" # позиция закрыта в убыток
-    CANCELLED = "cancelled" # позиция отменена
+    CANCELED = "cancelled" # позиция отменена
     NONE = "none" # позиция не инициализирована
     CREATED = "created" # позиция создана
     
@@ -44,9 +44,9 @@ class TakeProfit:
         return f"TakeProfitLevel(price={self.price}, volume={self.volume}, status={self.Status.value}) \n"
         
 class StopLoss:
-    def __init__(self, price: float, volume: float):
-        self.price = float_to_decimal(price)  # цена cтоп-лосс
-        self.volume = float_to_decimal(volume)  # объем (например, 0.2 = 20%) 
+    def __init__(self, price: Decimal, volume: Decimal):
+        self.price = price  # цена cтоп-лосс
+        self.volume = volume  # объем (например, 0.2 = 20%) 
         self.closed_volume = Decimal('0.0')
         self.status = StopLoss_Status.ACTIVE  # статус
         self.bar_executed = None  # индекс бара, в котором срабатывает стоп-лосс
@@ -84,10 +84,16 @@ class Position:
 
 
     # устанавливает размер позиции
+    # Получает USDT yf вход
     def setVolume_size(self, volume: float):
         if volume <= 0:
             raise ValueError("Volume must be greater than 0")
-        self.volume_size = float_to_decimal(volume) # размер позиции        
+        if self.entry_price <= 0:
+            raise ValueError("Entry price must be greater than 0")
+        
+        volume_native = float_to_decimal(volume)/self.entry_price # размер позиции        
+        
+        self.volume_size = volume_native 
     
     
     def is_empty(self) -> bool:

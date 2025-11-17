@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 from src.config.config import config
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo, PositionsManager
-from src.orders_block.trade_position import Position, Position_Status, TakeProfit_Status, StopLoss
+from src.orders_block.trade_position import Position, Position_Status, float_to_decimal, StopLoss
 
 from src.backtester.repot import TradeReport, generate_html_report, get_export_path
 
@@ -25,9 +25,9 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
     Запуск бэктеста с данными, загруженными из локального файла.
     """
     
-    full_datafile = config.get_setting("BACKTEST_SETTINGS", "FULL_DATAFILE")
-    start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")  
-    end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
+    # full_datafile = config.get_setting("BACKTEST_SETTINGS", "FULL_DATAFILE")
+    # start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")  
+    # end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
     
 
     
@@ -117,9 +117,9 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
 
             
             if signal.get("stop_loss") is not None:
-                stop_loss = signal["stop_loss"]
-                stop_loss_volume = signal["stop_loss_volume"]
-                position.set_stop_loss(StopLoss(price=float(stop_loss), volume=stop_loss_volume))        
+                stop_loss = float_to_decimal(signal["stop_loss"])
+                stop_loss_volume = float_to_decimal(signal["stop_loss_volume"])
+                position.set_stop_loss(StopLoss(price=stop_loss, volume=stop_loss_volume))        
         
             # # Если позиция только создана статус CREATED
             # # Рассчитываем по риск менеджмент объем позиции    
@@ -152,13 +152,23 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                 current_bar_1m = current_range_1m.iloc[j]
                  
                 close_TP = pos_mgr.check_take_profit(current_bar_1m)
+                if close_TP:
+                    position.bar_closed = current_bar_1m.name
+                    position.status = Position_Status.TAKEN_FULL
+                    pos_mgr.close_orders(current_range_1m)
+                    logger.info(f"Закрываем позицию  {position} по {current_bar_1m}")
+                    break
 
                 close_SL = pos_mgr.check_stop_loss(current_bar_1m)
 
                 # если закрыты все take_profits или stop_loss закрываем позицию
-                if close_TP or close_SL:
-                    pos_mgr.close_orders(current_bar)
-                    logger.info(f"Закрываем позициию {position} по {current_bar}")
+                if close_SL:
+                    position.bar_closed = current_bar_1m.name
+                    position.status = Position_Status.STOPPED
+                    pos_mgr.close_orders(current_range_1m)
+                   
+                    logger.info(f"Закрываем позициию по стоп-лосс {position} по {current_bar}")
+                    break
 
             
         # если позиция выполнена и заполнена дата закрытия

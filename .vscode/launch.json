@@ -13,7 +13,7 @@
             "justMyCode": true
         },
         {
-            "name": "App backtester",
+            "name": "Backtester",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/app.py",
@@ -31,11 +31,20 @@
             "justMyCode": true
         },
         {
-            "name": "App with loaddata",
+            "name": "loaddata",
             "type": "python",
             "request": "launch", 
             "program": "${workspaceFolder}/app.py",
             "args": ["--ldata"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "load_data_full",
+            "type": "python",
+            "request": "launch", 
+            "program": "${workspaceFolder}/app.py",
+            "args": ["--ldata", "--ld_min"],
             "console": "integratedTerminal",
             "justMyCode": true
         },

@@ -9,7 +9,7 @@ from src.config.config import config
 # ====================================================
 # Основной конвейер для получения и сохранения исторических данных
 # ====================================================
-def run_data_update_pipeline():
+def run_data_update_pipeline(load_min_timeframe = False):
     """Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации."""
 
     # Получение настроек Биржи
@@ -56,11 +56,12 @@ def run_data_update_pipeline():
             fetcher.export_to_excel(data_df, timeframe)
             
             
-        # data_df_min = fetcher.fetch_entire_history(min_timeframe)
-        # # Сохранение данных
-        # if data_df_min is not None:
-        #     logger.info(f"[{symbol}] Загружено {len(data_df_min)} свечей, таймфрейм {min_timeframe} - вся история.")
-         
-        #     # Сохранить в под папку 'csv_files'
-        #     fetcher.export_to_csv(data_df_min, timeframe=min_timeframe) 
-                
+        if load_min_timeframe:
+            data_df_min = fetcher.fetch_entire_history(min_timeframe)
+            # Сохранение данных
+            if data_df_min is not None:
+                logger.info(f"[{symbol}] Загружено {len(data_df_min)} свечей, таймфрейм {min_timeframe} - вся история.")
+            
+                # Сохранить в под папку 'csv_files'
+                fetcher.export_to_csv(data_df_min, timeframe=min_timeframe) 
+                    

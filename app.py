@@ -16,6 +16,11 @@ def main():
         action='store_true',  # Флаг (без значения)
         help='Загрузить или обновить исторические данные c биржи'
     )
+    parser.add_argument(
+        '--ld_min',
+        action='store_true',  # Флаг (без значения)
+        help='Загрузить или обновить исторические данные c биржи минутный график'
+    )
     # Добавляем параметр --debug
     parser.add_argument(
         '--debug',
@@ -46,7 +51,10 @@ def main():
     if args.ldata:
         logger.info("Загрузка и обновление исторических данных...")
         from src.data_fetcher.data_pipeline import run_data_update_pipeline
-        run_data_update_pipeline()
+        if args.ld_min:
+            run_data_update_pipeline(load_min_timeframe=True)
+        else:
+            run_data_update_pipeline()
         logger.info("Загрузка и обновление исторических данных завершены.")
     
     # Отладка стратегии 
