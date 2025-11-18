@@ -36,15 +36,15 @@ class DataFetcher:
     
     # Инициализация с параметрами монеты и биржи
     # ======================================================
-    def __init__(self, coin, exchange_id: str, limit: int, directory: str): 
+    def __init__(self, coin, exchange,  directory: str): 
         # Параметры, зависящие от монеты
         self.symbol = coin.get("SYMBOL")+"/USDT" 
         self.timeframe = coin.get("TIMEFRAME") 
         self.min_timeframe = coin.get("MIN_TIMEFRAME") if coin.get("MIN_TIMEFRAME") else "1"
         
         # Параметры биржи
-        self.exchange_id = exchange_id
-        self.limit = limit
+        self.exchange_id = exchange.get("EXCHANGE_ID")
+        self.limit = exchange.get("LIMIT")
         
         self.directory = directory
         # self.file_extension = file_extension
@@ -107,7 +107,10 @@ class DataFetcher:
         except ValueError:
             logger.error(f"Неверный формат даты: {date_str}. Ожидается 'YYYY-MM-DD'.")
             raise
-        
+    
+    # -------------------------------------------------------------
+    # Вспомогательный метод: Универсальный метод для загрузки данных с пагинацией НАЗАД ВО ВРЕМЕНИ
+    # -------------------------------------------------------------
     def _generic_fetcher(self, timeframe, start_date_ms: Optional[int] = None, end_date_ms: Optional[int] = None) -> Optional[pd.DataFrame]:
         """
         Универсальный метод для загрузки данных с пагинацией НАЗАД ВО ВРЕМЕНИ.

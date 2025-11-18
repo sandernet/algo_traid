@@ -14,4 +14,4 @@ services:
       - ./templates:/APP/TEMPLATES
     environment:
       - PYTHONUNBUFFERED=1
-    command: python app.py
+    command: python app.py --ldata --ld_min

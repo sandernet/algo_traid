@@ -65,8 +65,16 @@ class Position:
         self.stop_loss = None   
         self.tick_size = float_to_decimal(tick_size)  # размер tick_size
         
-        
+    # метод установки параметров позиции
     def setPosition(self, symbol, direction, entry_price: float, bar_index):
+        """
+        Устанавливает параметры позиции
+        symbol: str - название монеты
+        direction: Direction - направление позиции long, short
+        entry_price: float - цена входа
+        bar_index: int - индекс бара, в котором была открыта позиция
+                
+        """
         self.symbol: str = symbol # название монеты
         self.direction = direction # направление позиции long, short
         self.entry_price: Decimal = float_to_decimal(entry_price) # entry_price  # цена входа

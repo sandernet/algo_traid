@@ -228,11 +228,14 @@ def run_local_backtest():
     """Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации."""
 
     # Получение настроек Биржи
-    exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
-    limit = config.get_setting("EXCHANGE_SETTINGS", "LIMIT")
+    exchange = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE")
+    # limit = config.get_setting("EXCHANGE_SETTINGS", "LIMIT")
+    
+    # директории данных
     data_dir = config.get_setting("BACKTEST_SETTINGS", "DATA_DIR")
     template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
     
+    # Параметры бэктеста
     full_datafile = config.get_setting("BACKTEST_SETTINGS", "FULL_DATAFILE")
     start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")
     end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
@@ -260,8 +263,7 @@ def run_local_backtest():
         logger.info(f"🪙 Монета: [bold yellow]{symbol}[/bold yellow], ↔️ Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный шаг цены {tick_size}")
         # 1. Инициализируем DataFetcher
         fetcher = DataFetcher( coin,
-            exchange_id=exchange_id, 
-            limit=limit,
+            exchange=exchange, 
             directory=data_dir,
             )
         # 2. Загрузка из файла
