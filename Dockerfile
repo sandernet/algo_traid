@@ -5,7 +5,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Создаём необходимые директории
-RUN mkdir -p DATA_OHLCV logs configs
+RUN mkdir -p DATA_OHLCV LOGS configs REPORTS
 
 # Копируем зависимости (если есть requirements.txt)
 COPY requirements.txt .
