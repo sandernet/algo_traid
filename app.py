@@ -76,7 +76,7 @@ def main():
             
         # 2. Запуск бэктестера
         logger.info(f"Запуск бэктестера с локальными данными из {data_dir} ...")
-        from src.backtester.backtester import run_local_backtest
+        from src.backtester.backtester_new import run_local_backtest
         run_local_backtest()
         logger.info("Бэктестер завершил работу.")
     

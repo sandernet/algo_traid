@@ -11,28 +11,14 @@ logger = get_logger(__name__)
 
 from src.config.config import config
 
-
-from dataclasses import dataclass
-from typing import Optional, List
-
-@dataclass
-class TakeProfitLevel:
-    price: float          # цена тейк-профита
-    volume: float         # объём, выставляемый на этом уровне (может быть частью позиции)
-    executed: bool = False  # флаг исполнения
-    executed_price: Optional[float] = None  # цена исполнения (если отличается)
-
-@dataclass
-class TradePosition:
-    entry_price: float               # цена открытия позиции
-    stop_loss: float                 # цена стоп-лосса
-    take_profits: List[TakeProfitLevel]  # список тейк-профитов (обычно 3)
-    direction: str                   # 'long' или 'short'
-    size: float                      # объём позиции (в базовой валюте или контрактах)
-    symbol: str                      # торговая пара, например 'BTCUSDT'
-    status: str = 'open'             # 'open', 'closed', 'partial'
-
-
+def get_position_size(price: float, volume: float) -> float:
+    if volume <= 0:
+        raise ValueError("Volume must be greater than 0")
+    if price <= 0:
+        raise ValueError("Entry price must be greater than 0")
+    
+    return volume / price # размер позиции        
+    
 
 
 class RiskManager():

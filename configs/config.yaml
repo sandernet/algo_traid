@@ -44,15 +44,14 @@ COINS:
 # ======================================================================
 EXCHANGE_SETTINGS: 
 # Используемая биржа (например, binance, bybit, kucoin)
-  EXCHANGE:
-    EXCHANGE_ID: bybit
-    API_KEY: "MgrXLxN6GPT3j7Bqu2"
-    API_SECRET: "vB2j0v4zQU8oafG5eVCh7Nem1pKu8iUqde6b"
-    CATEGORY: "spot"
-  # TIMEFRAME: "D"
-    LIMIT: 1000
-    TESTNET: false
-    DEMO: true
+  EXCHANGE_ID: bybit
+  API_KEY: "MgrXLxN6GPT3j7Bqu2"
+  API_SECRET: "vB2j0v4zQU8oafG5eVCh7Nem1pKu8iUqde6b"
+  CATEGORY: "spot"
+# TIMEFRAME: "D"
+  LIMIT: 1000
+  TESTNET: false
+  DEMO: true
 
 # ======================================================================
 # СЕКЦИЯ СТРАТЕГИИ (STRATEGY_SETTINGS)

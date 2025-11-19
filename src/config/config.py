@@ -12,7 +12,6 @@ REQUIRED_SETTINGS: Dict[str, Dict[str, Any]] = {
         "EXCHANGE_ID": str,
         "API_KEY": str,
         "API_SECRET": str,
-        # "TIMEFRAME": str,
         "CATEGORY": str,
         "LIMIT": int,
     },
@@ -51,6 +50,8 @@ REQUIRED_SETTINGS: Dict[str, Dict[str, Any]] = {
         "TIMEZONE": str
     }
 }
+
+
 # Определение ожидаемых параметров и их типов для каждого элемента в массиве COINS
 REQUIRED_COIN_FIELDS: Dict[str, Any] = {
     "SYMBOL": str,
@@ -113,7 +114,6 @@ class ConfigManager:
                     elif expected_type != list and value is not None and not isinstance(value, expected_type):
                         errors.append(f"Некорректный тип для [{section}][{key}]. Ожидается {expected_type.__name__}, но получено {type(value).__name__}.")
 
-        # 2. Дополнительные логические проверки
         # 2. **НОВАЯ ПРОВЕРКА**: Проверка массива COINS
         if 'COINS' not in self._config:
             errors.append("Отсутствует обязательный массив: [COINS]")
@@ -140,6 +140,7 @@ class ConfigManager:
                         if not isinstance(value, expected_type):
                             errors.append(f"[COINS][{i}] ({coin.get('SYMBOL', 'UNKNOWN')}): Некорректный тип для '{key}'. Ожидается {expected_type.__name__}, но получено {type(value).__name__}.")
             
+        
         
         # # Проверка API-ключей, если это Live или Paper Trading
         # if mode in ['live', 'paper']:

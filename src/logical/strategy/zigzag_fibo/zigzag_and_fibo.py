@@ -87,8 +87,9 @@ class ZigZagAndFibo:
             "price": entry_price,
             "direction": direction,
             "take_profits": tps,
-            "stop_loss": stop_loss,
-            "stop_loss_volume": stop_loss_volume,
+            "sl": {"price": stop_loss, "volume": stop_loss_volume},
+            # "stop_loss": stop_loss,
+            # "stop_loss_volume": stop_loss_volume if stop_loss_volume is not None else 1.0,
             "z2_index": z2_index
             }
 

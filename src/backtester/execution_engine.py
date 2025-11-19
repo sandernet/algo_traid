@@ -1,0 +1,128 @@
+from src.orders_block.order import Order
+from src.orders_block.order import OrderType
+from src.orders_block.order import to_decimal
+from src.orders_block.order import Direction
+from src.orders_block.order import PositionManager
+from typing import List, Optional, Dict, Any
+
+from decimal import Decimal
+
+# Логирование
+# ====================================================
+from src.utils.logger import get_logger
+logger = get_logger(__name__)
+
+from src.config.config import config
+
+
+class ExecutionEngine:
+    """
+    Упрощенный движок исполнения, который обрабатывает бар по бару и заполняет активные ордера.
+    Правила (упрощенные):
+      - MARKET-ордеры: заполняются немедленно при закрытии бара
+      - ОРДЕРЫ ЛИМИТ на вход (для LONG): заполняются, если низкая цена бара <= цены лимита <= высокая цена бара
+        (аналогично для SHORT: если низкая цена бара <= цены лимита <= высокая цена бара)
+      - ОРДЕРЫ СТОП-ЛОСС:
+          - для LONG стоп-лосс (продажа для закрытия): запускается, если низкая цена бара <= цены стопа
+          - для SHORT стоп-лосс (покупка для закрытия): запускается, если высокая цена бара >= цены стопа
+      - ОРДЕРЫ ТЕЙК-ПРОФИТ:
+          - для LONG: запускается, если высокая цена бара >= цены тейка
+          - для SHORT: запускается, если низкая цена бара <= цены тейка
+    Частичные заполнения не моделируются (полное заполнение).
+    """
+    def __init__(self, manager: PositionManager):
+        self.manager = manager
+
+    def process_bar(self, bar: Dict[str, Any], bar_index: int):
+        """
+        bar: dict with keys: 'time' (optional), 'open', 'high', 'low', 'close'
+        bar_index: integer index of the bar
+        """
+        # перебераем все позиции и их активные ордера
+        for pos in list(self.manager.positions.values()):
+            # из позиции получаем активные ордера
+            active_orders = pos.get_active_orders()
+            if not active_orders:
+                # если активных ордеров нет, переходим к следующей позиции
+                continue
+            
+            # перебираем все активные ордера позиции
+            for order in active_orders:
+                # проверяем, следует ли исполнить ордер на этом баре
+                if self.should_execute(order, bar):
+                    
+                    # определяем цену исполнения и объем
+                    exec_price = self.get_execution_price(order, bar)
+                    exec_volume = order.remaining()
+                    
+                    # убедиться, что мы не закрываем больше, чем осталось (для ордеров на выход)
+                    if order.order_type in {OrderType.TAKE_PROFIT, OrderType.CLOSE, OrderType.STOP_LOSS}:
+                        exec_volume = min(exec_volume, pos.remaining_volume())
+
+                    if exec_volume <= Decimal("0"):
+                        continue
+
+                    # регистрируем исполнение ордера в позиции
+                    pos.record_execution(order, exec_price, exec_volume, bar_index)
+
+                    # действия после выполнения: если запись заполнена, могут быть ордера в скобках (их может установить пользователь)
+                    # здесь мы могли бы реализовать логику OCO, трейлинг-стопы и т. д. 
+                    # На данный момент мы оставляем расширения на усмотрение пользователя.
+
+
+    # ------------------------
+    # Проверка условий исполнения
+    # ------------------------  
+    def should_execute(self, order: Order, bar: Dict[str, Any]) -> bool:
+        """
+        Проверка условий исполнения ордера на текущем баре.
+        Если ордер может быть заполнен на этом баре, то возвращает True, иначе False.
+       """
+        low = to_decimal(bar['low'])
+        high = to_decimal(bar['high'])
+        close = to_decimal(bar['close'])
+
+        # MARKET
+        if order.order_type == OrderType.MARKET:
+            return True
+
+        # проверка ЛИМИТ и Вход
+        if order.order_type in {OrderType.LIMIT, OrderType.ENTRY} and order.price is not None:
+            # A limit buy executes when price <= limit (we assume liquidity, so check if limit within bar)
+            # For simplicity: if the bar's range touches the limit -> execute
+            return (low <= order.price <= high)
+
+        # STOP_LOSS
+        if order.order_type == OrderType.STOP_LOSS and order.price is not None:
+            if order.direction == Direction.LONG:
+                return low <= order.price
+            else:
+                return high >= order.price
+
+        # TAKE_PROFIT
+        if order.order_type == OrderType.TAKE_PROFIT and order.price is not None:
+            if order.direction == Direction.LONG:
+                return high >= order.price
+            else:
+                return low <= order.price
+
+        return False
+
+    # ------------------------
+    # Получить цену исполнения
+    # ------------------------
+    def get_execution_price(self, order: Order, bar: Dict[str, Any]) -> Decimal:
+        """
+        Определить цену исполнения. Для упрощения:
+         - MARKET -> цена закрытия
+         - TP -> цена тейка
+         - SL -> цена стопа
+         - LIMIT/ENTRY -> цена ордера (если достигнута)
+        Вы можете улучшить метод, моделируя слэп, заполнение при открытии, VWAP и т.д.
+        """
+        close = to_decimal(bar['close'])
+        if order.order_type == OrderType.MARKET:
+            return close
+        if order.order_type in {OrderType.TAKE_PROFIT, OrderType.STOP_LOSS, OrderType.LIMIT, OrderType.ENTRY} and order.price is not None:
+            return order.price
+        return close
