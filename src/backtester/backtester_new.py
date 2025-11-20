@@ -113,13 +113,15 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
             # 2. Добовляем teke profit
             if signal.get("take_profits") is not None:
                 for item_tp in signal.get("take_profits", []):
-                    tp = make_order(OrderType.TAKE_PROFIT, price=item_tp.get("price"), volume=item_tp.get("volume"), direction=direction)
+                    # TODO Рассчитать объем в нативной валюте
+                    tp = make_order(OrderType.TAKE_PROFIT, price=item_tp.price, volume=item_tp.volume, direction=direction)
                     position.add_order(tp)
             
             # 3. Добавляем stop loss
             stop_loss = signal.get("sl")
             if stop_loss is not None:
                 sl_price = stop_loss.get("price")
+                # TODO Рассчитать объем в нативной валюте
                 sl_volume = stop_loss.get("volume")
                 sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=sl_volume, direction=direction)
                 position.add_order(order=sl)
