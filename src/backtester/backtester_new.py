@@ -142,15 +142,15 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                 logger.info(f"✅ Позиция {position.id} закрыта.")
                 
                 # сохраняем исполненную позицию в отчет
-                # trade_report = TradeReport.from_position(position)
-                # executed_positions.append(trade_report.to_dict())
+                trade_report = TradeReport(position)
+                executed_positions.append(trade_report.to_dict())
                 
                 # сбрасываем позицию
                 manager = PositionManager()
                 engine = ExecutionEngine(manager)
                 position: Optional[Position] = None
             
-    executed_positions = []
+
     return executed_positions
         
 
