@@ -5,15 +5,16 @@
 import pandas as pd
 from pandas import Timedelta, DateOffset
 from decimal import Decimal
+from typing import Optional
 # Логирование
 # ====================================================
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 from src.config.config import config
-from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo #, PositionsManager
-# from src.orders_block.trade_position import Position, Position_Status, float_to_decimal, StopLoss
-from src.orders_block.order import PositionManager, Direction, OrderType, make_order
+from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
+from src.orders_block.order import PositionManager, Direction, make_order, Position, OrderStatus
+from src.orders_block.order import OrderType, OrderStatus, Position_Status
 from src.backtester.execution_engine import ExecutionEngine
 
 from src.orders_block.risk_manager import get_position_size
@@ -43,12 +44,12 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
         return executed_positions
     
     # Инициализация стратегии    
-    strategy = ZigZagAndFibo(symbol)
+    strategy = ZigZagAndFibo(coin=coin)
     # Создаём модель позиции и менеджер, который управляет этой позицией
     
     manager = PositionManager()
     engine = ExecutionEngine(manager)
-    position = None
+    position: Optional[Position] = None
     
     
     # перебираем все бары начиная с минимального количества
@@ -65,67 +66,90 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
         current_close = current_bar["close"]
         
         logger.info(f"[yellow]----------------------------------------------------------- [/yellow]")
-        logger.info(f"[yellow]== Обработка бара {current_index} signal_bar {signal_bar.name} === open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
+        logger.info(f"[yellow]== Обработка бара {current_index} /// open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
         
         #-------------------------------------------------------------
         # Алгоритм входа в позицию и создание позиции
         #-------------------------------------------------------------
-        
         # рассчитываем индикаторы стратегии ищем точку входа
-        signal = strategy.find_entry_point(current_data)
-        """   
-        signal = {
-            "price": entry_price,
-            "direction": direction,
-            "take_profits": tps,
-            "stop_loss": stop_loss,
-            "stop_loss_volume": stop_loss_volume,
-            "z2_index": z2_index
-            }
-            """
         
         # Если сигнал есть и позиция еще не закрыта
-        if signal and position is None:
-            
-            if signal['direction'] == Direction.LONG:
-                logger.info(f"🔵 Сигнал на открытие LONG позиции по цене {signal['price']} / {signal['z2_index']}")
-                direction = Direction.LONG
-                                
-            else:
-                logger.info(f"🔴 Сигнал на открытие SHORT позиции по цене {signal['price']} / {signal['z2_index']}")
-                direction = Direction.SHORT
-            
-            # 1. создаем позицию
-            position = manager.open_position(symbol=symbol, direction=direction, tick_size=tick_size)
-            # Риск менеджмент - установка объема позиции
-            entry_price = signal.get("price")
-            if entry_price is None:
-                logger.error("Ошибка: цена входа не определена в сигнале.")
-                continue
-            volume_native = get_position_size(price=entry_price, volume=volume_inUSDT) 
+        if position is None:
+            signal = strategy.find_entry_point(current_data)
+            if signal != {}:
+                direction = signal['direction']
+                logger.info(f"🔷 Сигнал на вход получен: {direction} по цене {signal.get('price')}")
 
-            
-            # создаем ордер на вход
-            order = make_order(OrderType.ENTRY, price=entry_price, volume=volume_native, direction=direction, created_dt=current_bar.name)
-            # добавляем ордер в позицию
-            position.add_order(order)
-            
-            # 2. Добовляем teke profit
-            if signal.get("take_profits") is not None:
-                for item_tp in signal.get("take_profits", []):
-                    tp_volume = volume_native*item_tp.volume
-                    tp = make_order(OrderType.TAKE_PROFIT, price=item_tp.price, volume=tp_volume, direction=direction)
-                    position.add_order(tp)
-            
-            # 3. Добавляем stop loss
-            stop_loss = signal.get("sl")
-            if stop_loss is not None:
-                sl_price = stop_loss.get("price")
-                # TODO Рассчитать объем в нативной валюте
+                # 1. создаем позицию
+                position = manager.open_position(symbol=symbol, direction=direction, tick_size=tick_size)
+                # Риск менеджмент - установка объема позиции
+                entry_price = signal.get("price")
+                if entry_price is None:
+                    logger.error("Ошибка: цена входа не определена в сигнале.")
+                else:
+                    # -------------------------------------------------------------
+                    # Добавить риск менеджмент - расчет объема позиции
+                    # -------------------------------------------------------------
+                    # объем позиции в нативной валюте (например, в BTC) покупаем по текущей цене
+                    volume_native = get_position_size(price=entry_price, volume=volume_inUSDT) 
 
-                sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=volume_native, direction=direction)
-                position.add_order(order=sl)
+                    # создаем ордер на вход
+                    order = make_order(OrderType.ENTRY, price=entry_price, volume=volume_native, direction=direction, created_dt=current_bar.name)
+            
+                    # добавляем ордер в позицию
+                    position.add_order(order)
+                    
+                    # 2. Добовляем teke profit
+                    if signal["take_profits"] is not None:
+                        for tp in signal["take_profits"]: 
+                            tp_volume = volume_native*float(tp["volume"])
+                            tp_order = make_order(OrderType.TAKE_PROFIT, price=tp["price"], volume=tp_volume, direction=direction)
+                            position.add_order(tp_order)
+
+                    # 3. Добавляем stop loss
+                    stop_loss = signal.get("sl")
+                    if stop_loss is not None:
+                        sl_price = stop_loss.get("price")
+                        # Пока делаем один StopLoss SL на весь объем позиции
+                        sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=volume_native, direction=direction)
+                        position.add_order(order=sl)
    
+   
+        #-------------------------------------------------------------
+        # Обработка исполнения ордеров на текущем баре
+        #-------------------------------------------------------------
+        if position is not None: # если есть position   
+            logger.info(f"♻️ Проверка исполнения ордеров для созданной позиции {position.id} ... {position.direction}")
+            # перебираем текущий бар по минутным данным для более точного исполнения стопов и тейков
+            start_1m    = current_index
+            end__1m     = shift_timestamp(current_index, 1, timeframe, direction=+1)
+
+            current_range_1m = select_range(data_df_1m, start_1m, end__1m)
+            for j in range(len(current_range_1m)):
+                bar1m = current_range_1m.iloc[j]
+                # передаем бар в движок исполнения
+                engine.process_bar(bar=bar1m, bar_index=bar1m.name)
+                
+                
+            # проверяем количество активных закрытых ордеров TP
+
+                if position.status == Position_Status.ACTIVE and position.check_stop_break():
+                    # если закрыт хотя бы один TP, двигаем стоп в безубыточность
+                    position.move_stop_to_break_even()
+
+            if position.status in {Position_Status.TAKEN_FULL, Position_Status.STOPPED, Position_Status.TAKEN_PART}:
+                # если активных ордеров нет, позиция закрыта
+                logger.info(f"✅ Позиция {position.id} закрыта.")
+                
+                # сохраняем исполненную позицию в отчет
+                # trade_report = TradeReport.from_position(position)
+                # executed_positions.append(trade_report.to_dict())
+                
+                # сбрасываем позицию
+                manager = PositionManager()
+                engine = ExecutionEngine(manager)
+                position: Optional[Position] = None
+            
     executed_positions = []
     return executed_positions
         

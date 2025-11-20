@@ -4,6 +4,7 @@ from src.orders_block.order import to_decimal
 from src.orders_block.order import Direction
 from src.orders_block.order import PositionManager
 from typing import List, Optional, Dict, Any
+from datetime import datetime
 
 from decimal import Decimal
 
@@ -14,7 +15,9 @@ logger = get_logger(__name__)
 
 from src.config.config import config
 
-
+# -------------------------------------------------
+# Класс ExecutionEngine - движок исполнения ордеров
+# -------------------------------------------------
 class ExecutionEngine:
     """
     Упрощенный движок исполнения, который обрабатывает бар по бару и заполняет активные ордера.
@@ -31,9 +34,10 @@ class ExecutionEngine:
     Частичные заполнения не моделируются (полное заполнение).
     """
     def __init__(self, manager: PositionManager):
+        
         self.manager = manager
 
-    def process_bar(self, bar: Dict[str, Any], bar_index: int):
+    def process_bar(self, bar: Dict[str, Any], bar_index: datetime):
         """
         bar: dict with keys: 'time' (optional), 'open', 'high', 'low', 'close'
         bar_index: integer index of the bar

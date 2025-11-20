@@ -19,20 +19,17 @@ from enum import Enum
 from decimal import Decimal, ROUND_HALF_UP, getcontext
 from typing import List, Optional, Dict, Any
 from uuid import uuid4
-import logging
-
 from datetime import datetime, timedelta
+
+
+# Логирование
+# ====================================================
+from src.utils.logger import get_logger
+logger = get_logger(__name__)
+
 
 # установите достаточно высокую десятичную точность
 getcontext().prec = 18
-
-# Configure logger
-logger = logging.getLogger("position_module")
-if not logger.handlers:
-    h = logging.StreamHandler()
-    h.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
-    logger.addHandler(h)
-logger.setLevel(logging.INFO)
 
 
 # -------------------------
@@ -83,7 +80,7 @@ class Direction(Enum):
 class Execution:
     price: Decimal
     volume: Decimal
-    bar_index: int
+    bar_index: Optional[datetime]  # индекс бара исполнения
     order_id: str
 
 
@@ -160,11 +157,20 @@ class Position:
             if o.order_type == otype and o.status == OrderStatus.ACTIVE:
                 o.status = OrderStatus.CANCELLED
                 logger.info(f"Order {o.id} of type {otype} cancelled")
+    
+    # проверка по переводу стопа в безубыточность
+    def check_stop_break(self) -> bool:
+        if self.opened_volume >= self.closed_volume and self.profit > Decimal("0"):
+            for o in self.orders:
+                if o.order_type == OrderType.STOP_LOSS and not o.meta.get("moved_to_be") and o.status == OrderStatus.ACTIVE:
+                    return True
+        return False
+    
 
     # ------------------------
     # Управление исполнением
     # ------------------------
-    def record_execution(self, order: Order, price: Decimal, volume: Decimal, bar_index: int):
+    def record_execution(self, order: Order, price: Decimal, volume: Decimal, bar_index: Optional[datetime] = None):
         """
         Применить исполнение к позиции и обновить состояние.
         1. Записать исполнение
@@ -181,7 +187,9 @@ class Position:
         # управление объемами и средней ценой для входов/закрытий
         if order.order_type == OrderType.ENTRY:
             prev_total = self.opened_volume * (self.avg_entry_price or Decimal("0"))
+            
             self.opened_volume += to_decimal(volume)
+            
             if self.avg_entry_price is None:
                 self.avg_entry_price = to_decimal(price)
             else:
@@ -190,6 +198,7 @@ class Position:
 
             # mark active if at least some opened
             self.status = Position_Status.ACTIVE
+            logger.info(f"🔵 Позиция {self.id} открыта. Статус: {self.status.value} Объем: {self.opened_volume}, Средняя цена входа: {self.avg_entry_price}")  
 
         # если это закрывающий ордер (TP/SL/CLOSE)
         elif order.order_type in {OrderType.TAKE_PROFIT, OrderType.CLOSE, OrderType.STOP_LOSS}:
@@ -204,11 +213,32 @@ class Position:
                 self.profit += pnl
 
         # обновить статус позиции
-        if self.opened_volume > Decimal("0") and self.closed_volume >= self.opened_volume:
-            self.status = Position_Status.TAKEN_FULL if self.profit >= 0 else Position_Status.STOPPED
+        # precision = Decimal("0.0000001")  # Установите точность для сравнения
+        if self.tick_size:
+            tick_size = self.tick_size
+        else:
+            tick_size = Decimal("0.00000001")
+           
+        opened_volume_rounded = self.opened_volume.quantize(tick_size)
+        closed_volume_rounded = self.closed_volume.quantize(tick_size)
 
-        logger.info(f"Executed {order.order_type.value} order {order.id} @ {price} x {volume} (pos {self.id}). "
-                    f"opened_vol={self.opened_volume} closed_vol={self.closed_volume} avg_entry={self.avg_entry_price} pnl={self.profit}")
+        if opened_volume_rounded > Decimal("0") and closed_volume_rounded >= opened_volume_rounded:
+            # закрыта полностью
+            self.status = Position_Status.TAKEN_FULL if self.profit >= 0 else Position_Status.STOPPED
+            for o in self.orders:
+                if o.status == OrderStatus.ACTIVE and o.order_type == OrderType.STOP_LOSS:
+                    self.status = Position_Status.TAKEN_PART if self.profit >= 0 else Position_Status.STOPPED
+                    break
+        elif self.closed_volume > Decimal("0") and self.round_to_tick(self.closed_volume)  < self.round_to_tick(self.opened_volume):
+            # закрыта частично
+            self.status = Position_Status.ACTIVE
+            # self.move_stop_to_break_even()
+            logger.info(f"🟡 Позиция {self.id} частично закрыта. Статус: {self.status.value}")
+
+        logger.info(f"Position {self.id}: recorded execution of order {order.order_type}\n"
+              f"Цена {price} x объем {volume},\n"
+              f"Открытый объем ={self.opened_volume}, Закрытый объем={self.closed_volume}\\n"
+              f"Средняя цена входа={self.avg_entry_price}, Profit={self.profit}, СТАТУС={self.status.value}")
 
     # ------------------------
     # Позиционные утилиты
@@ -243,7 +273,7 @@ class Position:
     # Переместить стоп-лосс к безубыточности
     def move_stop_to_break_even(self):
         if self.avg_entry_price is None:
-            logger.warning("Cannot move stop to break-even: no entries yet")
+            logger.warning("Невозможно переместить стоп в безубыток: записей пока нет.")
             return None
         be_price = self.avg_entry_price
         # cancel existing active stops and add new stop at entry price
@@ -253,11 +283,14 @@ class Position:
             order_type=OrderType.STOP_LOSS,
             price=self.round_to_tick(be_price),
             volume=self.remaining_volume(),
-            direction=self.direction
+            direction=self.direction,
+            meta={"moved_to_be": True}
         )
         self.add_order(new_stop)
-        logger.info(f"Position {self.id}: stop moved to break-even at {new_stop.price}")
+        logger.info(f"Position {self.id}: стоп перенесен в точку безубыточности {new_stop.price}")
         return new_stop
+
+
 
     def __repr__(self):
         return f"<Position id={self.id[:6]} sym={self.symbol} dir={self.direction.value} status={self.status.value} opened={self.opened_volume} closed={self.closed_volume} avg_entry={self.avg_entry_price} pnl={self.profit}>"
@@ -279,7 +312,7 @@ class PositionManager:
     def open_position(self, symbol: str, direction: Direction, tick_size: Optional[float] = None) -> Position:
         pos = Position(symbol=symbol, direction=direction, tick_size=tick_size)
         self.positions[pos.id] = pos
-        logger.info(f"Открыта новая позиция {pos.id} {symbol} {direction.value}")
+        logger.info(f"📚 Создана новая позиция {pos.id} {symbol} {direction.value}")
         return pos
 
     # ------------------------
@@ -293,7 +326,7 @@ class PositionManager:
         for o in pos.get_active_orders():
             o.status = OrderStatus.CANCELLED
         pos.status = Position_Status.CANCELED
-        logger.info(f"Position {position_id} closed/cancelled by manager")
+        logger.info(f"📚 Позиция {position_id} закрыта/отменена менеджером")
 
     # ------------------------
     # Получить позиции по символу и/или направлению

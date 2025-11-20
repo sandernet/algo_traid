@@ -46,7 +46,11 @@ class ZigZag:
             
         # Инициализация z, z1, z2 значениями цен
         z  = df['low'].iloc[-1]
+        z_index = df.index[-1]
+        
         z1 = df['low'].iloc[-1]
+        z1_index = df.index[-1]
+        
         z2 = df['high'].iloc[-1]
         z2_index = df.index[-1]
         
@@ -58,15 +62,17 @@ class ZigZag:
             if dir_prev != dir_curr:
                 z1 = z2
                 z2 = z
-                z2_index = df.index[i]
+                z2_index = z_index
         # === направление вверх ===
             if dir_curr > 0:
                 if _high[i] > z2:
                     z2 = _high[i]
                     z2_index = df.index[i]
                     z = _low[i]
+                    z_index = df.index[i]
                 if _low[i] < z:
                     z = _low[i]
+                    z_index = df.index[i]
 
             # === направление вниз ===
             elif dir_curr < 0:
@@ -74,8 +80,10 @@ class ZigZag:
                     z2 = _low[i]
                     z2_index = df.index[i]
                     z = _high[i]
+                    z_index = df.index[i]
                 if _high[i] > z:
                     z = _high[i]
+                    z_index = df.index[i]
 
             bars.append({
                     "bar_index": i,
@@ -86,12 +94,12 @@ class ZigZag:
                     "z2_index": z2_index
                 })
             
-        ZigZag = pd.DataFrame(bars)
+        logger.info((f"bars: {bars[-1]}"))
         last_values = {
-            'z1': ZigZag['z1'].iloc[-1],
-            'z2': ZigZag['z2'].iloc[-1],
-            'direction': ZigZag['direction'].iloc[-1],
-            'z2_index': ZigZag['z2_index'].iloc[-1]
+            'z1': bars[-1]['z1'],
+            'z2': bars[-1]['z2'],
+            'direction': bars[-1]['direction'],
+            'z2_index': bars[-1]['z2_index']
         }
         
         return  last_values  #z1, z2, zz['direction'].iloc[-1], z2_index
