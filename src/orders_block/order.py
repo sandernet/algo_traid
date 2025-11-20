@@ -117,6 +117,8 @@ class Order:
         else:
             # частичное заполнение ордера
             self.status = OrderStatus.PARTIAL
+            
+
 
 
 class Position:
@@ -214,6 +216,12 @@ class Position:
     # Оставшийся объем для закрытия
     def remaining_volume(self) -> Decimal:
         return max(Decimal("0"), self.opened_volume - self.closed_volume)
+        # ------------------------
+    # Метод расчета части объема ордера
+    # ------------------------
+    def part_volume(self, share: Decimal) -> Decimal:
+        return (self.opened_volume * share).quantize(Decimal('1.'), rounding=ROUND_HALF_UP)
+    
     # Получить активные заказы 
     
     def get_active_orders(self) -> List[Order]:

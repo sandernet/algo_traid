@@ -21,11 +21,11 @@ COINS:
     TIMEFRAME: "D"
     MIN_TIMEFRAME: "1"
     AUTO_TRADING: true
-    START_DEPOSIT_USDT: 100
+    START_DEPOSIT_USDT: 10000
     MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
     LEVERAGE: 5  # Плечо
     # Размер ордера (в usdt )
-    VOLUME_SIZE  : 100    
+    VOLUME_SIZE  : 10000    
   
   # - SYMBOL: BNB
   #   TIMEFRAME: "D"
