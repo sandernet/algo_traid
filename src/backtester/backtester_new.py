@@ -19,7 +19,8 @@ from src.backtester.execution_engine import ExecutionEngine
 
 from src.orders_block.risk_manager import get_position_size
 
-from src.backtester.repot import TradeReport, generate_html_report, get_export_path
+# from src.backtester.repot import TradeReport, generate_html_report, get_export_path
+from src.backtester.report_generator import ReportGenerator, get_export_path, generate_html_report
 
 ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускается последняя точка zigzag
 
@@ -141,8 +142,9 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                 manager.close_position(position.id, close_bar=current_bar.name)
                      
                 # сохраняем исполненную позицию в отчет
-                trade_report = TradeReport(position)
-                executed_positions.append(trade_report.to_dict())
+                # trade_report = TradeReport(position)
+                # executed_positions.append(trade_report.to_dict())
+                executed_positions.append(position)
                 
                 # сбрасываем позицию
                 manager = PositionManager()
@@ -151,42 +153,9 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
             
 
     return executed_positions
-        
 
 
 # ====================================================
-# Выбор диапазона дат для бэктеста
-# ==================================================== 
-def select_range_becktest(data_df, timeframe, full_datafile, allowed_min_bars, start_date = None, end_date = None)  -> pd.DataFrame:
-    """
-    Фильтрация DataFrame по заданному диапазону дат.
-    Если full_datafile = True, то возвращаем исходный DataFrame
-    
-    :param data_df: pd.DataFrame — исходный DataFrame с данными
-    :return: pd.DataFrame — отфильтрованный DataFrame
-    """
-    
-
-    if full_datafile:
-        logger.info("Используется полный исторический диапазон. full_datafile = True")
-        return data_df
-    else:
-        start_date = shift_timestamp(start_date, allowed_min_bars, timeframe, direction=-1)
-        logger.info(f"📅 Период тестированияыы: {start_date} ↔️   {end_date}")
-        return select_range(data_df, start_date, end_date)
-    
-def select_range(data_df, start_date, end_date):
-    # Преобразование строковых дат в datetime объекты
-    start_dt = pd.to_datetime(start_date)
-    end_dt = pd.to_datetime(end_date)
-
-    
-    # Фильтрация DataFrame по диапазону дат
-    filtered_df = data_df[(data_df.index >= start_dt) & (data_df.index <= end_dt)].copy()
-    
-    return filtered_df
-
-
 # точка входа для бэктеста
 # ====================================================
 def run_local_backtest():
@@ -245,11 +214,20 @@ def run_local_backtest():
             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
             executed_positions = backtest_coin(select_data,data_df_1m, coin, MIN_BARS)
             
+            
+            # gen = ReportGenerator(executed_positions)
+            # data = gen.build_report()
+
+            # env = Environment(loader=FileSystemLoader("templates"))
+            # tpl = env.get_template("report.html")
+
+            # html = tpl.render(data)
+
             files_report = get_export_path(symbol=symbol, file_extension="html")
             files_report_csv = get_export_path(symbol=symbol, file_extension="csv")
             
             path = generate_html_report(
-                executed_reports = executed_positions,
+                positions = executed_positions,
                 symbol = symbol, 
                 period_start =start_date,
                 period_end =end_date,
@@ -338,3 +316,35 @@ def shift_timestamp(index, bars: int, timeframe: str, direction: int = -1):
     if direction < 0:
         return index - delta
     return index + delta
+
+# ====================================================
+# Выбор диапазона дат для бэктеста
+# ==================================================== 
+def select_range_becktest(data_df, timeframe, full_datafile, allowed_min_bars, start_date = None, end_date = None)  -> pd.DataFrame:
+    """
+    Фильтрация DataFrame по заданному диапазону дат.
+    Если full_datafile = True, то возвращаем исходный DataFrame
+    
+    :param data_df: pd.DataFrame — исходный DataFrame с данными
+    :return: pd.DataFrame — отфильтрованный DataFrame
+    """
+    
+
+    if full_datafile:
+        logger.info("Используется полный исторический диапазон. full_datafile = True")
+        return data_df
+    else:
+        start_date = shift_timestamp(start_date, allowed_min_bars, timeframe, direction=-1)
+        logger.info(f"📅 Период тестированияыы: {start_date} ↔️   {end_date}")
+        return select_range(data_df, start_date, end_date)
+    
+def select_range(data_df, start_date, end_date):
+    # Преобразование строковых дат в datetime объекты
+    start_dt = pd.to_datetime(start_date)
+    end_dt = pd.to_datetime(end_date)
+
+    
+    # Фильтрация DataFrame по диапазону дат
+    filtered_df = data_df[(data_df.index >= start_dt) & (data_df.index <= end_dt)].copy()
+    
+    return filtered_df
