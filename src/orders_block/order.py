@@ -132,6 +132,8 @@ class Position:
         self.executions: List[Execution] = []  # все исполнения, связанные с этой позицией
         self.opened_volume: Decimal = Decimal("0") # общий открытый объем
         self.closed_volume: Decimal = Decimal("0") # общий закрытый объем
+        self.bar_opened: Optional[datetime] = None  # индекс бара, в котором была открыта позиция
+        self.bar_closed: Optional[datetime] = None  # индекс бара, в котором была закрыта позиция
         self.avg_entry_price: Optional[Decimal] = None # средняя цена входа
         self.profit: Decimal = Decimal("0")      # накопленная прибыль / убыток по позиции
         self.tick_size = to_decimal(tick_size) if tick_size is not None else None # размер тика для округления цен
@@ -257,9 +259,12 @@ class Position:
     def get_active_orders(self) -> List[Order]:
         return [o for o in self.orders if o.status == OrderStatus.ACTIVE]
 
-    # Получить заказы по типу
-    def get_orders_by_type(self, otype: OrderType) -> List[Order]:
-        return [o for o in self.orders if o.order_type == otype and o.status == OrderStatus.ACTIVE]
+    # Получить ордера по типу только активные
+    def get_orders_by_type(self, otype: OrderType, active_only: bool = True) -> List[Order]:
+        if active_only:
+            return [o for o in self.orders if o.order_type == otype and o.status == OrderStatus.ACTIVE]
+        else:
+            return [o for o in self.orders if o.order_type == otype]
 
     # Округление цены до размера тика
     def round_to_tick(self, price: Decimal) -> Decimal:
@@ -309,27 +314,28 @@ class PositionManager:
     # ------------------------
     # открытие 
     # ------------------------
-    def open_position(self, symbol: str, direction: Direction, tick_size: Optional[float] = None) -> Position:
+    def open_position(self, symbol: str, direction: Direction, tick_size: Optional[float] = None, open_bar: Optional[datetime] = None) -> Position:
         pos = Position(symbol=symbol, direction=direction, tick_size=tick_size)
         self.positions[pos.id] = pos
+        self.positions[pos.id].bar_opened = open_bar
         logger.info(f"📚 Создана новая позиция {pos.id} {symbol} {direction.value}")
         return pos
 
     # ------------------------
     # закрытие по ID
     # ------------------------
-    def close_position(self, position_id: str):
+    def close_position(self, position_id: str, close_bar: Optional[datetime] = None):
         pos = self.positions.get(position_id)
         if not pos:
             return
         # cancel active orders
         for o in pos.get_active_orders():
             o.status = OrderStatus.CANCELLED
-        pos.status = Position_Status.CANCELED
-        logger.info(f"📚 Позиция {position_id} закрыта/отменена менеджером")
+        pos.bar_closed = close_bar
+        logger.info(f"📚 Позиция {position_id} закрыта/отменена на баре {pos.bar_closed}")
 
     # ------------------------
-    # Получить позиции по символу и/или направлению
+    # Получить позиции по символу и/или направлению 
     # ------------------------
     def get_positions(self, symbol: Optional[str] = None, direction: Optional[Direction] = None) -> List[Position]:
         res = list(self.positions.values())

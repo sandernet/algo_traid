@@ -58,7 +58,6 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
         
         current_data = data_df.iloc[i-allowed_min_bars : i ]
         current_bar = data_df.iloc[i] # текущий бар который обрабатывается
-        signal_bar = current_data.iloc[-1]
         current_index = current_bar.name
         current_open = current_bar["open"]
         current_high = current_bar["high"]
@@ -81,7 +80,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                 logger.info(f"🔷 Сигнал на вход получен: {direction} по цене {signal.get('price')}")
 
                 # 1. создаем позицию
-                position = manager.open_position(symbol=symbol, direction=direction, tick_size=tick_size)
+                position = manager.open_position(symbol=symbol, direction=direction, tick_size=tick_size, open_bar=current_bar.name)
                 # Риск менеджмент - установка объема позиции
                 entry_price = signal.get("price")
                 if entry_price is None:
@@ -139,8 +138,8 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
 
             if position.status in {Position_Status.TAKEN_FULL, Position_Status.STOPPED, Position_Status.TAKEN_PART}:
                 # если активных ордеров нет, позиция закрыта
-                logger.info(f"✅ Позиция {position.id} закрыта.")
-                
+                manager.close_position(position.id, close_bar=current_bar.name)
+                     
                 # сохраняем исполненную позицию в отчет
                 trade_report = TradeReport(position)
                 executed_positions.append(trade_report.to_dict())

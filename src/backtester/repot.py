@@ -26,8 +26,8 @@ class TradeReport:
         self.entry_price = float(position.avg_entry_price or 0.0)
         self.volume = float(position.opened_volume)
         self.status = position.status.value
-        self.bar_opened = position.meta.get("bar_opened")
-        self.bar_closed = position.meta.get("bar_closed")
+        self.bar_opened = position.bar_opened
+        self.bar_closed = position.bar_closed
         self.profit = float(position.profit)
         self.take_profits = self._take_profits_report(position)
         self.stop_loss = self._stop_loss_report(position)
@@ -36,7 +36,7 @@ class TradeReport:
         """
         Формирует структуру отчёта по уровням Take Profit.
         """
-        take_profits = position.get_orders_by_type(OrderType.TAKE_PROFIT)
+        take_profits = position.get_orders_by_type(OrderType.TAKE_PROFIT, active_only=False)
         take_profits_report = []
 
         for i, tp in enumerate(take_profits, start=1):
@@ -45,27 +45,32 @@ class TradeReport:
                 "price": float(tp.price or 0.0),
                 "volume": float(tp.volume),
                 "status": tp.status.value,
-                "profit": float(tp.meta.get("profit", 0.0)),
+                "profit": float(tp.price or 0.0) * float(tp.volume),
                 "bar_executed": tp.meta.get("bar_executed")
             })
 
         return take_profits_report
 
-    def _stop_loss_report(self, position: Position) -> dict:
+    def _stop_loss_report(self, position: Position) -> list[dict]:
         """
         Формирует структуру отчёта по стоп-лоссу.
         """
-        stop_loss = next((o for o in position.get_orders_by_type(OrderType.STOP_LOSS) if o.status == OrderStatus.FILLED), None)
-        if not stop_loss:
-            return {}
+        stop_loss = position.get_orders_by_type(OrderType.STOP_LOSS, active_only=False)
+        stop_loss_report = []
 
-        return {
-            "price": float(stop_loss.price or 0.0),
-            "volume": float(stop_loss.volume),
-            "status": stop_loss.status.value,
-            "bar_executed": stop_loss.meta.get("bar_executed"),
-            "profit": float(stop_loss.meta.get("profit", 0.0))
-        }
+        for i, tp in enumerate(stop_loss, start=1):
+            stop_loss_report.append({
+                "id": i,
+                "price": float(tp.price or 0.0),
+                "volume": float(tp.volume),
+                "status": tp.status.value,
+                "profit": float(tp.meta.get("profit", 0.0)),
+                "bar_executed": tp.meta.get("bar_executed")
+            })
+
+        return stop_loss_report
+        
+
 
     def to_dict(self) -> dict:
         """Преобразует отчёт в словарь (удобно для сериализации)."""
