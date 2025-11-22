@@ -30,6 +30,10 @@ ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускает
 def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
     """
     Запуск бэктеста с данными, загруженными из локального файла.
+    :param data_df: pd.DataFrame — исторические данные по монете
+    :param data_df_1m: pd.DataFrame — исторические данные по монете на 1 минуту
+    :param coin: dict — конфигурация монеты
+    :param allowed_min_bars: int — минимальное количество баров для расчета индикаторов
     """
     
     symbol = coin.get("SYMBOL")+"/USDT"
@@ -190,49 +194,49 @@ def run_local_backtest():
     from src.data_fetcher.data_fetcher import DataFetcher
     # 2. Обработка каждой монеты   
     for coin in coins_list:
-        try:
-            logger.info("============================================================================")
-            logger.info(f"🚀 Запуск бэктеста для монеты {coin.get('SYMBOL')}/USDT ...")
-            logger.info("============================================================================")
-        
-            symbol = coin.get("SYMBOL")+"/USDT"
-            timeframe = coin.get("TIMEFRAME")
-            tick_size = coin.get("MINIMAL_TICK_SIZE")
-            logger.info(f"🪙 Монета: [bold yellow]{symbol}[/bold yellow], ↔️ Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный шаг цены {tick_size}")
-            # 1. Загрузка из файла
-            # Инициализируем DataFetcher
-            fetcher = DataFetcher( coin,
-                exchange=exchange, 
-                directory=data_dir,
-                )
-            # Загружаем данные из CSV файла
-            with LoggingTimer("Загрузка данных торгового таймфрейма для бэктеста"):
-                data_df = fetcher.load_from_csv(file_type="csv", timeframe=timeframe) # загружаем данные нужного таймфрейма
-            with LoggingTimer("Загрузка минутных данных для точного исполнения стопов и тейков"):
-                data_df_1m = fetcher.load_from_csv(file_type="csv") # загружаем минутные данные для точного исполнения стопов и тейков
-        
-            if data_df is not None:
-                logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
-                
-                # 2. Выбор периода для бэктеста
-                with LoggingTimer("Выбор диапазона данных для бэктеста"):
-                    select_data = select_range_becktest(data_df, timeframe, full_datafile, MIN_BARS, start_date, end_date)
-                
-                # 3. Выполнение бэктеста
-                #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
-                with LoggingTimer("Выполнение бэктеста"):
-                    executed_positions = backtest_coin(select_data,data_df_1m, coin, MIN_BARS)
-                
-                # 4. Генерация отчета по результатам бэктеста
-                with LoggingTimer("Генерация отчета"):
-                    generate_report(executed_positions, symbol, start_date, end_date)
-                
-                logger.info(f"Закончена обработка бэктеста для {symbol}. Всего позиций: {len(executed_positions)}")
-                
-            else:
-                logger.error(f"Невозможно запустить бектест для {symbol}: данные не загружены.")
-        except Exception as e:
-            logger.error(f"Ошибка при бэктесте для монеты {coin.get('SYMBOL')}/USDT: {e}")
+        # try:
+        logger.info("============================================================================")
+        logger.info(f"🚀 Запуск бэктеста для монеты {coin.get('SYMBOL')}/USDT ...")
+        logger.info("============================================================================")
+    
+        symbol = coin.get("SYMBOL")+"/USDT"
+        timeframe = coin.get("TIMEFRAME")
+        tick_size = coin.get("MINIMAL_TICK_SIZE")
+        logger.info(f"🪙 Монета: [bold yellow]{symbol}[/bold yellow], ↔️ Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный шаг цены {tick_size}")
+        # 1. Загрузка из файла
+        # Инициализируем DataFetcher
+        fetcher = DataFetcher( coin,
+            exchange=exchange, 
+            directory=data_dir,
+            )
+        # Загружаем данные из CSV файла
+        with LoggingTimer("Загрузка данных торгового таймфрейма для бэктеста"):
+            data_df = fetcher.load_from_csv(file_type="csv", timeframe=timeframe) # загружаем данные нужного таймфрейма
+        with LoggingTimer("Загрузка минутных данных для точного исполнения стопов и тейков"):
+            data_df_1m = fetcher.load_from_csv(file_type="csv") # загружаем минутные данные для точного исполнения стопов и тейков
+    
+        if data_df is not None:
+            logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
+            
+            # 2. Выбор периода для бэктеста
+            with LoggingTimer("Выбор диапазона данных для бэктеста"):
+                select_data = select_range_becktest(data_df, timeframe, full_datafile, MIN_BARS, start_date, end_date)
+            
+            # 3. Выполнение бэктеста
+            #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
+            with LoggingTimer("Выполнение бэктеста"):
+                executed_positions = backtest_coin(select_data,data_df_1m, coin, MIN_BARS)
+            
+            # 4. Генерация отчета по результатам бэктеста
+            with LoggingTimer("Генерация отчета"):
+                generate_report(executed_positions, symbol, start_date, end_date)
+            
+            logger.info(f"Закончена обработка бэктеста для {symbol}. Всего позиций: {len(executed_positions)}")
+            
+        else:
+            logger.error(f"Невозможно запустить бектест для {symbol}: данные не загружены.")
+        # except Exception as e:
+        #     logger.error(f"Ошибка при бэктесте для монеты {coin.get('SYMBOL')}/USDT: {e}")
         
 # сдвиг метки времени
 def shift_timestamp(index, bars: int, timeframe: str, direction: int = -1):

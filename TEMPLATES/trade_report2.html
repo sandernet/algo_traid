@@ -8,60 +8,87 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            background: #f7f7f7;
+            background: #f4f6f8;
         }
 
-        h1, h2 {
-            color: #333;
-        }
+        h1, h2 { color: #333; }
 
         .header-box {
             background: #ffffff;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 7px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 10px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 14px;
+            margin-top: 12px;
         }
 
         .stat-item {
             background: #fff;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            padding: 14px;
+            border-radius: 10px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.12);
             text-align: center;
+            font-size: 14px;
         }
 
+        .details-row{display:none;background:#fafafa}
+        .details-cell{padding:10px;border-top:none}
+        .meta{font-size:0.9em;color:#555;margin-top:6px}
+
+        /* ==== COLORS ==== */
+
+        /* PnL */
+        .profit-positive { color: #0a8a00; font-weight: bold; }
+        .profit-negative { color: #d60000; font-weight: bold; }
+
+        /* Position status colors */
+        .status-open { color: #0077cc; font-weight: bold; }
+        .status-closed { color: #009933; font-weight: bold; }
+        .status-cancelled { color: #777; font-weight: bold; }
+        .status-other { color: #d68400; font-weight: bold; }
+
+        /* Order status colors */
+        .order-filled { color: #009933; font-weight: bold; }
+        .order-cancelled { color: #d60000; font-weight: bold; }
+        .order-pending { color: #0077cc; font-weight: bold; }
+        .order-other { color: #444; font-weight: bold; }
+
+        .dir-long {
+            color: #0b8f22; /* зелёный */
+            font-weight: bold;
+        }
+        .dir-short {
+            color: #c92a2a; /* красный */
+            font-weight: bold;
+        }
+
+        /* Tables */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
             background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 14px;
+            font-size: 13px;
         }
 
         th, td {
-            border: 1px solid #ccc;
+            border: 1px solid #d5d5d5;
             padding: 8px 10px;
-            text-align: left;
         }
 
         th {
-            background: #e8e8e8;
+            background: #e9ecef;
+            font-weight: bold;
         }
 
-        .orders-container {
-            margin: 5px 0 15px 0;
-            padding: 10px;
-            border-radius: 8px;
-            background: #f0f0f0;
-            display: none;
-        }
 
         .toggle-btn {
             cursor: pointer;
@@ -69,21 +96,17 @@
             font-weight: bold;
             text-decoration: underline;
         }
-
-        .profit-positive { color: green; font-weight: bold; }
-        .profit-negative { color: red; font-weight: bold; }
-
     </style>
 
     <script>
-    function toggleDetails(id){
-    const row = document.getElementById('det-' + id);
-    if(row.style.display === 'none' || row.style.display === ''){
-        row.style.display = 'table-row';
-    } else {
-        row.style.display = 'none';
-    }
-    }
+        function toggleDetails(id) {
+            const block = document.getElementById(id);
+            if(block.style.display === 'none' || block.style.display === ''){
+                block.style.display = 'block';
+            } else {
+                block.style.display = 'none';
+            }
+        }   
     </script>
 </head>
 
@@ -91,37 +114,49 @@
 
 <body>
 
-<!-- ======================== HEADER ======================== -->
+<!-- ====================================================== -->
+<!--                      HEADER                             -->
+<!-- ====================================================== -->
+
 <div class="header-box">
     <h1>{{ title }}</h1>
 
     <p><strong>Период:</strong> {{ period_start }} — {{ period_end }}</p>
 
     <div class="stats-grid">
+
         <div class="stat-item">
             <strong>Всего сделок:</strong><br>{{ stats.total_positions }}
         </div>
+
         <div class="stat-item">
             <strong>Общий PnL:</strong><br>
             <span class="{% if stats.total_pnl > 0 %}profit-positive{% elif stats.total_pnl < 0 %}profit-negative{% endif %}">
                 {{ "%.2f"|format(stats.total_pnl) }}
             </span>
         </div>
+
         <div class="stat-item">
             <strong>Winrate:</strong><br>{{ "%.1f"|format(stats.winrate) }}%
         </div>
+
         <div class="stat-item">
             <strong>Прибыльных:</strong><br>{{ stats.wins }}
         </div>
+
         <div class="stat-item">
             <strong>Убыточных:</strong><br>{{ stats.losses }}
         </div>
+
     </div>
 </div>
 
 
 
-<!-- ======================== POSITIONS TABLE ======================== -->
+<!-- ====================================================== -->
+<!--                   POSITIONS TABLE                      -->
+<!-- ====================================================== -->
+
 <h2>Список позиций</h2>
 
 <table>
@@ -131,9 +166,10 @@
             <th>Symbol</th>
             <th>Direction</th>
             <th>Статус</th>
-            <th>Открыта</th>
-            <th>Закрыта</th>
-            <th>Объём</th>
+            <th>Bar Opened</th>
+            <th>Bar Closed</th>
+            <th>Opened Vol</th>
+            <th>Closed Vol</th>
             <th>Средняя цена</th>
             <th>Прибыль</th>
             <th>Ордеры</th>
@@ -141,16 +177,29 @@
     </thead>
 
     <tbody>
+
     {% for p in positions %}
+        {% set uid = "orders_" ~ p.id %}
+        {% set pstatus =
+            "status-closed" if p.status == "closed"
+            else "status-open" if p.status == "open"
+            else "status-cancelled" if p.status == "cancelled"
+            else "status-other"
+        %}
+
         <tr>
-            <td>{{ p.id }}</td>
+            <td>{{ p.id[:6] }}</td>
             <td>{{ p.symbol }}</td>
-            <td>{{ p.direction }}</td>
-            <td>{{ p.status }}</td>
-            <td>{{ p.opened }}</td>
-            <td>{{ p.closed }}</td>
+            <td class="{{ 'dir-long' if p.direction == 'LONG' else 'dir-short' }}">
+                {{ p.direction }}
+            </td>
+            <td class="{{ pstatus }}">{{ p.status }}</td>
+            <td>{{ p.bar_opened }}</td>
+            <td>{{ p.bar_closed }}</td>
             <td>{{ p.opened_volume }}</td>
+            <td>{{ p.closed_volume }}</td>
             <td>{{ p.avg_entry_price }}</td>
+
             <td>
                 <span class="{% if p.profit > 0 %}profit-positive{% elif p.profit < 0 %}profit-negative{% endif %}">
                     {{ "%.2f"|format(p.profit) }}
@@ -158,59 +207,64 @@
             </td>
 
             <td>
-                {% set uid = "orders_" ~ p.id %}
-                <!-- <span class="toggle" onclick="toggleDetails('{{ loop.index }}')">more</span> -->
-                <span class="toggle" onclick="toggleOrders('{{ uid }}')">
-                    показать / скрыть
-                </span>
+                
+                <span class="toggle-btn" onclick="toggleDetails('{{ uid }}', event)">показать</span>
             </td>
         </tr>
 
-        <!-- ---------------- ORDERS BLOCK ---------------- -->
-        <tr>
-            <td colspan="10" style="padding:0;">
-                <div class="orders-container" id="{{ uid }}">
-                    {% if p.orders and p.orders|length > 0 %}
-                        <table style="width: 100%;">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Тип</th>
-                                    <th>Статус</th>
-                                    <th>Цена</th>
-                                    <th>Объём</th>
-                                    <th>Исполнено</th>
-                                    <th>Направление</th>
-                                    <th>Бар открытия</th>
-                                    <th>Бар закрытия</th>
-                                </tr>
-                            </thead>
+        <!-- ORDER LIST -->
+        <tr id="{{ uid }}" class="details-row">
+            <td colspan="11" class="details-cell">
+                {% if p.orders and p.orders|length > 0 %}
+                    <table style="width:100%; margin:0;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Тип</th>
+                                <th>Статус</th>
+                                <th>Цена</th>
+                                <th>Объем</th>
+                                <th>Исполнено</th>
+                                <th>Created Bar</th>
+                                <th>Close Bar</th>
+                            </tr>
+                        </thead>
 
-                            <tbody>
-                            {% for o in p.orders %}
-                                <tr>
-                                    <td>{{ o.id }}</td>
-                                    <td>{{ o.order_type }}</td>
-                                    <td>{{ o.status }}</td>
-                                    <td>{{ o.price }}</td>
-                                    <td>{{ o.volume }}</td>
-                                    <td>{{ o.filled }}</td>
-                                    <td>{{ o.direction }}</td>
-                                    <td>{{ o.created_bar }}</td>
-                                    <td>{{ o.close_bar }}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
+                        <tbody>
 
-                    {% else %}
-                        <em>Нет ордеров</em>
-                    {% endif %}
-                </div>
+                        {% for o in p.orders %}
+
+                            {% set ostatus =
+                                "order-filled" if o.status == "filled"
+                                else "order-cancelled" if o.status == "cancelled"
+                                else "order-pending" if o.status == "pending"
+                                else "order-other"
+                            %}
+
+                            <tr>
+                                <td>{{ o.id[:6] }}</td>
+                                <td>{{ o.order_type }}</td>
+                                <td class="{{ ostatus }}">{{ o.status }}</td>
+                                <td>{{ o.price }}</td>
+                                <td>{{ o.volume }}</td>
+                                <td>{{ o.filled }}</td>
+                                <td>{{ o.created_bar }}</td>
+                                <td>{{ o.close_bar }}</td>
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+                    </table>
+
+                {% else %}
+                    <em>Нет ордеров</em>
+                {% endif %}
             </td>
         </tr>
 
     {% endfor %}
+
     </tbody>
 </table>
 

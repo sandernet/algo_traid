@@ -30,12 +30,12 @@ class ReportGenerator:
         """
         return {
             "id": getattr(order, "id", None),
-            "order_type": getattr(order, "order_type", None),
-            "status": getattr(order, "status", None),
+            "order_type": getattr(order.order_type, "name", order.order_type),
+            "status": getattr(order.status, "name", order.status),
             "price": getattr(order, "price", None),
             "volume": getattr(order, "volume", None),
             "filled": getattr(order, "filled", None),
-            "direction": getattr(order, "direction", None),
+            "direction": getattr(order.direction, "name", order.direction),
             "created_bar": getattr(order, "created_bar", None),
             "close_bar": getattr(order, "close_bar", None),
             "meta":  getattr(order, "meta", None),  # на случай использования оригинального объекта
@@ -54,15 +54,12 @@ class ReportGenerator:
         return {
             "id": getattr(pos, "id", None),
             "symbol": getattr(pos, "symbol", None),
-            "direction": getattr(pos, "direction", None),
-            "status": getattr(pos, "status", None),
-            "opened": getattr(pos, "opened", None),
-            "closed": getattr(pos, "closed", None),
+            "direction": getattr(pos.direction, "name", pos.direction),
+            "status": getattr(pos.status, "name", pos.status),
             "opened_volume": getattr(pos, "opened_volume", None),
             "closed_volume": getattr(pos, "closed_volume", None),
             "bar_opened": getattr(pos, "bar_opened", None),
             "bar_closed": getattr(pos, "bar_closed", None),
-            "avg_entry": getattr(pos, "avg_entry", None),
             "avg_entry_price": getattr(pos, "avg_entry_price", None),
             "profit": getattr(pos, "profit", None),
             "meta": getattr(pos, "meta", None),
@@ -82,28 +79,34 @@ class ReportGenerator:
         """
         Создаёт статистику по всем позициям.
         """
-        total_pnl = 0
-        wins = 0
-        losses = 0
+        try:
+            total_pnl = 0
+            wins = 0
+            losses = 0
 
-        for p in serialized:
-            profit = p["profit"] or 0
-            total_pnl += profit
-            if profit > 0:
-                wins += 1
-            elif profit < 0:
-                losses += 1
+            for p in serialized:
+                profit = p.get("profit") or 0
+                total_pnl += profit
+                if profit > 0:
+                    wins += 1
+                elif profit < 0:
+                    losses += 1
 
-        count = len(serialized)
-        winrate = (wins / count * 100) if count else 0
+            count = len(serialized)
+            winrate = (wins / count * 100) if count else 0
+         
+            return {
+                "total_positions": count,
+                "total_pnl": total_pnl,
+                "wins": wins,
+                "losses": losses,
+                "winrate": winrate,
+            }
+        except Exception as e:
+            logger.error(f"Error building statistics: {e}")
+            return {"total_positions": 0, "total_pnl": 0, "wins": 0, "losses": 0, "winrate": 0}
 
-        return {
-            "total_positions": count,
-            "total_pnl": total_pnl,
-            "wins": wins,
-            "losses": losses,
-            "winrate": winrate,
-        }
+        
 
     # -----------------------------
     # ОСНОВНАЯ ФОРМА ОТЧЁТА
@@ -177,19 +180,19 @@ def generate_html_report(positions, symbol, period_start, period_end, target_pat
 # Основная функция генерации отчёта
 # -----------------------
 def generate_report(executed_positions, symbol, start_date, end_date):
-    try:
-        template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
-        files_report = get_export_path(symbol=symbol, file_extension="html")
-                
-                
-        path = generate_html_report(
-            positions = executed_positions,
-            symbol = symbol, 
-            period_start =start_date,
-            period_end =end_date,
-            target_path = files_report, 
-            template_dir = template_dir
-            )
-        logger.info(f"Отчет сохранен в: {path}")
-    except Exception as e:
-        logger.error(f"Ошибка при генерации отчета для {symbol}: {e}")
+    # try:
+    template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
+    files_report = get_export_path(symbol=symbol, file_extension="html")
+            
+            
+    path = generate_html_report(
+        positions = executed_positions,
+        symbol = symbol, 
+        period_start =start_date,
+        period_end =end_date,
+        target_path = files_report, 
+        template_dir = template_dir
+        )
+    logger.info(f"Отчет сохранен в: {path}")
+    # except Exception as e:
+    #     logger.error(f"Ошибка при генерации отчета для {symbol}: {e}")
