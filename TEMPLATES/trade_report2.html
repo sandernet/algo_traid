@@ -76,10 +76,14 @@
     </style>
 
     <script>
-        function toggleOrders(id) {
-            const block = document.getElementById(id);
-            block.style.display = block.style.display === "none" ? "block" : "none";
-        }
+    function toggleDetails(id){
+    const row = document.getElementById('det-' + id);
+    if(row.style.display === 'none' || row.style.display === ''){
+        row.style.display = 'table-row';
+    } else {
+        row.style.display = 'none';
+    }
+    }
     </script>
 </head>
 
@@ -155,7 +159,8 @@
 
             <td>
                 {% set uid = "orders_" ~ p.id %}
-                <span class="toggle-btn" onclick="toggleOrders('{{ uid }}')">
+                <!-- <span class="toggle" onclick="toggleDetails('{{ loop.index }}')">more</span> -->
+                <span class="toggle" onclick="toggleOrders('{{ uid }}')">
                     показать / скрыть
                 </span>
             </td>
