@@ -87,11 +87,11 @@ class ReportGenerator:
         losses = 0
 
         for p in serialized:
-            pnl = p["pnl"] or 0
-            total_pnl += pnl
-            if pnl > 0:
+            profit = p["profit"] or 0
+            total_pnl += profit
+            if profit > 0:
                 wins += 1
-            elif pnl < 0:
+            elif profit < 0:
                 losses += 1
 
         count = len(serialized)
@@ -147,20 +147,10 @@ def generate_html_report(positions, symbol, period_start, period_end, target_pat
     Генерация HTML-отчёта по списку объектов TradeReport или dict.
     Использует Jinja2-шаблон.
     """
-    # plain = [r.to_dict() if isinstance(r, TradeReport) else r for r in executed_reports]
 
     title = f"{symbol} Trade Report"
     period_start = pd.to_datetime(period_start).strftime("%Y-%m-%d")
     period_end = pd.to_datetime(period_end).strftime("%Y-%m-%d")
-
-    # profits = [r.get("profit", 0.0) for r in plain]
-    # total_profit = sum(profits)
-    # trades_count = len(profits)
-    # wins = sum(1 for p in profits if p > 0)
-    # losses = sum(1 for p in profits if p < 0)
-    # flat = trades_count - wins - losses
-    # win_rate = (wins / trades_count * 100) if trades_count else 0.0
-
 
     gen = ReportGenerator(positions)
     report = gen.build_report()
@@ -178,12 +168,6 @@ def generate_html_report(positions, symbol, period_start, period_end, target_pat
         period_start=period_start,
         period_end=period_end,
         **report,
-        # total_profit=total_profit,
-        # trades_count=trades_count,
-        # win_rate=win_rate,
-        # wins=wins,
-        # losses=losses,
-        # flat=flat
     )
 
     Path(target_path).write_text(html_content, encoding="utf-8")
