@@ -3,7 +3,7 @@
 Определение размера позиции (Position Sizing). 
 Реализация глобальных Stop Loss и Take Profit.
 """
-
+from decimal import Decimal
 # Логирование
 # ====================================================
 from src.utils.logger import get_logger
@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 from src.config.config import config
 
-def get_position_size(price: float, volume: float) -> float:
+def get_position_size(price: Decimal, volume: Decimal) -> Decimal:
     if volume <= 0:
         raise ValueError("Volume must be greater than 0")
     if price <= 0:

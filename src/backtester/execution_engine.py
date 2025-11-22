@@ -67,7 +67,7 @@ class ExecutionEngine:
                         continue
 
                     # регистрируем исполнение ордера в позиции
-                    pos.record_execution(order, exec_price, exec_volume, bar_index)
+                    pos.record_execution(order, exec_price, pos.round_to_tick(exec_volume), bar_index)
 
                     # действия после выполнения: если запись заполнена, могут быть ордера в скобках (их может установить пользователь)
                     # здесь мы могли бы реализовать логику OCO, трейлинг-стопы и т. д. 

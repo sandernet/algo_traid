@@ -84,21 +84,26 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                 direction = signal['direction']
                 logger.info(f"🔷 Сигнал на вход получен: {direction} по цене {signal.get('price')}")
 
-                # 1. создаем позицию
-                position = manager.open_position(symbol=symbol, direction=direction, tick_size=tick_size, open_bar=current_bar.name)
                 # Риск менеджмент - установка объема позиции
                 entry_price = signal.get("price")
                 if entry_price is None:
                     logger.error("Ошибка: цена входа не определена в сигнале.")
                 else:
+                    # 1. создаем позицию
+                    position = manager.open_position(symbol=symbol, direction=direction, tick_size=tick_size, open_bar=current_bar.name)
+                    
+                    entry_price = position.round_to_tick(Decimal(entry_price))
                     # -------------------------------------------------------------
                     # Добавить риск менеджмент - расчет объема позиции
                     # -------------------------------------------------------------
+                    volume_inUSDT = position.round_to_tick(Decimal(volume_inUSDT))
                     # объем позиции в нативной валюте (например, в BTC) покупаем по текущей цене
-                    volume_native = get_position_size(price=entry_price, volume=volume_inUSDT) 
+                    volume_native = get_position_size(price=entry_price, volume=volume_inUSDT)
+                    # округляем объем до ближайшего тикера
+                    volume = position.round_to_tick(Decimal(volume_native))
 
                     # создаем ордер на вход
-                    order = make_order(OrderType.ENTRY, price=entry_price, volume=volume_native, direction=direction, created_bar=current_bar.name)
+                    order = make_order(OrderType.ENTRY, price=entry_price, volume=volume, direction=direction, created_bar=current_bar.name)
             
                     # добавляем ордер в позицию
                     position.add_order(order)
@@ -106,16 +111,20 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                     # 2. Добовляем teke profit
                     if signal["take_profits"] is not None:
                         for tp in signal["take_profits"]: 
-                            tp_volume = volume_native*float(tp["volume"])
-                            tp_order = make_order(OrderType.TAKE_PROFIT, price=tp["price"], volume=tp_volume, direction=direction)
+                            
+                            tp_volume = position.round_to_tick(volume*Decimal(tp["volume"]))
+                            price = position.round_to_tick(Decimal(tp["price"]))
+                            
+                            tp_order = make_order(OrderType.TAKE_PROFIT, price=price, volume=tp_volume, direction=direction)
                             position.add_order(tp_order)
 
                     # 3. Добавляем stop loss
                     stop_loss = signal.get("sl")
                     if stop_loss is not None:
                         sl_price = stop_loss.get("price")
+                        sl_price = position.round_to_tick(Decimal(sl_price))
                         # Пока делаем один StopLoss SL на весь объем позиции
-                        sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=volume_native, direction=direction)
+                        sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=volume, direction=direction)
                         position.add_order(order=sl)
    
    

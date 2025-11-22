@@ -116,6 +116,7 @@ class Order:
         else:
             # частичное заполнение ордера
             self.status = OrderStatus.PARTIAL
+            self.close_bar = close_bar
             
 
 
@@ -180,12 +181,13 @@ class Position:
         1. Записать исполнение
         2. Обновить состояние позиции
         """
-        ex = Execution(price=to_decimal(price), volume=to_decimal(volume), bar_index=bar_index, order_id=order.id)
+        ex = Execution(price=to_decimal(price), volume=volume, bar_index=bar_index, order_id=order.id)
         self.executions.append(ex)
 
         # по объему пометить ордер как заполненный (полностью или частично)
         # поменяет статус ордера соответственно
-        order.mark_filled(to_decimal(volume), bar_index)
+        
+        order.mark_filled(volume, bar_index)
 
         # update volumes and average price for entries/closings
         # управление объемами и средней ценой для входов/закрытий
@@ -250,7 +252,9 @@ class Position:
     # Оставшийся объем для закрытия
     def remaining_volume(self) -> Decimal:
         return max(Decimal("0"), self.opened_volume - self.closed_volume)
-        # ------------------------
+        
+        
+    # ------------------------
     # Метод расчета части объема ордера
     # ------------------------
     def part_volume(self, share: Decimal) -> Decimal:
@@ -352,7 +356,7 @@ class PositionManager:
 # -------------------------
 # Создание ордеров
 # -------------------------
-def make_order(order_type: OrderType, price: Optional[float], volume: float, direction: Direction, created_bar: Optional[datetime] = None, meta: Optional[Dict[str, Any]] = None) -> Order:
+def make_order(order_type: OrderType, price: Optional[Decimal], volume: Decimal, direction: Direction, created_bar: Optional[datetime] = None, meta: Optional[Dict[str, Any]] = None) -> Order:
     """
     Создать ордер на основе параметров.
     
@@ -367,8 +371,8 @@ def make_order(order_type: OrderType, price: Optional[float], volume: float, dir
     return Order(
         id=uuid4().hex,
         order_type=order_type,
-        price=to_decimal(price) if price is not None else None,
-        volume=to_decimal(volume),
+        price=price if price is not None else None,
+        volume=volume,
         direction=direction,
         created_bar=created_bar,
         meta=meta or {}

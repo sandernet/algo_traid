@@ -69,8 +69,24 @@
         .table{width:100%;border-collapse:collapse;margin-top:10px}
         .table th,.table td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}
         .table th{background:#f0f0f3}
-        .tp-table{width:100%;border-collapse:separate !important;margin-top:6px}
-        .tp-table th,.tp-table td{border:1px solid #ddd;padding:6px;font-size:0.9em}
+        .tp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+            border: 1px solid #ccc;       /* общий тонкий бордюр */
+            border-radius: 6px;
+        }
+
+        /* стили для ячеек вложенных таблиц */
+        .tp-table th, .tp-table td {
+            border: 1px solid #ccc;       /* тонкий бордюр для ячеек */
+            padding: 4px 6px;             /* уменьшенные отступы */
+            font-size: 0.85em;
+        }
+        .tp-table tbody tr:hover {
+            background-color: #e6f2ff;     /* светлый синий фон при наведении */
+        }
+        
         .details-row{display:none;background:#fafafa}
         .details-cell {
             padding: 10px;
