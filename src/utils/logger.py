@@ -2,6 +2,8 @@
 import logging
 import logging.handlers
 import os
+
+
 from rich.logging import RichHandler
 from src.config.config import config # Импортируем наш модуль конфигурации
 
@@ -92,3 +94,6 @@ log_manager = LoggerManager()
 
 # Статический метод для простого импорта в других модулях
 get_logger = LoggerManager.get_logger
+
+from src.utils.logger_time import LoggingTimer  as LoggingTimer # Импортируем LoggingTimer для использования в других модулях 
+

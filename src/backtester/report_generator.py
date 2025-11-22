@@ -30,12 +30,15 @@ class ReportGenerator:
         """
         return {
             "id": getattr(order, "id", None),
-            "type": getattr(order, "type", None),
-            "side": getattr(order, "side", None),
+            "order_type": getattr(order, "order_type", None),
+            "status": getattr(order, "status", None),
             "price": getattr(order, "price", None),
-            "amount": getattr(order, "amount", None),
-            "timestamp": getattr(order, "timestamp", None),
-            "raw": order  # на случай использования оригинального объекта
+            "volume": getattr(order, "volume", None),
+            "filled": getattr(order, "filled", None),
+            "direction": getattr(order, "direction", None),
+            "created_bar": getattr(order, "created_bar", None),
+            "close_bar": getattr(order, "close_bar", None),
+            "meta":  getattr(order, "meta", None),  # на случай использования оригинального объекта
         }
 
     def serialize_position(self, pos: Any) -> Dict[str, Any]:
@@ -50,15 +53,20 @@ class ReportGenerator:
 
         return {
             "id": getattr(pos, "id", None),
-            "symbol": getattr(pos, "sym", None),
-            "direction": getattr(pos, "dir", None),
+            "symbol": getattr(pos, "symbol", None),
+            "direction": getattr(pos, "direction", None),
             "status": getattr(pos, "status", None),
             "opened": getattr(pos, "opened", None),
             "closed": getattr(pos, "closed", None),
+            "opened_volume": getattr(pos, "opened_volume", None),
+            "closed_volume": getattr(pos, "closed_volume", None),
+            "bar_opened": getattr(pos, "bar_opened", None),
+            "bar_closed": getattr(pos, "bar_closed", None),
             "avg_entry": getattr(pos, "avg_entry", None),
-            "pnl": getattr(pos, "pnl", None),
+            "avg_entry_price": getattr(pos, "avg_entry_price", None),
+            "profit": getattr(pos, "profit", None),
+            "meta": getattr(pos, "meta", None),
             "orders": orders,
-            "raw": pos
         }
 
     def serialize_all_positions(self) -> List[Dict[str, Any]]:
@@ -157,9 +165,6 @@ def generate_html_report(positions, symbol, period_start, period_end, target_pat
     gen = ReportGenerator(positions)
     report = gen.build_report()
     
-    print(report.keys())
-
-
     env = Environment(
         loader=FileSystemLoader(template_dir),
         autoescape=True,
@@ -183,3 +188,24 @@ def generate_html_report(positions, symbol, period_start, period_end, target_pat
 
     Path(target_path).write_text(html_content, encoding="utf-8")
     return target_path
+
+# -----------------------
+# Основная функция генерации отчёта
+# -----------------------
+def generate_report(executed_positions, symbol, start_date, end_date):
+    try:
+        template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
+        files_report = get_export_path(symbol=symbol, file_extension="html")
+                
+                
+        path = generate_html_report(
+            positions = executed_positions,
+            symbol = symbol, 
+            period_start =start_date,
+            period_end =end_date,
+            target_path = files_report, 
+            template_dir = template_dir
+            )
+        logger.info(f"Отчет сохранен в: {path}")
+    except Exception as e:
+        logger.error(f"Ошибка при генерации отчета для {symbol}: {e}")

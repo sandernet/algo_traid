@@ -93,8 +93,9 @@ class Order:
     direction: Direction      #направление: ДЛИННОЕ или КОРОТКОЕ (влияет на интерпретацию стопов)
     status: OrderStatus = OrderStatus.ACTIVE
     filled: Decimal = field(default_factory=lambda: Decimal("0"))
-    created_at: Optional[int] = None  # optional bar index when created
-    created_dt: Optional[datetime] = None  # optional bar index when created
+    # created_at: Optional[int] = None  # optional bar index when created
+    created_bar: Optional[datetime] = None  # optional bar index when created
+    close_bar: Optional[datetime] = None  # optional bar index when closed
     meta: Dict[str, Any] = field(default_factory=dict)
 
     # ------------------------
@@ -106,11 +107,12 @@ class Order:
     # ------------------------
     # Метод управления заполнением ордера
     # ------------------------
-    def mark_filled(self, amount: Decimal):
+    def mark_filled(self, amount: Decimal, close_bar: datetime):
         self.filled += amount
         if self.filled >= self.volume:
             # полный объем ордера заполнен
             self.status = OrderStatus.FILLED
+            self.close_bar = close_bar
         else:
             # частичное заполнение ордера
             self.status = OrderStatus.PARTIAL
@@ -172,7 +174,7 @@ class Position:
     # ------------------------
     # Управление исполнением
     # ------------------------
-    def record_execution(self, order: Order, price: Decimal, volume: Decimal, bar_index: Optional[datetime] = None):
+    def record_execution(self, order: Order, price: Decimal, volume: Decimal, bar_index: datetime):
         """
         Применить исполнение к позиции и обновить состояние.
         1. Записать исполнение
@@ -183,7 +185,7 @@ class Position:
 
         # по объему пометить ордер как заполненный (полностью или частично)
         # поменяет статус ордера соответственно
-        order.mark_filled(to_decimal(volume))
+        order.mark_filled(to_decimal(volume), bar_index)
 
         # update volumes and average price for entries/closings
         # управление объемами и средней ценой для входов/закрытий
@@ -347,12 +349,10 @@ class PositionManager:
 
 
 
-
-
 # -------------------------
 # Создание ордеров
 # -------------------------
-def make_order(order_type: OrderType, price: Optional[float], volume: float, direction: Direction, created_dt: Optional[datetime] = None, meta: Optional[Dict[str, Any]] = None) -> Order:
+def make_order(order_type: OrderType, price: Optional[float], volume: float, direction: Direction, created_bar: Optional[datetime] = None, meta: Optional[Dict[str, Any]] = None) -> Order:
     """
     Создать ордер на основе параметров.
     
@@ -370,8 +370,7 @@ def make_order(order_type: OrderType, price: Optional[float], volume: float, dir
         price=to_decimal(price) if price is not None else None,
         volume=to_decimal(volume),
         direction=direction,
-        created_at=0,
-        created_dt=created_dt,
+        created_bar=created_bar,
         meta=meta or {}
     )
 
