@@ -244,7 +244,7 @@ def run_local_backtest():
             
             # 4. Генерация отчета по результатам бэктеста
             with LoggingTimer("Генерация отчета"):
-                generate_report(executed_positions, symbol, start_date, end_date)
+                generate_report(executed_positions, coin, start_date, end_date)
             
             logger.info(f"Закончена обработка бэктеста для {symbol}. Всего позиций: {len(executed_positions)}")
             

@@ -131,10 +131,10 @@ def get_export_path(coin, file_extension: str = "html") -> str:
     """
     Формирует полный путь для сохранения файла и гарантирует существование директории.
     """
-    symbol = coin.get('symbol')
-    timeframe = coin.get('timeframe', '-')
+    symbol = coin.get('SYMBOL')
+    timeframe = coin.get('TIMEFRAME', '-')
     # report_date = datetime.date.today().isoformat()
-    file_prefix = f"{symbol.replace('/', '_')}_UDDT__timeframe {timeframe}"
+    file_prefix = f"{symbol}_UDDT__timeframe {timeframe}"
     path = config.get_setting("BACKTEST_SETTINGS", "REPORT_DIRECTORY")
 
     if not os.path.exists(path):
