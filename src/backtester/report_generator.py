@@ -94,7 +94,7 @@ class ReportGenerator:
 
             count = len(serialized)
             winrate = (wins / count * 100) if count else 0
-         
+
             return {
                 "total_positions": count,
                 "total_pnl": total_pnl,

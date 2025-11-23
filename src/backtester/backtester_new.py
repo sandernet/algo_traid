@@ -231,6 +231,11 @@ def run_local_backtest():
             # 2. Выбор периода для бэктеста
             with LoggingTimer("Выбор диапазона данных для бэктеста"):
                 select_data = select_range_becktest(data_df, timeframe, full_datafile, MIN_BARS, start_date, end_date)
+                if not full_datafile:
+                    logger.info(f"Данные для бэктеста отобраны с {select_data.index[0]} по {select_data.index[-1]}. Всего баров: {len(select_data)}")
+                    start_date = select_data.index[0]
+                    end_date = select_data.index[-1]
+                
             
             # 3. Выполнение бэктеста
             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
