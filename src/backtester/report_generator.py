@@ -127,12 +127,14 @@ class ReportGenerator:
 # -------------------------------------------------------------
 # Формирование пути для экспорта и импорта файлов
 # -------------------------------------------------------------
-def get_export_path(symbol, file_extension: str = "html") -> str:
+def get_export_path(coin, file_extension: str = "html") -> str:
     """
     Формирует полный путь для сохранения файла и гарантирует существование директории.
     """
-    report_date = datetime.date.today().isoformat()
-    file_prefix = f"{symbol.replace('/', '_')} report {report_date}"
+    symbol = coin.get('symbol')
+    timeframe = coin.get('timeframe', '-')
+    # report_date = datetime.date.today().isoformat()
+    file_prefix = f"{symbol.replace('/', '_')}_UDDT__timeframe {timeframe}"
     path = config.get_setting("BACKTEST_SETTINGS", "REPORT_DIRECTORY")
 
     if not os.path.exists(path):
@@ -179,10 +181,11 @@ def generate_html_report(positions, symbol, period_start, period_end, target_pat
 # -----------------------
 # Основная функция генерации отчёта
 # -----------------------
-def generate_report(executed_positions, symbol, start_date, end_date):
+def generate_report(executed_positions, coin, start_date, end_date):
     # try:
     template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
-    files_report = get_export_path(symbol=symbol, file_extension="html")
+    symbol = coin.get('symbol')
+    files_report = get_export_path(coin=coin, file_extension="html")
             
             
     path = generate_html_report(
