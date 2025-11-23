@@ -13,7 +13,7 @@ def run_data_update_pipeline(load_min_timeframe = False):
     """Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации."""
 
     # Получение настроек Биржи
-    exchange_id = config.get_setting("EXCHANGE_SETTINGS", "EXCHANGE_ID")
+    exchange = config.get_section("EXCHANGE_SETTINGS")
     limit = config.get_setting("EXCHANGE_SETTINGS", "LIMIT")
     data_dir = config.get_setting("BACKTEST_SETTINGS", "DATA_DIR")
     
@@ -38,11 +38,10 @@ def run_data_update_pipeline(load_min_timeframe = False):
         logger.info(f"Монета: {symbol}, Таймфрейм: {timeframe}, Минимальный таймфрейм: {min_timeframe}")
        
         fetcher = DataFetcher( coin,
-            exchange_id=exchange_id, 
-            limit=limit,
+            exchange=exchange, 
             directory=data_dir,
             )
-        logger.info("Загрузка данных за всю историю...")
+        logger.info("Загрузка данных за всю историю...") 
         data_df = fetcher.fetch_entire_history(timeframe)
         
         # Сохранение данных
