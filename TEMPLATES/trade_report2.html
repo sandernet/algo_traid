@@ -219,7 +219,7 @@
         <!-- ORDER LIST -->
         <tr id="{{ uid }}" class="details-row">
             <td colspan="11" class="details-cell">
-               {% if p.orders and p.orders|length > 0 %}
+                {% if p.orders and p.orders|length > 0 %}
                     <table class="tp-table">
                         <thead>
                             <tr>
@@ -233,18 +233,14 @@
                                 <th>Close Bar</th>
                             </tr>
                         </thead>
-
                         <tbody>
-
                         {% for o in p.orders %}
-
                             {% set ostatus =
                                 "order-filled" if o.status == "filled"
                                 else "order-cancelled" if o.status == "cancelled"
                                 else "order-pending" if o.status == "pending"
                                 else "order-other"
                             %}
-
                             <tr>
                                 <td>{{ o.id[:6] }}</td>
                                 <td>{{ o.order_type }}</td>
@@ -255,20 +251,15 @@
                                 <td>{{ o.created_bar }}</td>
                                 <td>{{ o.close_bar }}</td>
                             </tr>
-
                         {% endfor %}
-
                         </tbody>
                     </table>
-
                 {% else %}
                     <em>Нет ордеров</em>
                 {% endif %}
             </td>
         </tr>
-
     {% endfor %}
-
     </tbody>
 </table>
 

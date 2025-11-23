@@ -1,0 +1,14 @@
+@startuml packages_MyApp
+set namespaceSeparator none
+package "algo_traid" as algo_traid {
+}
+package "algo_traid.app" as algo_traid.app {
+}
+package "algo_traid.src" as algo_traid.src {
+}
+package "algo_traid.src.config" as algo_traid.src.config {
+}
+package "algo_traid.src.config.config" as algo_traid.src.config.config {
+}
+algo_traid.app --> algo_traid.src.config.config
+@enduml

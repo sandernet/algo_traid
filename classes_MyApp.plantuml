@@ -1,0 +1,10 @@
+@startuml classes_MyApp
+set namespaceSeparator none
+class "ConfigManager" as algo_traid.src.config.config.ConfigManager {
+  config_path : str
+  get_section(section: str, logger) -> dict
+  get_setting(section: str, key: str, logger)
+}
+class "<color:red>ConfigValidationError</color>" as algo_traid.src.config.config.ConfigValidationError {
+}
+@enduml

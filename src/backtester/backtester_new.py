@@ -126,8 +126,9 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                         # Пока делаем один StopLoss SL на весь объем позиции
                         sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=volume, direction=direction)
                         position.add_order(order=sl)
-   
-   
+
+
+
         #-------------------------------------------------------------
         # Обработка исполнения ордеров на текущем баре
         #-------------------------------------------------------------
@@ -153,7 +154,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
             if position.status in {Position_Status.TAKEN_FULL, Position_Status.STOPPED, Position_Status.TAKEN_PART}:
                 # если активных ордеров нет, позиция закрыта
                 manager.close_position(position.id, close_bar=current_bar.name)
-                     
+
                 # сохраняем исполненную позицию в отчет
                 # trade_report = TradeReport(position)
                 # executed_positions.append(trade_report.to_dict())

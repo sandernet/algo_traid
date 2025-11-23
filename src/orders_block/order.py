@@ -224,7 +224,7 @@ class Position:
             tick_size = self.tick_size
         else:
             tick_size = Decimal("0.00000001")
-           
+
         opened_volume_rounded = self.opened_volume.quantize(tick_size)
         closed_volume_rounded = self.closed_volume.quantize(tick_size)
 
@@ -238,13 +238,17 @@ class Position:
         elif self.closed_volume > Decimal("0") and self.round_to_tick(self.closed_volume)  < self.round_to_tick(self.opened_volume):
             # закрыта частично
             self.status = Position_Status.ACTIVE
-            # self.move_stop_to_break_even()
+            # # Переводим в безубыток 
+            # if order.meta.get("moved_to_be"):
+            #     logger.info(f"🟢 Позиция {self.id} стоп перенесен в безубыточность.")
+            #     self.move_stop_to_break_even()
+                
             logger.info(f"🟡 Позиция {self.id} частично закрыта. Статус: {self.status.value}")
 
         logger.info(f"Position {self.id}: recorded execution of order {order.order_type}\n"
-              f"Цена {price} x объем {volume},\n"
-              f"Открытый объем ={self.opened_volume}, Закрытый объем={self.closed_volume}\\n"
-              f"Средняя цена входа={self.avg_entry_price}, Profit={self.profit}, СТАТУС={self.status.value}")
+            f"Цена {price} x объем {volume},\n"
+            f"Открытый объем ={self.opened_volume}, Закрытый объем={self.closed_volume}\\n"
+            f"Средняя цена входа={self.avg_entry_price}, Profit={self.profit}, СТАТУС={self.status.value}")
 
     # ------------------------
     # Позиционные утилиты

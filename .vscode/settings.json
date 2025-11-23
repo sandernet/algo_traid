@@ -5,5 +5,10 @@
       "API_KEY": "",
       "API_SECRET": "",
     }
-  }
+  },
+  "cSpell.words": [
+    "kk"
+  ],
+  "plantuml.diagramsRoot": "docs/diagrams/src",
+  "plantuml.exportOutDir": "docs/diagrams/out"
 }
