@@ -113,7 +113,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                         for tp in signal["take_profits"]: 
                             
                             tp_volume = position.round_to_tick(volume*Decimal(str(tp["volume"])))
-                            price = position.round_to_tick(Decimal(tp["price"]))
+                            price = position.round_to_tick(Decimal(str(tp["price"])))
                             
                             tp_order = make_order(OrderType.TAKE_PROFIT, price=price, volume=tp_volume, direction=direction, created_bar=current_bar.name)
                             position.add_order(tp_order)
@@ -139,7 +139,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
         # Обработка исполнения ордеров на текущем баре
         #-------------------------------------------------------------
         if position is not None: # если есть position   
-            logger.info(f"♻️ Проверка исполнения ордеров для созданной позиции {position.id} ... {position.direction}")
+            logger.info(f"♻️ Проверка исполнения ордеров для созданной позиции {position.id[:6]}")
             # перебираем текущий бар по минутным данным для более точного исполнения стопов и тейков
             start_1m    = current_index
             end__1m     = shift_timestamp(current_index, 1, timeframe, direction=+1)
