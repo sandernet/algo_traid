@@ -76,7 +76,6 @@ class LoggerManager:
             show_level=True,
             show_path=True,
             enable_link_path = True
-             
         )
         console_handler.setFormatter(self.formatter)
         logging.getLogger().addHandler(console_handler)
