@@ -213,22 +213,14 @@ class Position:
             # рассчитать PnL для закрытого объема
             if self.avg_entry_price is not None:
                 if self.direction == Direction.LONG:
-                    pnl = (to_decimal(price) - self.avg_entry_price) * to_decimal(volume)
+                    pnl = (price - self.avg_entry_price) * volume
                 else:
-                    pnl = (self.avg_entry_price - to_decimal(price)) * to_decimal(volume)
+                    pnl = (self.avg_entry_price - price) * volume
                 self.profit += pnl
 
         # обновить статус позиции
-        # precision = Decimal("0.0000001")  # Установите точность для сравнения
-        if self.tick_size:
-            tick_size = self.tick_size
-        else:
-            tick_size = Decimal("0.00000001")
 
-        opened_volume_rounded = self.opened_volume.quantize(tick_size)
-        closed_volume_rounded = self.closed_volume.quantize(tick_size)
-
-        if opened_volume_rounded > Decimal("0") and closed_volume_rounded >= opened_volume_rounded:
+        if  self.opened_volume > Decimal("0") and self.closed_volume >=  self.opened_volume:
             # закрыта полностью
             self.status = Position_Status.TAKEN_FULL if self.profit >= 0 else Position_Status.STOPPED
             for o in self.orders:
@@ -245,9 +237,9 @@ class Position:
                 
             logger.info(f"🟡 Позиция {self.id} частично закрыта. Статус: {self.status.value}")
 
-        logger.info(f"Position {self.id}: recorded execution of order {order.order_type}\n"
-            f"Цена {price} x объем {volume},\n"
-            f"Открытый объем ={self.opened_volume}, Закрытый объем={self.closed_volume}\\n"
+        logger.info(f"[green]Информация об исполнении по позиции id: {self.id} тип: {order.order_type}[/green]\n"
+            f"Цена {price};  объем {volume},\n"
+            f"Открытый объем ={self.opened_volume}, Закрытый объем={self.closed_volume}\n"
             f"Средняя цена входа={self.avg_entry_price}, Profit={self.profit}, СТАТУС={self.status.value}")
 
     # ------------------------
@@ -328,7 +320,7 @@ class PositionManager:
         pos = Position(symbol=symbol, direction=direction, tick_size=tick_size)
         self.positions[pos.id] = pos
         self.positions[pos.id].bar_opened = open_bar
-        logger.info(f"📚 Создана новая позиция {pos.id} {symbol} {direction.value}")
+        logger.info(f"[{symbol}] 📚 Создана новая позиция  {direction.value} id: {pos.id} ")
         return pos
 
     # ------------------------

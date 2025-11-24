@@ -93,8 +93,7 @@ class ZigZag:
                     "z2": z2,
                     "z2_index": z2_index
                 })
-            
-        logger.info((f"bars: {bars[-1]}"))
+
         last_values = {
             'z1': bars[-1]['z1'],
             'z2': bars[-1]['z2'],

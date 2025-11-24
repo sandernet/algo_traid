@@ -3,82 +3,56 @@
 Определение размера позиции (Position Sizing). 
 Реализация глобальных Stop Loss и Take Profit.
 """
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_DOWN
 # Логирование
 # ====================================================
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
-from src.config.config import config
-
-def get_position_size(price: Decimal, volume: Decimal) -> Decimal:
-    if volume <= 0:
-        raise ValueError("Volume must be greater than 0")
-    if price <= 0:
-        raise ValueError("Entry price must be greater than 0")
-    
-    return volume / price # размер позиции        
-    
-
 
 class RiskManager():
-    def __init__(self, symbol: str):
-        self.symbol = symbol
-        self.leverage=config.get_setting("STRATEGY_SETTINGS", "LEVERAGE")
-        self.position_size=config.get_setting("STRATEGY_SETTINGS", "POSITION_SIZE") 
+    def __init__(self, coin):
+        self.symbol             = coin.get("SYMBOL")+"/USDT"
+        self.leverage           = Decimal(coin.get("LEVERAGE"))
+        self.start_deposit_usdt = Decimal(coin.get("START_DEPOSIT_USDT"))
+        self.minimal_qty        = Decimal(str(coin.get("MINIMAL_TICK_SIZE")))  # минимальный объём монеты (minQty)
+        self.position_size_usdt = Decimal(coin.get("VOLUME_SIZE"))  # фикс. объём в USDT (условный риск)
         
         
+    # расчет размера позиции
+    def calculate_position_size(self, entry_price: Decimal) -> Decimal:
+            """
+            Расчет количества монет с учетом:
+            - фиксированного размера позиции в USDT
+            - плеча
+            - минимального шага количества (minQty)
+            """
+            # 1. Объём позиции в монете до округления
+            raw_qty = (self.position_size_usdt * self.leverage) / entry_price
 
-    def fibo_trade_plan(self, levels, entry_price):
+            # 2. Приведение к минимальному шагу (minQty)
+            qty = self._round_to_min_qty(raw_qty)
+
+            return qty
+        
+    # округление количества монет до минимального шага (minQty)
+    def _round_to_min_qty(self, qty: Decimal) -> Decimal:
         """
-        Расчёт торгового плана по уровням Фибоначчи на основе последнего движения зигзага.
-
-        :param fib_targets: dict — целевые уровни Фибоначчи для тейков (например, {38.2: price1, 50.0: price2, 61.8: price3})
-        :param prise_stoploss: float — уровень Фибоначчи для стоп-лосса 
-        
-        :param entry_price: float — цена входа (например, close текущей свечи)
-        :param leverage: int — плечо
-        :param position_size: float — общий размер позиции (в контрактах или лотах)
-        :return: dict — информация по ордерам (тейки и стоп)
+        Округление количества монет до минимального шага (minQty)
+        всегда вниз, чтобы не превысить лимиты биржи.
         """
-        fib_targets = list(levels.values())[:5]
-        stop_level = list(levels.values())[6]  # уровень стоп-лосса на 161.8%
-        
-        logger.info(f"Формирование торгового плана по уровням Фибоначчи:")
-        logger.info(f"  - Цена входа: {entry_price}")
-        logger.info(f"  - Плечо: {self.leverage}")    
-        logger.info(f"  - Общий размер позиции: {self.position_size}")
-        logger.info(f"  - Уровни тейков: {fib_targets}")
-        logger.info(f"  - Уровень стоп-лосса: {stop_level}")
-        
-        # Разбиваем позицию на 5 равных частей
-        part_size = self.position_size / len(fib_targets)
-
-        # Формируем торговый план
-        take_profits = []
-        for lvl, price in levels.items():
-            take_profits.append({
-                "fib_level": lvl,
-                "price": price,
-                "size": part_size,
-            })
-
-        trade_plan = {
-            "entry_price": entry_price,
-            "leverage": self.leverage,
-            "total_position": self.position_size,
-            "take_profits": take_profits,
-            "stop_loss": {
-                "fib_level": 161.8,
-                "price": stop_level,
-                "size": self.position_size  # стоп на всю позицию
-            }
-        }
-
-        return trade_plan
+        if not self.minimal_qty:
+            return qty
+        if self.minimal_qty <= 0:
+            return qty
+        q = (qty / self.minimal_qty).quantize(Decimal('1'), rounding=ROUND_HALF_DOWN)
+        return q * self.minimal_qty
     
-    def apply_stop_loss_take_profit(self):
-        """
-        Применение глобальных Stop Loss и Take Profit.
-        """
-        pass
+    # # округление количества монет до минимального шага (minQty)
+    # def _round_to_min_qty(self, qty: Decimal) -> Decimal:
+    #     """
+    #     Округление количества монет до минимального шага (minQty)
+    #     всегда вниз, чтобы не превысить лимиты биржи.
+    #     """
+    #     return (qty // self.minimal_qty) * self.minimal_qty
+    

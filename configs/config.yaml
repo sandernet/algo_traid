@@ -23,9 +23,9 @@ COINS:
     AUTO_TRADING: true
     START_DEPOSIT_USDT: 10000
     MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
-    LEVERAGE: 5  # Плечо
+    LEVERAGE: 1  # Плечо
     # Размер ордера (в usdt )
-    VOLUME_SIZE  : 10000    
+    VOLUME_SIZE  : 1000
   
   # - SYMBOL: BNB
   #   TIMEFRAME: "D"
@@ -112,7 +112,7 @@ BACKTEST_SETTINGS:
   TEMPLATE_DIRECTORY: TEMPLATES/
   FULL_DATAFILE: False # Если True, то бэктест будет использовать полный исторический диапазон
   # начальная ДАТА для бэктеста
-  START_DATE: "2025-05-01"
+  START_DATE: "2025-01-01"
   # конечная ДАТА для бэктеста    
   END_DATE: "2025-12-01"
 

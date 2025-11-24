@@ -17,7 +17,7 @@ from src.orders_block.order import PositionManager, Direction, make_order, Posit
 from src.orders_block.order import OrderType, OrderStatus, Position_Status
 from src.backtester.v2.execution_engine import ExecutionEngine
 
-from src.orders_block.risk_manager import get_position_size
+from src.orders_block.risk_manager import RiskManager
 
 # from src.backtester.repot import TradeReport, generate_html_report, get_export_path
 from src.backtester.v2.report_generator import generate_report
@@ -55,6 +55,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
     manager = PositionManager()
     engine = ExecutionEngine(manager)
     position: Optional[Position] = None
+    rm = RiskManager(coin=coin)
     
     
     # перебираем все бары начиная с минимального количества
@@ -70,7 +71,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
         current_close = current_bar["close"]
         
         logger.info(f"[yellow]----------------------------------------------------------- [/yellow]")
-        logger.info(f"[yellow]== Обработка бара {current_index} /// open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
+        logger.info(f"[{current_index}] [yellow]- open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
         
         #-------------------------------------------------------------
         # Алгоритм входа в позицию и создание позиции
@@ -96,11 +97,9 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                     # -------------------------------------------------------------
                     # Добавить риск менеджмент - расчет объема позиции
                     # -------------------------------------------------------------
-                    volume_inUSDT = position.round_to_tick(Decimal(volume_inUSDT))
                     # объем позиции в нативной валюте (например, в BTC) покупаем по текущей цене
-                    volume_native = get_position_size(price=entry_price, volume=volume_inUSDT)
-                    # округляем объем до ближайшего тикера
-                    volume = position.round_to_tick(Decimal(volume_native))
+                    volume = rm.calculate_position_size(entry_price=entry_price)
+                    logger.info(f"🔶 Размер позиции рассчитан RiskManager: {volume}")
 
                     # создаем ордер на вход
                     order = make_order(OrderType.ENTRY, price=entry_price, volume=volume, direction=direction, created_bar=current_bar.name)
@@ -110,13 +109,20 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                     
                     # 2. Добовляем teke profit
                     if signal["take_profits"] is not None:
+                        sum_tp_volume: Decimal = Decimal('0')
                         for tp in signal["take_profits"]: 
                             
-                            tp_volume = position.round_to_tick(volume*Decimal(tp["volume"]))
+                            tp_volume = position.round_to_tick(volume*Decimal(str(tp["volume"])))
                             price = position.round_to_tick(Decimal(tp["price"]))
                             
-                            tp_order = make_order(OrderType.TAKE_PROFIT, price=price, volume=tp_volume, direction=direction)
+                            tp_order = make_order(OrderType.TAKE_PROFIT, price=price, volume=tp_volume, direction=direction, created_bar=current_bar.name)
                             position.add_order(tp_order)
+                            sum_tp_volume += tp_volume
+                        if sum_tp_volume < volume:
+                            volume_diff = volume - sum_tp_volume
+                            logger.info(f"⚠️ Внимание: сумма объемов Take Profit ({sum_tp_volume}) меньше общего объема позиции ({volume}). Добавляем недостающий объем {volume_diff} к последнему TP.")
+                            position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему TP
+
 
                     # 3. Добавляем stop loss
                     stop_loss = signal.get("sl")
@@ -124,7 +130,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                         sl_price = stop_loss.get("price")
                         sl_price = position.round_to_tick(Decimal(sl_price))
                         # Пока делаем один StopLoss SL на весь объем позиции
-                        sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=volume, direction=direction)
+                        sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=volume, direction=direction, created_bar=current_bar.name)
                         position.add_order(order=sl)
 
 
@@ -206,13 +212,13 @@ def run_local_backtest():
     for coin in coins_list:
         # try:
         logger.info("============================================================================")
-        logger.info(f"🚀 Запуск бэктеста для монеты {coin.get('SYMBOL')}/USDT ...")
+        logger.info(f"[bold yellow] [{coin.get('SYMBOL')}/USDT][/bold yellow] 🚀 Запуск бэктеста ...")
         logger.info("============================================================================")
     
         symbol = coin.get("SYMBOL")+"/USDT"
         timeframe = coin.get("TIMEFRAME")
         tick_size = coin.get("MINIMAL_TICK_SIZE")
-        logger.info(f"🪙 Монета: [bold yellow]{symbol}[/bold yellow], ↔️ Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный шаг цены {tick_size}")
+        logger.info(f"[{symbol}] 🪙, 🕒 Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный шаг цены {tick_size}")
         # 1. Загрузка из файла
         # Инициализируем DataFetcher
         fetcher = DataFetcher( coin,
