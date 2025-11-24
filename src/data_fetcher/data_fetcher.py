@@ -132,7 +132,7 @@ class DataFetcher:
         
         start_log = datetime.fromtimestamp(stop_ms / 1000).strftime('%Y-%m-%d') if stop_ms > 0 else "начала доступной истории"
         end_log = datetime.fromtimestamp(since_ms / 1000).strftime('%Y-%m-%d %H:%M:%S')
-        logger.info(f"Начало загрузки {self.symbol} ({timeframe}) НАЗАД с {end_log} до {start_log}...")
+        logger.info(f"[{self.symbol}] Начало загрузки ({timeframe}) НАЗАД с {end_log} до {start_log}...")
 
 
         while True:
@@ -162,7 +162,7 @@ class DataFetcher:
                 # Ниже мы используем 'until' и полагаемся на ccxt.
 
                 if not ohlcv_chunk or len(ohlcv_chunk) < 2:
-                    logger.info(f"[{self.symbol}] Получен пустой ответ или менее двух свечей. Достигнут конец истории.")
+                    logger.debug(f"[{self.symbol}] Получен пустой ответ или менее двух свечей. Достигнут конец истории.")
                     break # Конец истории
 
                 # 4. Обработка полученного чанка
@@ -187,7 +187,7 @@ class DataFetcher:
                 
                 # Логирование прогресса
                 first_date = datetime.fromtimestamp(first_timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S')
-                logger.info(f"[{self.symbol}] Успешно загружено свечей: {len(valid_chunk)}. Продолжение НАЗАД с: {first_date}")
+                logger.debug(f"[{self.symbol}] Успешно загружено свечей: {len(valid_chunk)}. Продолжение НАЗАД с: {first_date}")
                 
                 # Защита от DoS
                 time.sleep(self.exchange.rateLimit / 1000) 
@@ -216,7 +216,7 @@ class DataFetcher:
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
         df.set_index('timestamp', inplace=True)
         
-        logger.info(f"[{self.symbol}] Загрузка завершена. Диапазон: {df.index.min()} - {df.index.max()}")
+        logger.info(f"[{self.symbol}] Загружено свечей {len(df)}. Диапазон: {df.index.min()} - {df.index.max()}")
         
         return df
 
@@ -241,7 +241,7 @@ class DataFetcher:
         """
         start_ms = self._convert_date_to_ms(start_date, is_end_date=False)
         end_ms = self._convert_date_to_ms(end_date, is_end_date=True) # Конечная дата должна быть до конца дня!
-
+        # TODO: Добавить смещение на минимальное нужное индикаторам для расчета значение
         if start_ms >= end_ms:
             logger.error("Начальная дата должна быть раньше конечной даты.")
             return None
@@ -271,7 +271,7 @@ class DataFetcher:
         try:
             # index=True сохранит индекс (таймштамп) как первый столбец
             df.to_csv(file_path, index=True)
-            logger.info(f"✅ Данные для {self.symbol} успешно экспортированы в: {file_path}")
+            logger.info(f"[{self.symbol}] ✅ Данные успешно экспортированы в: {file_path}")
             return file_path
         except Exception as e:
             logger.error(f"❌ Ошибка при сохранении CSV для {self.symbol}: {e}")
@@ -302,7 +302,7 @@ class DataFetcher:
             df.to_excel(writer, sheet_name='OHLCV Data', index=True)
             writer.close()
             
-            logger.info(f"✅ Данные для {self.symbol} успешно экспортированы в: {file_path}")
+            logger.info(f"[{self.symbol}] ✅ Данные успешно экспортированы в: : {file_path}")
             return file_path
         except ImportError:
             logger.error("❌ Библиотека 'openpyxl' не найдена. Установите: pip install openpyxl")

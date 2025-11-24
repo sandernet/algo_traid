@@ -50,12 +50,14 @@ def main():
     # Загрузка исторических данных с биржи
     if args.ldata:
         logger.info("Загрузка и обновление исторических данных...")
-        from src.data_fetcher.data_pipeline import run_data_update_pipeline
+        from src.data_fetcher.get_data_from_exchange import run_data_update_pipeline
         if args.ld_min:
-            run_data_update_pipeline(load_min_timeframe=True)
+            run_data_update_pipeline(loading_min=True)
         else:
             run_data_update_pipeline()
-        logger.info("Загрузка и обновление исторических данных завершены.")
+            
+        logger.info("Загрузка исторических данных завершена.")
+        
     
     # Отладка стратегии 
     if args.debug:
@@ -66,17 +68,17 @@ def main():
     
     # бектестинг стратегии на исторических данных
     if args.btest:
-        # 1. Проверяем есть ли данные для бэктеста
-        if not os.path.exists(data_dir+"csv_files"):
-            logger.info(f"Нет данных для бэктеста.")
-            logger.info("Загружаем данные с биржи...")
-            from src.data_fetcher.data_pipeline import run_data_update_pipeline
-            run_data_update_pipeline()
-            logger.info("Загрузка данных с биржи завершена.")
+        # # 1. Проверяем есть ли данные для бэктеста
+        # if not os.path.exists(data_dir+"csv_files"):
+        #     logger.info(f"Нет данных для бэктеста.")
+        #     logger.info("Загружаем данные с биржи...")
+        #     from data_fetcher.get_data_from_exchange import run_data_update_pipeline
+        #     run_data_update_pipeline()
+        #     logger.info("Загрузка данных с биржи завершена.")
             
         # 2. Запуск бэктестера
         logger.info(f"Запуск бэктестера с локальными данными из {data_dir} ...")
-        from src.backtester.backtester_new import run_local_backtest
+        from src.backtester.v2.backtester import run_local_backtest
         run_local_backtest()
         logger.info("Бэктестер завершил работу.")
     

@@ -20,7 +20,7 @@ class LoggingTimer:
         self.start_time_raw = time.time()
         self.start_datetime = datetime.now()
 
-        logger.info(f"--- [СТАРТ] {self.task_name} / {self.start_datetime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}")
+        logger.info(f"[🟢🟢🟢] {self.task_name} / {self.start_datetime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -31,7 +31,7 @@ class LoggingTimer:
         # 3. Расчет и запись ЗАТРАЧЕННОГО ВРЕМЕНИ
         execution_time = self.end_time_raw - self.start_time_raw
 
-        logger.info(f"--- [КОНЕЦ] {self.task_name} / Затрачено времени: {execution_time:.4f} секунд / {self.end_datetime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}\n")
+        logger.info(f"[🔴🔴🔴] {self.task_name} / Затрачено времени: {execution_time:.4f} секунд / {self.end_datetime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}")
         
         # Возвращает False, чтобы не подавлять возможные исключения
         return False

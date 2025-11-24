@@ -15,12 +15,12 @@ from src.config.config import config
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
 from src.orders_block.order import PositionManager, Direction, make_order, Position, OrderStatus
 from src.orders_block.order import OrderType, OrderStatus, Position_Status
-from src.backtester.execution_engine import ExecutionEngine
+from src.backtester.v2.execution_engine import ExecutionEngine
 
 from src.orders_block.risk_manager import get_position_size
 
 # from src.backtester.repot import TradeReport, generate_html_report, get_export_path
-from src.backtester.report_generator import generate_report
+from src.backtester.v2.report_generator import generate_report
 
 ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускается последняя точка zigzag
 
