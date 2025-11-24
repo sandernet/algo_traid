@@ -9,6 +9,5 @@
   "cSpell.words": [
     "kk"
   ],
-  "plantuml.diagramsRoot": "docs/diagrams/src",
-  "plantuml.exportOutDir": "docs/diagrams/out"
+
 }
