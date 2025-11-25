@@ -38,18 +38,15 @@ class DataFetcher:
     # ======================================================
     def __init__(self, coin, exchange,  directory: str): 
         # Параметры, зависящие от монеты
-        market_type = coin.get("CATEGORY", "spot")   # spot | linear | inverse
+        self.market_type = coin.get("MARKET_TYPE", "spot")   # spot | linear | inverse
 
-        if market_type == "linear":
-            self.symbol = coin.get("SYMBOL") + "/USDT:USDT"
-        elif market_type == "inverse":
-            self.symbol = coin.get("SYMBOL") + "/USD"
-        else:
-            self.symbol = coin.get("SYMBOL") + "/USDT"
+        self.base = coin.get("SYMBOL")
+        self.symbol = "" # assigned after load_markets()
         
         self.timeframe = coin.get("TIMEFRAME") 
         self.min_timeframe = coin.get("MIN_TIMEFRAME") if coin.get("MIN_TIMEFRAME") else "1"
-        self.category = coin.get("CATEGORY") if coin.get("CATEGORY") else "linear"
+        
+        self.market_type = coin.get("MARKET_TYPE") if coin.get("MARKET_TYPE") else "spot"
         
         # Параметры биржи
         self.exchange_id = exchange.get("EXCHANGE_ID")
@@ -68,14 +65,46 @@ class DataFetcher:
             exchange_class = getattr(ccxt, self.exchange_id.lower())
             # Bybit не требует API-ключей для публичных данных (OHLCV)
             self.exchange = exchange_class({
+                "enableRateLimit": True,
                 "options": {
-                    "defaultType": self.category  # 'linear' или 'inverse' для Bybit
+                    "defaultType": self.market_type
                 }
-            })
+                })
+            
+            # self.exchange.load_markets()
+            self._detect_symbol_format()
+            
             logger.info(f"Подключение к бирже {self.exchange_id} успешно.")
         except AttributeError:
             logger.error(f"Биржа '{self.exchange_id}' не поддерживается библиотекой ccxt.")
             raise
+        
+    # -------------------------------------------
+    def _detect_symbol_format(self):
+        """
+        Automatically detects correct symbol for chosen market type.
+        Examples:
+        spot: BTC/USDT
+        linear: BTC/USDT:USDT
+        inverse: BTC/USD
+        """
+        try:
+            
+            # markets = self.exchange.markets
+            # Дополнительная проверка для Bybit и других бирж
+            if self.exchange_id.lower() == "bybit":
+                if self.market_type == "linear":
+                    self.symbol = f"{self.base}/USDT:USDT"
+                elif self.market_type == "inverse":
+                    self.symbol = f"{self.base}/USD"
+                elif self.market_type == "spot":
+                    self.symbol = f"{self.base}/USDT"
+        except Exception as e:
+            self.symbol = f"{self.base}/USDT" # fallback
+            logger.error(f"Ошибка при определении формата символа для {self.base} на {self.exchange_id}: {e}")
+            raise    
+
+        
     
     # -------------------------------------------------------------
     # ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Формирование пути для экспорта и импорта файлов
@@ -146,7 +175,7 @@ class DataFetcher:
         start_log = datetime.fromtimestamp(stop_ms / 1000).strftime('%Y-%m-%d') if stop_ms > 0 else "начала доступной истории"
         end_log = datetime.fromtimestamp(since_ms / 1000).strftime('%Y-%m-%d %H:%M:%S')
         logger.info(f"[{self.symbol}] Начало загрузки ({timeframe}) НАЗАД с {end_log} до {start_log}...")
-
+        error_count = 0
 
         while True:
             try:
@@ -207,7 +236,11 @@ class DataFetcher:
 
             except ccxt.ExchangeError as e:
                 # ... (обработка ошибок)
-                logger.error(f"[{self.symbol}] Ошибка API при загрузке данных: {e}. Пауза 5с.", exc_info=True)
+                logger.error(f"[{self.symbol}] Ошибка API при загрузке данных: {e}. Пауза 5с.")
+                error_count += 1
+                if error_count >= 3:
+                    logger.critical(f"[{self.symbol}] Превышено количество попыток из-за ошибок API. Прерывание загрузки.")
+                    return None
                 time.sleep(5)
                 continue
             except Exception as e:

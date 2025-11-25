@@ -1,3 +1,9 @@
+"""
+Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации.
+Загрузка данных осуществляется через DataFetcher.
+
+"""
+
 # Логирование
 # ====================================================
 from src.utils.logger import get_logger, LoggingTimer
@@ -35,8 +41,9 @@ def run_data_update_pipeline(loading_min=False):
         symbol = coin.get("SYMBOL")+"/USDT"
         timeframe = coin.get("TIMEFRAME")
         min_timeframe = coin.get("MIN_TIMEFRAME", "")
-        logger.info(f"Монета: {symbol}, Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный таймфрейм: [bold yellow]{min_timeframe}[/bold yellow]")
-       
+        market_type = coin.get("MARKET_TYPE", "spot")  # Добавлено получение категории рынка
+        logger.info(f"[bold yellow]{symbol}[/bold yellow], Маркет: [bold green]{market_type}[/bold green], Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный таймфрейм: [bold yellow]{min_timeframe}[/bold yellow]")
+
         fetcher = DataFetcher( coin,
             exchange=exchange, 
             directory=data_dir,
@@ -44,7 +51,7 @@ def run_data_update_pipeline(loading_min=False):
         
        
         # Загрузка данных
-        with LoggingTimer(f"[{symbol}] load timeframe.....: {timeframe}"):
+        with LoggingTimer(f"[bold yellow]{symbol}[/bold yellow] load timeframe.....: {timeframe}"):
             data_df = fetcher.fetch_entire_history(timeframe)
             # Сохранение данных
             if data_df is not None:
@@ -57,7 +64,7 @@ def run_data_update_pipeline(loading_min=False):
             
         if loading_min:
             if min_timeframe != "":
-                with LoggingTimer(f"[{symbol}] load timeframe.....: {timeframe}"):
+                with LoggingTimer(f"[bold yellow]{symbol}[/bold yellow] load timeframe.....: {timeframe}"):
                     data_df_min = fetcher.fetch_entire_history(min_timeframe)
                 
                     # Сохранение данных
