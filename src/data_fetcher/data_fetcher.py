@@ -37,21 +37,18 @@ class DataFetcher:
     # Инициализация с параметрами монеты и биржи
     # ======================================================
     def __init__(self, coin, exchange,  directory: str): 
-        # Параметры, зависящие от монеты
-        self.market_type = coin.get("MARKET_TYPE", "spot")   # spot | linear | inverse
-
-        self.base = coin.get("SYMBOL")
-        self.symbol = "" # assigned after load_markets()
-        
-        self.timeframe = coin.get("TIMEFRAME") 
-        self.min_timeframe = coin.get("MIN_TIMEFRAME") if coin.get("MIN_TIMEFRAME") else "1"
-        
-        self.market_type = coin.get("MARKET_TYPE") if coin.get("MARKET_TYPE") else "spot"
-        
         # Параметры биржи
         self.exchange_id = exchange.get("EXCHANGE_ID")
         self.limit = exchange.get("LIMIT")
         
+        # Параметры, зависящие от монеты
+        self.market_type = coin.get("MARKET_TYPE", "spot")   # spot | linear | inverse
+        self.base = coin.get("SYMBOL")
+        self.symbol = self._detect_symbol_format() # assigned after load_markets()
+
+        self.timeframe = coin.get("TIMEFRAME") 
+        self.min_timeframe = coin.get("MIN_TIMEFRAME") if coin.get("MIN_TIMEFRAME") else "1"
+
         self.directory = directory
         # self.file_extension = file_extension
         
@@ -80,7 +77,9 @@ class DataFetcher:
             raise
         
     # -------------------------------------------
-    def _detect_symbol_format(self):
+    # ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Автоматическое определение формата символа
+    # -------------------------------------------
+    def _detect_symbol_format(self) -> str:
         """
         Automatically detects correct symbol for chosen market type.
         Examples:
@@ -88,23 +87,18 @@ class DataFetcher:
         linear: BTC/USDT:USDT
         inverse: BTC/USD
         """
-        try:
-            
-            # markets = self.exchange.markets
-            # Дополнительная проверка для Bybit и других бирж
-            if self.exchange_id.lower() == "bybit":
-                if self.market_type == "linear":
-                    self.symbol = f"{self.base}/USDT:USDT"
-                elif self.market_type == "inverse":
-                    self.symbol = f"{self.base}/USD"
-                elif self.market_type == "spot":
-                    self.symbol = f"{self.base}/USDT"
-        except Exception as e:
-            self.symbol = f"{self.base}/USDT" # fallback
-            logger.error(f"Ошибка при определении формата символа для {self.base} на {self.exchange_id}: {e}")
-            raise    
+                # markets = self.exchange.markets
+        # Дополнительная проверка для Bybit и других бирж
+        if self.exchange_id.lower() == "bybit":
+            if self.market_type == "linear":
+                return f"{self.base}/USDT:USDT"
+            elif self.market_type == "inverse":
+                return f"{self.base}/USD"
+            elif self.market_type == "spot":
+                return f"{self.base}/USDT"
 
-        
+        logger.error(f"Ошибка при определении формата символа для {self.base} на {self.exchange_id}.")
+        return self.base  # По умолчанию возвращаем как есть
     
     # -------------------------------------------------------------
     # ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Формирование пути для экспорта и импорта файлов
@@ -113,7 +107,7 @@ class DataFetcher:
         """
         Формирует полный путь для сохранения файла и гарантирует существование директории.
         """
-        file_prefix = f"{self.symbol.replace('/', '_')}_{timeframe}_{self.exchange_id}"
+        file_prefix = f"{self.symbol.replace('/', '_').replace(':', '_')}_{timeframe}_{self.exchange_id}"
         path = ""
         if file_extension == "csv":
             path = self.directory+"csv_files"
