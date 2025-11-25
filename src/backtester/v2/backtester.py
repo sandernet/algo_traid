@@ -38,7 +38,6 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
     
     symbol = coin.get("SYMBOL")+"/USDT"
     tick_size = coin.get("MINIMAL_TICK_SIZE")
-    volume_inUSDT = coin.get("VOLUME_SIZE") if coin.get("VOLUME_SIZE") is not None else float('0')
     timeframe = coin.get("TIMEFRAME")
     
     
@@ -60,27 +59,48 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
     
     # перебираем все бары начиная с минимального количества
     # Это нужно для того, чтобы индикаторы были заполнены
-    for i in range(allowed_min_bars, len(data_df)):
+    arr = data_df[['open','high','low','close']].copy()
+    arr['dt'] = data_df.index.to_numpy()
+    arr = arr.to_numpy()
+    
+    for i in range(allowed_min_bars, len(arr)):
         
-        current_data = data_df.iloc[i-allowed_min_bars : i ]
-        current_bar = data_df.iloc[i] # текущий бар который обрабатывается
-        current_index = current_bar.name
-        current_open = current_bar["open"]
-        current_high = current_bar["high"]
-        current_low = current_bar["low"]
-        current_close = current_bar["close"]
+        # current_data = data_df.iloc[i-allowed_min_bars : i ]
+        # current_bar = data_df.iloc[i] # текущий бар который обрабатывается
+        # current_index = current_bar.name
+        # current_open = current_bar["open"]
+        # current_high = current_bar["high"]
+        # current_low = current_bar["low"]
+        # current_close = current_bar["close"]
         
-        logger.info(f"[yellow]----------------------------------------------------------- [/yellow]")
-        logger.info(f"[{current_index}] [yellow]- open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
+        current_data    = arr[i-allowed_min_bars:i]
+        current_open    = arr[i][0]
+        current_high    = arr[i][1]
+        current_low     = arr[i][2]
+        current_close   = arr[i][3]
+        current_index   = arr[i][4]
+        
+        logger.debug(f"[yellow]----------------------------------------------------------- [/yellow]")
+        logger.debug(f"[{current_index.strftime("%d.%m.%Y %H:%M")}] [yellow]- open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
         
         #-------------------------------------------------------------
         # Алгоритм входа в позицию и создание позиции
         #-------------------------------------------------------------
         # рассчитываем индикаторы стратегии ищем точку входа
+        signal = strategy.find_entry_point(current_data)
         
-        # Если сигнал есть и позиция еще не закрыта
+        if position is not None and signal != {}:
+            if position.direction != signal['direction']:
+                logger.info(f"⚠️ Внимание: получен противоположный сигнал, позиция открыта {position.id[:6]}.")
+                logger.info(f"🔶 Закрываем позицию по рынку перед открытием новой позиции.")
+                manager.close_position_at_market(position.id, Decimal(str(current_open)), close_bar=current_index)
+                executed_positions.append(position)
+                # сбрасываем позицию
+                position: Optional[Position] = None
+            
+        
+        # Если нет открытой позиции, ищем точку входа
         if position is None:
-            signal = strategy.find_entry_point(current_data)
             if signal != {}:
                 direction = signal['direction']
                 logger.info(f"🔷 Сигнал на вход получен: {direction} по цене {signal.get('price')}")
@@ -91,7 +111,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                     logger.error("Ошибка: цена входа не определена в сигнале.")
                 else:
                     # 1. создаем позицию
-                    position = manager.open_position(symbol=symbol, direction=direction, tick_size=tick_size, open_bar=current_bar.name)
+                    position = manager.open_position(symbol=symbol, direction=direction, tick_size=tick_size, open_bar=current_index)
                     
                     entry_price = position.round_to_tick(Decimal(entry_price))
                     # -------------------------------------------------------------
@@ -102,7 +122,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                     logger.info(f"🔶 Размер позиции рассчитан RiskManager: {volume}")
 
                     # создаем ордер на вход
-                    order = make_order(OrderType.ENTRY, price=entry_price, volume=volume, direction=direction, created_bar=current_bar.name)
+                    order = make_order(OrderType.ENTRY, price=entry_price, volume=volume, direction=direction, created_bar=current_index)
             
                     # добавляем ордер в позицию
                     position.add_order(order)
@@ -115,7 +135,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                             tp_volume = position.round_to_tick(volume*Decimal(str(tp["volume"])))
                             price = position.round_to_tick(Decimal(str(tp["price"])))
                             
-                            tp_order = make_order(OrderType.TAKE_PROFIT, price=price, volume=tp_volume, direction=direction, created_bar=current_bar.name)
+                            tp_order = make_order(OrderType.TAKE_PROFIT, price=price, volume=tp_volume, direction=direction, created_bar=current_index)
                             position.add_order(tp_order)
                             sum_tp_volume += tp_volume
                         if sum_tp_volume < volume:
@@ -130,7 +150,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                         sl_price = stop_loss.get("price")
                         sl_price = position.round_to_tick(Decimal(sl_price))
                         # Пока делаем один StopLoss SL на весь объем позиции
-                        sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=volume, direction=direction, created_bar=current_bar.name)
+                        sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=volume, direction=direction, created_bar=current_index)
                         position.add_order(order=sl)
 
 
@@ -139,7 +159,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
         # Обработка исполнения ордеров на текущем баре
         #-------------------------------------------------------------
         if position is not None: # если есть position   
-            logger.info(f"♻️ Проверка исполнения ордеров для созданной позиции {position.id[:6]}")
+            logger.debug (f"♻️ Проверка исполнения ордеров для созданной позиции {position.id[:6]}")
             # перебираем текущий бар по минутным данным для более точного исполнения стопов и тейков
             start_1m    = current_index
             end__1m     = shift_timestamp(current_index, 1, timeframe, direction=+1)
@@ -157,19 +177,13 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                     # если закрыт хотя бы один TP, двигаем стоп в безубыточность
                     position.move_stop_to_break_even()
 
-            if position.status in {Position_Status.TAKEN_FULL, Position_Status.STOPPED, Position_Status.TAKEN_PART}:
-                # если активных ордеров нет, позиция закрыта
-                manager.close_position(position.id, close_bar=current_bar.name)
+        if position is not None and position.status in {Position_Status.TAKEN_FULL, Position_Status.STOPPED, Position_Status.TAKEN_PART, Position_Status.CANCELED}:
+            # если активных ордеров нет, позиция закрыта
+            manager.close_position(position.id, close_bar=current_index)
 
-                # сохраняем исполненную позицию в отчет
-                # trade_report = TradeReport(position)
-                # executed_positions.append(trade_report.to_dict())
-                executed_positions.append(position)
-                
-                # сбрасываем позицию
-                manager = PositionManager()
-                engine = ExecutionEngine(manager)
-                position: Optional[Position] = None
+            executed_positions.append(position)
+            # сбрасываем позицию
+            position: Optional[Position] = None
             
 
     return executed_positions

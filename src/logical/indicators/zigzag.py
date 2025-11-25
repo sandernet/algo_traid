@@ -11,16 +11,22 @@ from src.config.config import config
 
 
 class ZigZag:
-    def __init__(self):
+    def __init__(self, coin):
         # Получение настроек индикатора
     #   ZIGZAG_DEPTH: 12
     #   ZIGZAG_DEVIATION: 5
     #   ZIGZAG_BACKTEP: 2
-        self.depth = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEPTH")
-        self.deviation = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEVIATION")   
-        self.backstep = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_BACKTEP") 
-        self.mintick = 0.01
-        # self.price = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_BACKTEP")
+        try:
+            self.depth = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEPTH")
+            self.deviation = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_DEVIATION")   
+            self.backstep = config.get_setting("STRATEGY_SETTINGS", "ZIGZAG_BACKTEP") 
+            self.mintick = coin.get("MINIMAL_TICK_SIZE", 0.01)
+        except Exception as e:
+            logger.error(f"Ошибка при получении настроек индикатора ZigZag: {e}")
+            self.depth = 12
+            self.deviation = 5
+            self.backstep = 2
+        
     
     # === Методы класса ===
     

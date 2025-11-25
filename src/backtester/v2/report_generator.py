@@ -147,13 +147,13 @@ def get_export_path(coin, file_extension: str = "html") -> str:
 # -----------------------
 # Генерация HTML отчёта
 # -----------------------
-def generate_html_report(positions, symbol, period_start, period_end, target_path, template_dir):
+def generate_html_report(positions, coin, period_start, period_end, target_path, template_dir):
     """
     Генерация HTML-отчёта по списку объектов TradeReport или dict.
     Использует Jinja2-шаблон.
     """
 
-    title = f"{symbol} Trade Report"
+    title = f"{coin.get('SYMBOL', '')} Trade Report, timeframe {coin.get('TIMEFRAME', '')}, market_type {coin.get('MARKET_TYPE', '')}"
     period_start = pd.to_datetime(period_start).strftime("%Y-%m-%d")
     period_end = pd.to_datetime(period_end).strftime("%Y-%m-%d")
 
@@ -184,13 +184,12 @@ def generate_html_report(positions, symbol, period_start, period_end, target_pat
 def generate_report(executed_positions, coin, start_date, end_date):
     # try:
     template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
-    symbol = coin.get('symbol')
     files_report = get_export_path(coin=coin, file_extension="html")
             
             
     path = generate_html_report(
         positions = executed_positions,
-        symbol = symbol, 
+        coin = coin, 
         period_start =start_date,
         period_end =end_date,
         target_path = files_report, 

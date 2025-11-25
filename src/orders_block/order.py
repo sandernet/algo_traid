@@ -337,6 +337,40 @@ class PositionManager:
         logger.info(f"📚 Позиция {position_id} закрыта/отменена на баре {pos.bar_closed}")
 
     # ------------------------
+    # Закрытие позиции по текущей цене
+    # ------------------------
+    def close_position_at_market(self, position_id: str, current_price: Decimal, close_bar: Optional[datetime] = None):
+        """
+        Закрыть позицию полностью по текущей рыночной цене.
+        Устанавливает статус CANCELLED для всех активных ордеров.
+        """
+        pos = self.positions.get(position_id)
+        if not pos:
+            return
+        
+        remaining_vol = pos.remaining_volume()
+        if remaining_vol > 0:
+            # Создаем фиктивный ордер для закрытия позиции
+            market_order = Order(
+                id=uuid4().hex,
+                order_type=OrderType.CLOSE,
+                price=current_price,
+                volume=remaining_vol,
+                direction=pos.direction
+            )
+            # Регистрируем исполнение для закрытия позиции
+            pos.record_execution(market_order, price=current_price, volume=remaining_vol, bar_index=close_bar or datetime.now())
+        
+        # Отменяем все активные ордера
+        for order in pos.get_active_orders():
+            order.status = OrderStatus.CANCELLED
+        
+        # Устанавливаем статус позиции как CANCELLED
+        pos.status = Position_Status.CANCELED
+        pos.bar_closed = close_bar or datetime.now()
+        logger.info(f"Позиция {pos.id} полностью закрыта по рыночной цене {current_price}. Статус: CANCELLED")
+
+    # ------------------------
     # Получить позиции по символу и/или направлению 
     # ------------------------
     def get_positions(self, symbol: Optional[str] = None, direction: Optional[Direction] = None) -> List[Position]:
