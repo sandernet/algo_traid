@@ -7,49 +7,54 @@
 # Настройки торговых монет (SYMBOLS)
 # =====================================================================
 COINS:
-  - SYMBOL: BTC
-    TIMEFRAME: "D"
-    MIN_TIMEFRAME: "1"
-    AUTO_TRADING: true
-    START_DEPOSIT_USDT: 1000
-    MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
-    LEVERAGE: 5  # Плечо
-    # Размер ордера (в usdt )
-    VOLUME_SIZE  : 1000
+  # - SYMBOL: BTC
+  #   TIMEFRAME: "D"
+  #   MIN_TIMEFRAME: "1"
+  #   CATEGORY: "spot"
+  #   AUTO_TRADING: true
+  #   START_DEPOSIT_USDT: 1000
+  #   MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
+  #   LEVERAGE: 5  # Плечо
+  #   # Размер ордера (в usdt )
+  #   VOLUME_SIZE  : 1000
 
-  - SYMBOL: SOL
-    TIMEFRAME: "D"
-    MIN_TIMEFRAME: "1"
-    AUTO_TRADING: true
-    START_DEPOSIT_USDT: 1000
-    MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
-    LEVERAGE: 5  # Плечо
-    # Размер ордера (в usdt )
-    VOLUME_SIZE  : 1000
+  # - SYMBOL: SOL
+  #   TIMEFRAME: "D"
+  #   MIN_TIMEFRAME: "1"
+  #   CATEGORY: "spot"
+  #   AUTO_TRADING: true
+  #   START_DEPOSIT_USDT: 1000
+  #   MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
+  #   LEVERAGE: 5  # Плечо
+  #   # Размер ордера (в usdt )
+  #   VOLUME_SIZE  : 1000
 
-  - SYMBOL: ETH
-    TIMEFRAME: "D"
-    MIN_TIMEFRAME: "1" # Для проверки ордеров на исполнение. если не нужно осатавлять, пустая строка ""
-    AUTO_TRADING: true
-    START_DEPOSIT_USDT: 10000
-    MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
-    LEVERAGE: 1  # Плечо
-    # Размер ордера (в usdt )
-    VOLUME_SIZE  : 1000
+  # - SYMBOL: ETH
+  #   TIMEFRAME: "D"
+  #   MIN_TIMEFRAME: "1" # Для проверки ордеров на исполнение. если не нужно осатавлять, пустая строка ""
+  #   CATEGORY: "spot"
+  #   AUTO_TRADING: true
+  #   START_DEPOSIT_USDT: 10000
+  #   MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
+  #   LEVERAGE: 1  # Плечо
+  #   # Размер ордера (в usdt )
+  #   VOLUME_SIZE  : 1000
   
-  - SYMBOL: BNB
-    TIMEFRAME: "D"
-    MIN_TIMEFRAME: "1"
-    AUTO_TRADING: true
-    START_DEPOSIT_USDT: 1000
-    MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
-    LEVERAGE: 5  # Плечо
-    # Размер ордера (в usdt )
-    VOLUME_SIZE  : 1000 
+  # - SYMBOL: BNB
+  #   TIMEFRAME: "D"
+  #   MIN_TIMEFRAME: "1"
+  #   CATEGORY: "spot"
+  #   AUTO_TRADING: true
+  #   START_DEPOSIT_USDT: 1000
+  #   MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
+  #   LEVERAGE: 5  # Плечо
+  #   # Размер ордера (в usdt )
+  #   VOLUME_SIZE  : 1000 
 
   - SYMBOL: CFX
     TIMEFRAME: "D"
     MIN_TIMEFRAME: "1" # Для проверки ордеров на исполнение. если не нужно осатавлять, пустая строка ""
+    CATEGORY: "linear"
     AUTO_TRADING: true
     START_DEPOSIT_USDT: 10000
     MINIMAL_TICK_SIZE: 0.00001 # Минимальный размер шага цены
@@ -67,8 +72,7 @@ EXCHANGE_SETTINGS:
   EXCHANGE_ID: bybit
   API_KEY: "MgrXLxN6GPT3j7Bqu2"
   API_SECRET: "vB2j0v4zQU8oafG5eVCh7Nem1pKu8iUqde6b"
-  CATEGORY: "spot"
-# TIMEFRAME: "D"
+  CATEGORY: "linear"
   LIMIT: 1000
   TESTNET: false
   DEMO: true

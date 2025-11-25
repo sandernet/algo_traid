@@ -38,9 +38,18 @@ class DataFetcher:
     # ======================================================
     def __init__(self, coin, exchange,  directory: str): 
         # Параметры, зависящие от монеты
-        self.symbol = coin.get("SYMBOL")+"/USDT" 
+        market_type = coin.get("CATEGORY", "spot")   # spot | linear | inverse
+
+        if market_type == "linear":
+            self.symbol = coin.get("SYMBOL") + "/USDT:USDT"
+        elif market_type == "inverse":
+            self.symbol = coin.get("SYMBOL") + "/USD"
+        else:
+            self.symbol = coin.get("SYMBOL") + "/USDT"
+        
         self.timeframe = coin.get("TIMEFRAME") 
         self.min_timeframe = coin.get("MIN_TIMEFRAME") if coin.get("MIN_TIMEFRAME") else "1"
+        self.category = coin.get("CATEGORY") if coin.get("CATEGORY") else "linear"
         
         # Параметры биржи
         self.exchange_id = exchange.get("EXCHANGE_ID")
@@ -58,7 +67,11 @@ class DataFetcher:
         try:
             exchange_class = getattr(ccxt, self.exchange_id.lower())
             # Bybit не требует API-ключей для публичных данных (OHLCV)
-            self.exchange = exchange_class() 
+            self.exchange = exchange_class({
+                "options": {
+                    "defaultType": self.category  # 'linear' или 'inverse' для Bybit
+                }
+            })
             logger.info(f"Подключение к бирже {self.exchange_id} успешно.")
         except AttributeError:
             logger.error(f"Биржа '{self.exchange_id}' не поддерживается библиотекой ccxt.")
@@ -162,7 +175,7 @@ class DataFetcher:
                 # Ниже мы используем 'until' и полагаемся на ccxt.
 
                 if not ohlcv_chunk or len(ohlcv_chunk) < 2:
-                    logger.debug(f"[{self.symbol}] Получен пустой ответ или менее двух свечей. Достигнут конец истории.")
+                    logger.info(f"[{self.symbol}] Получен пустой ответ или менее двух свечей. Достигнут конец истории.")
                     break # Конец истории
 
                 # 4. Обработка полученного чанка
@@ -187,7 +200,7 @@ class DataFetcher:
                 
                 # Логирование прогресса
                 first_date = datetime.fromtimestamp(first_timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S')
-                logger.debug(f"[{self.symbol}] Успешно загружено свечей: {len(valid_chunk)}. Продолжение НАЗАД с: {first_date}")
+                logger.info(f"[{self.symbol}] Успешно загружено свечей: {len(valid_chunk)}. Продолжение НАЗАД с: {first_date}")
                 
                 # Защита от DoS
                 time.sleep(self.exchange.rateLimit / 1000) 
