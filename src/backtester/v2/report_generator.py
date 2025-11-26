@@ -26,12 +26,18 @@ class ReportGenerator:
         self.positions = positions
         self.data_ohlcv = data_ohlcv
 
+    def serialize_meta(self,meta):
+        if not isinstance(meta, dict) or not meta:
+            return ""
+        return " ".join(f"{k}={v}" for k, v in meta.items())
+        
     # -----------------------------
     # ПРЕОБРАЗОВАНИЕ ОБЪЕКТОВ
     # -----------------------------
     def serialize_order(self, order: Any) -> Dict[str, Any]:
         """
         Превращает Order в понятный Jinja2 словарь.
+        
         """
         return {
             "id": getattr(order, "id", None),
@@ -43,7 +49,7 @@ class ReportGenerator:
             "direction": getattr(order.direction, "name", order.direction),
             "created_bar": getattr(order, "created_bar", None),
             "close_bar": getattr(order, "close_bar", None),
-            "meta":  getattr(order, "meta", None),  # на случай использования оригинального объекта
+            "meta":  self.serialize_meta(getattr(order, "meta", {})),  # на случай использования оригинального объекта
         }
 
     def serialize_position(self, pos: Any) -> Dict[str, Any]:
@@ -202,18 +208,15 @@ class ReportGenerator:
         # ohlcv_df = self.data_ohlcv
 
         # 2. Создание графика
-        chart_html = self.create_candlestick_chart(self.data_ohlcv, serialized_positions)
+        # chart_html = self.create_candlestick_chart(self.data_ohlcv, serialized_positions)
 
         return {
             "positions": serialized_positions,
             "stats": stats,
-            "chart_html": chart_html # Добавляем HTML-код графика
+            # "chart_html": chart_html # Добавляем HTML-код графика
         }
 
-        return {
-            "positions": serialized_positions,
-            "stats": stats
-        }
+
 
 # -------------------------------------------------------------
 # Формирование пути для экспорта и импорта файлов

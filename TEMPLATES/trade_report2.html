@@ -56,6 +56,12 @@
         .order-pending { color: #0077cc; font-weight: bold; }
         .order-other { color: #444; font-weight: bold; }
 
+        /* Order type colors */
+        .order-entry { color: #60671d; font-weight: bold; }
+        .order-take_profit { color: #1e5929; font-weight: bold; }
+        .order-stop_loss { color: #933408; font-weight: bold; }
+
+
         .dir-long {
             color: #0b8f22; /* зелёный */
             font-weight: bold;
@@ -231,25 +237,33 @@
                                 <th>Исполнено</th>
                                 <th>Created Bar</th>
                                 <th>Close Bar</th>
+                                <th>Meta</th>
                             </tr>
                         </thead>
                         <tbody>
                         {% for o in p.orders %}
                             {% set ostatus =
-                                "order-filled" if o.status == "filled"
-                                else "order-cancelled" if o.status == "cancelled"
-                                else "order-pending" if o.status == "pending"
+                                "order-filled" if o.status == "FILLED"
+                                else "order-cancelled" if o.status == "CANCELLED"
+                                else "order-pending" if o.status == "PARTIAL"
                                 else "order-other"
+                            %}
+
+                            {% set otype =
+                                "order-entry" if o.order_type == "ENTRY"
+                                else "order-take_profit" if o.order_type == "TAKE_PROFIT"
+                                else "order-stop_loss" if o.order_type == "STOP_LOSS"
                             %}
                             <tr>
                                 <td>{{ o.id[:6] }}</td>
-                                <td>{{ o.order_type }}</td>
-                                <td class="{{ ostatus }}">{{ o.status }}</td>
+                                <td class="{{ otype }}">{{ o.order_type }}</td>
+                                <td class="{{ ostatus }}"">{{ o.status }}</td>
                                 <td>{{ o.price }}</td>
                                 <td>{{ o.volume }}</td>
                                 <td>{{ o.filled }}</td>
                                 <td>{{ o.created_bar }}</td>
                                 <td>{{ o.close_bar }}</td>
+                                <td>{{ o.meta }}</td>
                             </tr>
                         {% endfor %}
                         </tbody>

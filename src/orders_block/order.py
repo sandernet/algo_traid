@@ -42,13 +42,13 @@ def to_decimal(v: Any) -> Decimal:
 
 
 class Position_Status(Enum):
-    ACTIVE = "active"
-    TAKEN_PART = "part_taken"
-    TAKEN_FULL = "taken_full"
-    STOPPED = "stopped"
-    CANCELED = "cancelled"
-    NONE = "none"
-    CREATED = "created"
+    ACTIVE = "active"           #активная позиция
+    TAKEN_PART = "part_taken"   #финальный статус, когда позиция была исполнена частично
+    TAKEN_FULL = "taken_full"   #финальный статус, когда позиция была исполнена полностью
+    STOPPED = "stopped"         #финальный статус, когда позиция была остановлена по стоп-лоссу в минусе
+    CANCELED = "cancelled"      #финальный статус, когда позиция была отменена (профит может быть как положительный так и отрицательный)
+    NONE = "none"               #начальный статус, когда позиция не создана
+    CREATED = "created"         #начальный статус, когда позиция создана
 
 
 class OrderType(Enum):
@@ -140,7 +140,7 @@ class Position:
         self.avg_entry_price: Optional[Decimal] = None # средняя цена входа
         self.profit: Decimal = Decimal("0")      # накопленная прибыль / убыток по позиции
         self.tick_size = to_decimal(tick_size) if tick_size is not None else None # размер тика для округления цен
-        self.meta: Dict[str, Any] = {}          # дополнительная информация о позиции
+        self.meta: Dict[str, Any] = {}  # дополнительная информация о позиции  без убытка moved_to_break=true
 
     # ------------------------
     # Order management
@@ -166,8 +166,13 @@ class Position:
     # проверка по переводу стопа в безубыточность
     def check_stop_break(self) -> bool:
         if self.opened_volume >= self.closed_volume and self.profit > Decimal("0"):
+            checked = False
             for o in self.orders:
-                if o.order_type == OrderType.STOP_LOSS and not o.meta.get("moved_to_be") and o.status == OrderStatus.ACTIVE:
+                if o.order_type == OrderType.TAKE_PROFIT and o.meta.get("tp_to_break") and o.status == OrderStatus.FILLED:
+                    checked = True
+                    continue
+                
+                if checked and o.order_type == OrderType.STOP_LOSS and not o.meta.get("moved_to_break") and o.status == OrderStatus.ACTIVE:
                     return True
         return False
     
@@ -221,21 +226,22 @@ class Position:
         # обновить статус позиции
 
         if  self.opened_volume > Decimal("0") and self.closed_volume >=  self.opened_volume:
-            # закрыта полностью
+            # закрыт весь объем позиции
+            # Статус может быть TAKEN_FULL, STOPPED, TAKEN_PART
+            
             self.status = Position_Status.TAKEN_FULL if self.profit >= 0 else Position_Status.STOPPED
             for o in self.orders:
                 if o.status == OrderStatus.ACTIVE and o.order_type == OrderType.STOP_LOSS:
-                    self.status = Position_Status.TAKEN_PART if self.profit >= 0 else Position_Status.STOPPED
+                    self.status = Position_Status.TAKEN_FULL if self.profit >= 0 else Position_Status.STOPPED
+                    break
+                if o.status == OrderStatus.ACTIVE and o.order_type == OrderType.TAKE_PROFIT:
+                    self.status = Position_Status.TAKEN_FULL if self.profit >= 0 else Position_Status.STOPPED
                     break
         elif self.closed_volume > Decimal("0") and self.round_to_tick(self.closed_volume)  < self.round_to_tick(self.opened_volume):
             # закрыта частично
             self.status = Position_Status.ACTIVE
-            # # Переводим в безубыток 
-            # if order.meta.get("moved_to_be"):
-            #     logger.info(f"🟢 Позиция {self.id} стоп перенесен в безубыточность.")
-            #     self.move_stop_to_break_even()
-                
             logger.info(f"🟡 Позиция {self.id} частично закрыта. Статус: {self.status.value}")
+            
 
         logger.info(f"[green]Информация об исполнении по позиции id: {self.id} тип: {order.order_type}[/green]\n"
             f"Цена {price};  объем {volume},\n"
@@ -282,8 +288,8 @@ class Position:
         if self.avg_entry_price is None:
             logger.warning("Невозможно переместить стоп в безубыток: записей пока нет.")
             return None
-        be_price = self.avg_entry_price
-        # cancel existing active stops and add new stop at entry price
+        be_price = self.avg_entry_price # Средняя цена входа
+        # отменить существующие активные стопы и добавить новый стоп по цене входа
         self.cancel_orders_by_type(OrderType.STOP_LOSS)
         new_stop = Order(
             id=uuid4().hex,
@@ -291,10 +297,10 @@ class Position:
             price=self.round_to_tick(be_price),
             volume=self.remaining_volume(),
             direction=self.direction,
-            meta={"moved_to_be": True}
+            meta={"moved_to_break": True}
         )
         self.add_order(new_stop)
-        logger.info(f"Position {self.id}: стоп перенесен в точку безубыточности {new_stop.price}")
+        logger.debug(f"Position {self.id}: стоп перенесен в точку безубыточности {new_stop.price}")
         return new_stop
 
 

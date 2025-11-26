@@ -64,14 +64,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
     arr = arr.to_numpy()
     
     for i in range(allowed_min_bars, len(arr)):
-        
-        # current_data = data_df.iloc[i-allowed_min_bars : i ]
-        # current_bar = data_df.iloc[i] # текущий бар который обрабатывается
-        # current_index = current_bar.name
-        # current_open = current_bar["open"]
-        # current_high = current_bar["high"]
-        # current_low = current_bar["low"]
-        # current_close = current_bar["close"]
+
         
         current_data    = arr[i-allowed_min_bars:i]
         current_open    = arr[i][0]
@@ -91,8 +84,8 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
         
         if position is not None and signal != {}:
             if position.direction != signal['direction']:
-                logger.info(f"⚠️ Внимание: получен противоположный сигнал, позиция открыта {position.id[:6]}.")
-                logger.info(f"🔶 Закрываем позицию по рынку перед открытием новой позиции.")
+                logger.debug(f"⚠️ Внимание: получен противоположный сигнал, позиция открыта {position.id[:6]}.")
+                logger.debug(f"🔶 Закрываем позицию по рынку перед открытием новой позиции.")
                 manager.close_position_at_market(position.id, Decimal(str(current_open)), close_bar=current_index)
                 executed_positions.append(position)
                 # сбрасываем позицию
@@ -103,7 +96,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
         if position is None:
             if signal != {}:
                 direction = signal['direction']
-                logger.info(f"🔷 Сигнал на вход получен: {direction} по цене {signal.get('price')}")
+                logger.debug(f"🔷 Сигнал на вход получен: {direction} по цене {signal.get('price')}")
 
                 # Риск менеджмент - установка объема позиции
                 entry_price = signal.get("price")
@@ -119,7 +112,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                     # -------------------------------------------------------------
                     # объем позиции в нативной валюте (например, в BTC) покупаем по текущей цене
                     volume = rm.calculate_position_size(entry_price=entry_price)
-                    logger.info(f"🔶 Размер позиции рассчитан RiskManager: {volume}")
+                    logger.debug(f"🔶 Размер позиции рассчитан RiskManager: {volume}")
 
                     # создаем ордер на вход
                     order = make_order(OrderType.ENTRY, price=entry_price, volume=volume, direction=direction, created_bar=current_index)
@@ -133,26 +126,36 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                         for tp in signal["take_profits"]: 
                             
                             tp_volume = position.round_to_tick(volume*Decimal(str(tp["volume"])))
-                            price = position.round_to_tick(Decimal(str(tp["price"])))
+                            tp_price = position.round_to_tick(Decimal(str(tp["price"])))
                             
-                            tp_order = make_order(OrderType.TAKE_PROFIT, price=price, volume=tp_volume, direction=direction, created_bar=current_index)
+                            if tp.get('tp_to_break', False):
+                                tp_order = make_order(OrderType.TAKE_PROFIT, price=tp_price, volume=tp_volume, direction=direction, created_bar=current_index, meta={"tp_to_break": True})
+                            else:
+                                tp_order = make_order(OrderType.TAKE_PROFIT, price=tp_price, volume=tp_volume, direction=direction, created_bar=current_index)
+                                
                             position.add_order(tp_order)
                             sum_tp_volume += tp_volume
+                            
                         if sum_tp_volume < volume:
                             volume_diff = volume - sum_tp_volume
-                            logger.info(f"⚠️ Внимание: сумма объемов Take Profit ({sum_tp_volume}) меньше общего объема позиции ({volume}). Добавляем недостающий объем {volume_diff} к последнему TP.")
+                            logger.debug(f"⚠️ Внимание: сумма объемов Take Profit ({sum_tp_volume}) меньше общего объема позиции ({volume}). Добавляем недостающий объем {volume_diff} к последнему TP.")
                             position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему TP
 
 
                     # 3. Добавляем stop loss
-                    stop_loss = signal.get("sl")
-                    if stop_loss is not None:
-                        sl_price = stop_loss.get("price")
-                        sl_price = position.round_to_tick(Decimal(sl_price))
-                        # Пока делаем один StopLoss SL на весь объем позиции
-                        sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=volume, direction=direction, created_bar=current_index)
-                        position.add_order(order=sl)
-
+                    if signal["sl"] is not None:
+                        sum_sl_volume: Decimal = Decimal('0')
+                        for sl in signal["sl"]:
+                            sl_volume = position.round_to_tick(volume*Decimal(str(sl["volume"])))
+                            sl_price = position.round_to_tick(Decimal(str(sl["price"])))
+                            sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=sl_volume, direction=direction, created_bar=current_index)
+                            position.add_order(order=sl)
+                            sum_sl_volume += sl_volume
+                        
+                        if sum_sl_volume < volume:
+                            volume_diff = volume - sum_sl_volume
+                            logger.debug(f"⚠️ Внимание: сумма объемов Stop Loss ({sum_sl_volume}) меньше общего объема позиции ({volume}). Добавляем недостающий объем {volume_diff} к последнему SL.")
+                            position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему TP
 
 
         #-------------------------------------------------------------
@@ -170,9 +173,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                 # передаем бар в движок исполнения
                 engine.process_bar(bar=bar1m, bar_index=bar1m.name)
                 
-                
-            # проверяем количество активных закрытых ордеров TP
-
+                # проверяем исполнен ли TP после которого переводим SL в без убыточность
                 if position.status == Position_Status.ACTIVE and position.check_stop_break():
                     # если закрыт хотя бы один TP, двигаем стоп в безубыточность
                     position.move_stop_to_break_even()
@@ -240,32 +241,32 @@ def run_local_backtest():
             directory=data_dir,
             )
         # Загружаем данные из CSV файла
-        with LoggingTimer("Загрузка данных торгового таймфрейма для бэктеста"):
+        with LoggingTimer("[symbol] Загрузка данных торгового таймфрейма для бэктеста"):
             data_df = fetcher.load_from_csv(file_type="csv", timeframe=timeframe) # загружаем данные нужного таймфрейма
-        with LoggingTimer("Загрузка минутных данных для точного исполнения стопов и тейков"):
+        with LoggingTimer("[symbol] Загрузка минутных данных для точного исполнения стопов и тейков"):
             data_df_1m = fetcher.load_from_csv(file_type="csv") # загружаем минутные данные для точного исполнения стопов и тейков
         
         if data_df is not None:
             logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
             
             # 2. Выбор периода для бэктеста
-            with LoggingTimer("Выбор диапазона данных для бэктеста"):
+            with LoggingTimer("[symbol] Формируем данные для бэктеста"):
                 select_data = select_range_becktest(data_df, timeframe, full_datafile, MIN_BARS, start_date, end_date)
                 if not full_datafile:
-                    logger.info(f"Данные для бэктеста отобраны с {select_data.index[0]} по {select_data.index[-1]}. Всего баров: {len(select_data)}")
+                    logger.info(f"[symbol] Данные для бэктеста отобраны с {select_data.index[0]} по {select_data.index[-1]}. Всего баров: {len(select_data)}")
                     start_date = select_data.index[0]
                     end_date = select_data.index[-1]
 
             # 3. Выполнение бэктеста
             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
-            with LoggingTimer("Выполнение бэктеста"):
+            with LoggingTimer("[symbol] Выполнение бэктеста"):
                 executed_positions = backtest_coin(select_data,data_df_1m, coin, MIN_BARS)
             
             # 4. Генерация отчета по результатам бэктеста
-            with LoggingTimer("Генерация отчета"):
+            with LoggingTimer("[symbol] Генерация отчета"):
                 generate_report(select_data, executed_positions, coin, start_date, end_date)
             
-            logger.info(f"Закончена обработка бэктеста для {symbol}. Всего позиций: {len(executed_positions)}")
+            logger.info(f"[symbol] Закончена обработка бэктеста. Всего позиций: {len(executed_positions)}")
             
         else:
             logger.error(f"Невозможно запустить бектест для {symbol}: данные не загружены.")

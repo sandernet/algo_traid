@@ -14,17 +14,26 @@ def fibonacci_levels(z1: float, z2: float, direction: int) -> dict:
     fib_ratios = config.get_setting("STRATEGY_SETTINGS", "FIBONACCI_LEVELS")
     levels = {}
 
-    if direction == 1:
-        # коррекция вниз
-        for r in fib_ratios:
+    for r in fib_ratios:
+    
+        if direction == 1:
+            # коррекция вниз
             level = z1 + (z2 - z1) * r['level']
-            levels[round(r['level'] * 100, 1)] = {'level_price': level, 'volume': r['volume']}
-    elif direction == -1:
+        elif direction == -1:
         # коррекция вверх
-        for r in fib_ratios:
             level = z1 - (z1 - z2) * r['level']
-            levels[round(r['level'] * 100, 1)] =  {'level_price': level, 'volume': r['volume']}
-    else:
-        raise ValueError("direction должен быть 'up' или 'down'")
+        else:
+            raise ValueError("direction должен быть 'up' или 'down'")
+        
 
-    return levels
+        order_info = {'level_price': level, 'volume': r['volume']}
+        if r.get('SL', False):
+            order_info['sl'] = True
+        if r.get('TP', False):
+            order_info['tp'] = True
+        if r.get('TP_TO_BREAK', False):
+            order_info['tp_to_break'] = True
+
+        levels[round(r['level'] * 100, 1)] = order_info 
+
+    return dict(list(levels.items())[::-1])

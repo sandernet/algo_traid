@@ -50,8 +50,7 @@ class ZigZagAndFibo:
         z2_index = zigzag["z2_index"] # индекс ближайшей точки z2 
         entry_price = data_df["close"].iloc[-1] # цена входа
         current_index = data_df.index[-1] # текущий бар
-        stop_loss = fiboLev[161.8]['level_price'] # уровень стоп лосс
-        stop_loss_volume = fiboLev[161.8]['volume'] # объем стоп лосс
+        
         direction = None
         
                     
@@ -97,15 +96,23 @@ class ZigZagAndFibo:
             return {}
         # Создание сделки
         tps= []
-        # перебираем все 5 тейков в обратном порядке 
-        for _, value in list(fiboLev.items())[:5][::-1]:
-            tps.append({"price": value['level_price'], "volume": value['volume']})
+        sls=[]
+        info = {}
+        # перебираем все уровни и находим тейки и стопы
+        for value in fiboLev.values():
+            info = {"price": value['level_price'], "volume": value['volume']}
+            if value.get('tp') is True:
+                if value.get('tp_to_break') is True:
+                    info["tp_to_break"] = True
+                tps.append(info)
+            if value.get('sl') is True:
+                sls.append(info)
         
         signal = {
             "price": entry_price,
             "direction": direction,
             "take_profits": tps,
-            "sl": {"price": stop_loss, "volume": stop_loss_volume},
+            "sl": sls,
             "z2_index": z2_index
             }
         return signal

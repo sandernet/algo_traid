@@ -256,7 +256,7 @@ class DataFetcher:
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
         df.set_index('timestamp', inplace=True)
         
-        logger.info(f"[{self.symbol}] Загружено свечей {len(df)}. Диапазон: {df.index.min()} - {df.index.max()}")
+        logger.warning(f"[{self.symbol}] Загружено свечей {len(df)}. Диапазон: {df.index.min()} - {df.index.max()}")
         
         return df
 
