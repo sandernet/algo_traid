@@ -208,9 +208,9 @@ def run_local_backtest():
     full_datafile = config.get_setting("BACKTEST_SETTINGS", "FULL_DATAFILE")
     start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")
     end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
-        # Получение минимальное количество баров из настроек
+    # Получение минимальное количество баров из настроек
     MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
-        
+    
     # 1. Получение массива монет из конфигурации
     try:
         coins_list = config.get_section("COINS")
@@ -228,7 +228,7 @@ def run_local_backtest():
         logger.info("============================================================================")
         logger.info(f"[bold yellow] [{coin.get('SYMBOL')}/USDT][/bold yellow] 🚀 Запуск бэктеста ...")
         logger.info("============================================================================")
-    
+
         symbol = coin.get("SYMBOL")+"/USDT"
         timeframe = coin.get("TIMEFRAME")
         tick_size = coin.get("MINIMAL_TICK_SIZE")
@@ -244,7 +244,7 @@ def run_local_backtest():
             data_df = fetcher.load_from_csv(file_type="csv", timeframe=timeframe) # загружаем данные нужного таймфрейма
         with LoggingTimer("Загрузка минутных данных для точного исполнения стопов и тейков"):
             data_df_1m = fetcher.load_from_csv(file_type="csv") # загружаем минутные данные для точного исполнения стопов и тейков
-    
+        
         if data_df is not None:
             logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
             
@@ -255,8 +255,7 @@ def run_local_backtest():
                     logger.info(f"Данные для бэктеста отобраны с {select_data.index[0]} по {select_data.index[-1]}. Всего баров: {len(select_data)}")
                     start_date = select_data.index[0]
                     end_date = select_data.index[-1]
-                
-            
+
             # 3. Выполнение бэктеста
             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
             with LoggingTimer("Выполнение бэктеста"):
@@ -264,7 +263,7 @@ def run_local_backtest():
             
             # 4. Генерация отчета по результатам бэктеста
             with LoggingTimer("Генерация отчета"):
-                generate_report(executed_positions, coin, start_date, end_date)
+                generate_report(select_data, executed_positions, coin, start_date, end_date)
             
             logger.info(f"Закончена обработка бэктеста для {symbol}. Всего позиций: {len(executed_positions)}")
             
