@@ -285,9 +285,6 @@ class Position:
                 self.status = Position_Status.STOPPED
                 logger.info(f"🟡 Позиция {self.id} полностью закрыта по SL. Статус: {self.status.value}")
                 
-            else:
-                self.status = Position_Status.ACTIVE
-                logger.info(f"🟡 Позиция {self.id} частично закрыта. Статус: {self.status.value}")
                 
                 
     # Оставшийся объем для закрытия
@@ -371,7 +368,7 @@ class PositionManager:
     # ------------------------
     # закрытие по ID
     # ------------------------
-    def close_position(self, position_id: str, close_bar: Optional[datetime] = None):
+    def cansel_position(self, position_id: str, close_bar: Optional[datetime] = None):
         pos = self.positions.get(position_id)
         if not pos:
             return
@@ -402,14 +399,12 @@ class PositionManager:
                 order_type=OrderType.CLOSE,
                 price=current_price,
                 volume=remaining_vol,
-                direction=pos.direction
+                direction=pos.direction,
+                filled=remaining_vol,
+                status=OrderStatus.ACTIVE
             )
             pos.add_order(market_order)
             logger.info(f"Создан ордер на закрытие по текущей рыночной цене: {current_price}")
-            # pos.record_execution(market_order, price=current_price, volume=remaining_vol, bar_index=close_bar or datetime.now())
-        # Устанавливаем статус позиции как CANCELLED
-        # pos.status = Position_Status.CANCELED
-
         
 
     # ------------------------

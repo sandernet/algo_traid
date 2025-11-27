@@ -37,7 +37,7 @@ class ExecutionEngine:
         
         self.manager = manager
 
-    def process_bar(self, bar: Dict[str, Any], bar_index: datetime):
+    def process_bar(self, bar: list[float], bar_index: datetime):
         """
         bar: dict with keys: 'time' (optional), 'open', 'high', 'low', 'close'
         bar_index: integer index of the bar
@@ -77,17 +77,17 @@ class ExecutionEngine:
     # ------------------------
     # Проверка условий исполнения
     # ------------------------  
-    def should_execute(self, order: Order, bar: Dict[str, Any]) -> bool:
+    def should_execute(self, order: Order, bar: list[float]) -> bool:
         """
         Проверка условий исполнения ордера на текущем баре.
         Если ордер может быть заполнен на этом баре, то возвращает True, иначе False.
        """
-        low = to_decimal(bar['low'])
-        high = to_decimal(bar['high'])
-        close = to_decimal(bar['close'])
+        low = to_decimal(bar[2])
+        high = to_decimal(bar[1])
+        close = to_decimal(bar[3])
 
         # MARKET
-        if order.order_type == OrderType.MARKET:
+        if order.order_type in {OrderType.MARKET, OrderType.CLOSE}:
             return True
 
         # проверка ЛИМИТ и Вход
@@ -115,7 +115,7 @@ class ExecutionEngine:
     # ------------------------
     # Получить цену исполнения
     # ------------------------
-    def get_execution_price(self, order: Order, bar: Dict[str, Any]) -> Decimal:
+    def get_execution_price(self, order: Order, bar: list[float]) -> Decimal:
         """
         Определить цену исполнения. Для упрощения:
          - MARKET -> цена закрытия
@@ -124,7 +124,7 @@ class ExecutionEngine:
          - LIMIT/ENTRY -> цена ордера (если достигнута)
         Вы можете улучшить метод, моделируя слэп, заполнение при открытии, VWAP и т.д.
         """
-        close = to_decimal(bar['close'])
+        close = to_decimal(bar[3])
         if order.order_type == OrderType.MARKET:
             return close
         if order.order_type in {OrderType.TAKE_PROFIT, OrderType.STOP_LOSS, OrderType.LIMIT, OrderType.ENTRY} and order.price is not None:
