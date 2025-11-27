@@ -66,12 +66,12 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
     for i in range(allowed_min_bars, len(arr)):
 
         
-        current_data    = arr[i-allowed_min_bars:i]
-        current_open    = arr[i][0]
-        current_high    = arr[i][1]
-        current_low     = arr[i][2]
-        current_close   = arr[i][3]
-        current_index   = arr[i][4]
+        current_data    = arr[i-allowed_min_bars:i] # окно для расчета индикаторов
+        current_open    = arr[i][0] # текущий бар открытие
+        current_high    = arr[i][1] # текущий бар высота
+        current_low     = arr[i][2] # текущий бар низ
+        current_close   = arr[i][3] # текущий бар закрытие
+        current_index   = arr[i][4] # текущий бар индекс (Datetime)
         
         logger.debug(f"[yellow]----------------------------------------------------------- [/yellow]")
         logger.debug(f"[{current_index.strftime("%d.%m.%Y %H:%M")}] [yellow]- open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    

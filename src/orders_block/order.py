@@ -227,19 +227,11 @@ class Position:
 
         if  self.opened_volume > Decimal("0") and self.closed_volume >=  self.opened_volume:
             # закрыт весь объем позиции
-            # Статус может быть TAKEN_FULL, STOPPED, TAKEN_PART
-            
-            self.status = Position_Status.TAKEN_FULL if self.profit >= 0 else Position_Status.STOPPED
-            for o in self.orders:
-                if o.status == OrderStatus.ACTIVE and o.order_type == OrderType.STOP_LOSS:
-                    self.status = Position_Status.TAKEN_FULL if self.profit >= 0 else Position_Status.STOPPED
-                    break
-                if o.status == OrderStatus.ACTIVE and o.order_type == OrderType.TAKE_PROFIT:
-                    self.status = Position_Status.TAKEN_FULL if self.profit >= 0 else Position_Status.STOPPED
-                    break
+            # Меняет Статус на закрывающий. Может быть TAKEN_FULL, STOPPED, TAKEN_PART
+            self.setStatus()
+
         elif self.closed_volume > Decimal("0") and self.round_to_tick(self.closed_volume)  < self.round_to_tick(self.opened_volume):
             # закрыта частично
-            self.status = Position_Status.ACTIVE
             logger.info(f"🟡 Позиция {self.id} частично закрыта. Статус: {self.status.value}")
             
 
@@ -248,9 +240,41 @@ class Position:
             f"Открытый объем ={self.opened_volume}, Закрытый объем={self.closed_volume}\n"
             f"Средняя цена входа={self.avg_entry_price}, Profit={self.profit}, СТАТУС={self.status.value}")
 
+
+
     # ------------------------
     # Позиционные утилиты
     # ------------------------
+    
+    # Устанавливает статус позиции
+    def setStatus(self):
+        if self.status == Position_Status.ACTIVE:
+            close_vol_tp = Decimal("0")
+            close_vol_sl = Decimal("0")
+            
+            for o in self.orders:
+                if o.status == OrderStatus.FILLED and o.order_type == OrderType.TAKE_PROFIT:
+                    close_vol_tp += o.volume
+                if o.status == OrderStatus.FILLED and o.order_type == OrderType.STOP_LOSS:
+                    close_vol_sl += o.volume
+
+            if close_vol_tp > Decimal("0") and close_vol_sl > Decimal("0"):
+                self.status = Position_Status.TAKEN_PART
+                logger.info(f"🟡 Позиция {self.id} частично закрыта. Статус: {self.status.value}")
+                
+            elif close_vol_tp >= self.opened_volume:
+                self.status = Position_Status.TAKEN_FULL
+                logger.info(f"🟡 Позиция {self.id} полностью закрыта в профит Закрыты все TP. Статус: {self.status.value}")
+                
+            elif close_vol_sl >= self.opened_volume:
+                self.status = Position_Status.STOPPED
+                logger.info(f"🟡 Позиция {self.id} полностью закрыта по SL. Статус: {self.status.value}")
+                
+            else:
+                self.status = Position_Status.ACTIVE
+                logger.info(f"🟡 Позиция {self.id} частично закрыта. Статус: {self.status.value}")
+                
+                
     # Оставшийся объем для закрытия
     def remaining_volume(self) -> Decimal:
         return max(Decimal("0"), self.opened_volume - self.closed_volume)
@@ -259,8 +283,8 @@ class Position:
     # ------------------------
     # Метод расчета части объема ордера
     # ------------------------
-    def part_volume(self, share: Decimal) -> Decimal:
-        return (self.opened_volume * share).quantize(Decimal('1.'), rounding=ROUND_HALF_UP)
+    # def part_volume(self, share: Decimal) -> Decimal:
+    #     return (self.opened_volume * share).quantize(Decimal('1.'), rounding=ROUND_HALF_UP)
     
     # Получить активные заказы 
     
