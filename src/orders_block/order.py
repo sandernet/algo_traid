@@ -73,15 +73,15 @@ class Direction(Enum):
     SHORT = "short"
 
 
-# -------------------------
-# Core data structures
-# -------------------------
-@dataclass
-class Execution:
-    price: Decimal
-    volume: Decimal
-    bar_index: Optional[datetime]  # индекс бара исполнения
-    order_id: str
+# # -------------------------
+# # Core data structures
+# # -------------------------
+# @dataclass
+# class Execution:
+#     price: Decimal
+#     volume: Decimal
+#     bar_index: Optional[datetime]  # индекс бара исполнения
+#     order_id: str
 
 
 @dataclass
@@ -91,9 +91,9 @@ class Order:
     price: Optional[Decimal]  # Нет для рыночных ордеров
     volume: Decimal           # абсолютный объем в нативных единицах (не дробях)
     direction: Direction      #направление: ДЛИННОЕ или КОРОТКОЕ (влияет на интерпретацию стопов)
+    profit: Optional[Decimal] = None  # результат исполнения ордера
     status: OrderStatus = OrderStatus.ACTIVE
     filled: Decimal = field(default_factory=lambda: Decimal("0"))
-    # created_at: Optional[int] = None  # optional bar index when created
     created_bar: Optional[datetime] = None  # optional bar index when created
     close_bar: Optional[datetime] = None  # optional bar index when closed
     meta: Dict[str, Any] = field(default_factory=dict)
@@ -117,7 +117,14 @@ class Order:
             # частичное заполнение ордера
             self.status = OrderStatus.PARTIAL
             self.close_bar = close_bar
-            
+    
+    # Расчет профита
+    def calculate_profit(self, current_price: Decimal):
+        if self.order_type in {OrderType.TAKE_PROFIT, OrderType.STOP_LOSS, OrderType.CLOSE} and self.price and self.volume:
+            if self.direction == Direction.LONG:
+                self.profit = (current_price - self.price) * self.volume
+            else:
+                self.profit = (self.price - current_price) * self.volume
 
 
 
@@ -132,7 +139,7 @@ class Position:
         self.direction = direction # направление позицией (long/short)
         self.status = Position_Status.CREATED
         self.orders: List[Order] = []        # все связанные заказы (entry, tp, sl, ...)
-        self.executions: List[Execution] = []  # все исполнения, связанные с этой позицией
+        # self.executions: List[Execution] = []  # все исполнения, связанные с этой позицией
         self.opened_volume: Decimal = Decimal("0") # общий открытый объем
         self.closed_volume: Decimal = Decimal("0") # общий закрытый объем
         self.bar_opened: Optional[datetime] = None  # индекс бара, в котором была открыта позиция
@@ -186,8 +193,8 @@ class Position:
         1. Записать исполнение
         2. Обновить состояние позиции
         """
-        ex = Execution(price=to_decimal(price), volume=volume, bar_index=bar_index, order_id=order.id)
-        self.executions.append(ex)
+        # ex = Execution(price=to_decimal(price), volume=volume, bar_index=bar_index, order_id=order.id)
+        # self.executions.append(ex)
 
         # по объему пометить ордер как заполненный (полностью или частично)
         # поменяет статус ордера соответственно
@@ -222,6 +229,7 @@ class Position:
                 else:
                     pnl = (self.avg_entry_price - price) * volume
                 self.profit += pnl
+                order.profit = pnl
 
         # обновить статус позиции
 
@@ -249,24 +257,31 @@ class Position:
     # Устанавливает статус позиции
     def setStatus(self):
         if self.status == Position_Status.ACTIVE:
-            close_vol_tp = Decimal("0")
-            close_vol_sl = Decimal("0")
+            sum_vol_tp = Decimal("0")
+            sum_vol_sl = Decimal("0")
+            sum_vol_cl = Decimal("0")
             
             for o in self.orders:
                 if o.status == OrderStatus.FILLED and o.order_type == OrderType.TAKE_PROFIT:
-                    close_vol_tp += o.volume
+                    sum_vol_tp += o.volume
                 if o.status == OrderStatus.FILLED and o.order_type == OrderType.STOP_LOSS:
-                    close_vol_sl += o.volume
+                    sum_vol_sl += o.volume
+                if o.status == OrderStatus.FILLED and o.order_type == OrderType.CLOSE:
+                    sum_vol_cl += o.volume
 
-            if close_vol_tp > Decimal("0") and close_vol_sl > Decimal("0"):
+            if sum_vol_cl > Decimal("0"):
+                self.status = Position_Status.CANCELED
+                logger.info(f"🟡 Позиция {self.id} закрыта. Статус: {self.status.value}"
+                            )
+            elif sum_vol_tp > Decimal("0") and sum_vol_sl > Decimal("0"):
                 self.status = Position_Status.TAKEN_PART
                 logger.info(f"🟡 Позиция {self.id} частично закрыта. Статус: {self.status.value}")
                 
-            elif close_vol_tp >= self.opened_volume:
+            elif sum_vol_tp >= self.opened_volume:
                 self.status = Position_Status.TAKEN_FULL
                 logger.info(f"🟡 Позиция {self.id} полностью закрыта в профит Закрыты все TP. Статус: {self.status.value}")
                 
-            elif close_vol_sl >= self.opened_volume:
+            elif sum_vol_sl >= self.opened_volume:
                 self.status = Position_Status.STOPPED
                 logger.info(f"🟡 Позиция {self.id} полностью закрыта по SL. Статус: {self.status.value}")
                 
@@ -376,11 +391,12 @@ class PositionManager:
         """
         pos = self.positions.get(position_id)
         if not pos:
+            logger.warning(f"Позиция {position_id} не найдена")
             return
         
         remaining_vol = pos.remaining_volume()
         if remaining_vol > 0:
-            # Создаем фиктивный ордер для закрытия позиции
+            # Создаем закрывающий маркет ордер для закрытия всей позиции
             market_order = Order(
                 id=uuid4().hex,
                 order_type=OrderType.CLOSE,
@@ -388,17 +404,13 @@ class PositionManager:
                 volume=remaining_vol,
                 direction=pos.direction
             )
-            # Регистрируем исполнение для закрытия позиции
-            pos.record_execution(market_order, price=current_price, volume=remaining_vol, bar_index=close_bar or datetime.now())
-        
-        # Отменяем все активные ордера
-        for order in pos.get_active_orders():
-            order.status = OrderStatus.CANCELLED
-        
+            pos.add_order(market_order)
+            logger.info(f"Создан ордер на закрытие по текущей рыночной цене: {current_price}")
+            # pos.record_execution(market_order, price=current_price, volume=remaining_vol, bar_index=close_bar or datetime.now())
         # Устанавливаем статус позиции как CANCELLED
-        pos.status = Position_Status.CANCELED
-        pos.bar_closed = close_bar or datetime.now()
-        logger.info(f"Позиция {pos.id} полностью закрыта по рыночной цене {current_price}. Статус: CANCELLED")
+        # pos.status = Position_Status.CANCELED
+
+        
 
     # ------------------------
     # Получить позиции по символу и/или направлению 

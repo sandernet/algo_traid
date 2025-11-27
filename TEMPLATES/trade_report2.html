@@ -235,6 +235,7 @@
                                 <th>Цена</th>
                                 <th>Объем</th>
                                 <th>Исполнено</th>
+                                <th>Прибыль</th>
                                 <th>Created Bar</th>
                                 <th>Close Bar</th>
                                 <th>Meta</th>
@@ -261,6 +262,11 @@
                                 <td>{{ o.price }}</td>
                                 <td>{{ o.volume }}</td>
                                 <td>{{ o.filled }}</td>
+                                <td>
+                                    <span class="{% if o.profit is not none and o.profit > 0 %}profit-positive{% elif o.profit is not none and o.profit < 0 %}profit-negative{% endif %}">
+                                        {{ "%.2f"|format(o.profit) if o.profit is not none else '—'  }}
+                                    </span>
+                                </td>
                                 <td>{{ o.created_bar }}</td>
                                 <td>{{ o.close_bar }}</td>
                                 <td>{{ o.meta }}</td>

@@ -45,6 +45,7 @@ class ReportGenerator:
             "status": getattr(order.status, "name", order.status),
             "price": getattr(order, "price", None),
             "volume": getattr(order, "volume", None),
+            "profit": getattr(order, "profit", None),
             "filled": getattr(order, "filled", None),
             "direction": getattr(order.direction, "name", order.direction),
             "created_bar": getattr(order, "created_bar", None),

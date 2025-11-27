@@ -177,6 +177,8 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
                 if position.status == Position_Status.ACTIVE and position.check_stop_break():
                     # если закрыт хотя бы один TP, двигаем стоп в безубыточность
                     position.move_stop_to_break_even()
+                    
+                    
 
         if position is not None and position.status in {Position_Status.TAKEN_FULL, Position_Status.STOPPED, Position_Status.TAKEN_PART, Position_Status.CANCELED}:
             # если активных ордеров нет, позиция закрыта
