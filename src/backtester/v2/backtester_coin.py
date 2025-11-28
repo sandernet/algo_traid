@@ -23,7 +23,7 @@ ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускает
 # ====================================================
 # Запуск бэктеста для одной монеты
 # ====================================================
-def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
+def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> dict:
     """
     Запуск бэктеста с данными, загруженными из локального файла.
     :param data_df: pd.DataFrame — исторические данные по монете
@@ -37,11 +37,11 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
     timeframe = coin.get("TIMEFRAME")
     
     
-    executed_positions = []  # Список для хранения исполненных позиций
+    # executed_positions = []  # Список для хранения исполненных позиций
     
     if allowed_min_bars > len(data_df):
         logger.error(f"Невозможно запустить бектест: не хватает баров для расчета индикаторов.")
-        return executed_positions
+        return {}
     
     # Инициализация стратегии    
     strategy = ZigZagAndFibo(coin=coin)
@@ -105,11 +105,8 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
             else:    
                 logger.debug(f"[{symbol}]--------------------------------------------------")
                 
-            # logger.info(f"[green]Информация об исполнении по позиции id: {self.id} тип: {order.order_type}[/green]\n"
-            #     f"Цена {price};  объем {volume},\n"
-            #     f"Открытый объем={self.opened_volume}, Закрытый объем={self.closed_volume}\n"
-            #     f"Средняя цена входа={self.avg_entry_price}, Profit={self.profit}, СТАТУС={self.status.value}")
-       
+
+
         #-------------------------------------------------------------
         # Обработка исполнения ордеров на текущем баре
         #-------------------------------------------------------------
@@ -135,12 +132,12 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
             manager.cansel_active_orders(position.id, close_bar=current_index)
             position.bar_closed = current_index
 
-            executed_positions.append(position)
+            # executed_positions.append(position)
             # сбрасываем позицию
             position: Optional[Position] = None
             
 
-    return executed_positions
+    return manager.positions
 
 # сщздаем позициию по сигналу
 def create_position(signal, manager, coin, current_index) -> Optional[Position]:

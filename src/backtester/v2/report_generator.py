@@ -20,7 +20,7 @@ class ReportGenerator:
     Подготовленные данные предназначены для передачи в Jinja2-шаблон.
     """
 
-    def __init__(self, data_ohlcv, positions: List[Any]):
+    def __init__(self, data_ohlcv, positions: dict[str, Any]):
         self.positions = positions
         self.data_ohlcv = data_ohlcv
 
@@ -79,8 +79,14 @@ class ReportGenerator:
     def serialize_all_positions(self) -> List[Dict[str, Any]]:
         """
         Сериализует все позиции.
+        
         """
-        return [self.serialize_position(p) for p in self.positions]
+        # x = []
+        # for p in self.positions:
+        #     x.append(self.serialize_position(p))
+        
+        return [self.serialize_position(p) for _, p in self.positions.items()]
+        # return x
 
     # -----------------------------
     # СТАТИСТИКА
