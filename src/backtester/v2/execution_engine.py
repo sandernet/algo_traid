@@ -3,7 +3,6 @@ from src.orders_block.order import OrderType
 from src.orders_block.order import to_decimal
 from src.orders_block.order import Direction
 from src.orders_block.order import PositionManager
-from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 from decimal import Decimal
@@ -12,8 +11,6 @@ from decimal import Decimal
 # ====================================================
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
-
-from src.config.config import config
 
 # -------------------------------------------------
 # Класс ExecutionEngine - движок исполнения ордеров

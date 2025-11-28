@@ -33,7 +33,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
     """
     
     symbol = coin.get("SYMBOL")+"/USDT"
-    tick_size = coin.get("MINIMAL_TICK_SIZE")
+    tick_size = coin.get("MINIMAL_TICK_SIZE")   
     timeframe = coin.get("TIMEFRAME")
     
     
@@ -50,7 +50,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
     manager = PositionManager()
     engine = ExecutionEngine(manager)
     position: Optional[Position] = None
-    rm = RiskManager(coin=coin)
+
     
     
     # перебираем все бары начиная с минимального количества
@@ -70,7 +70,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
         current_index   = arr[i][4] # текущий бар индекс (Datetime)
         
         logger.debug(f"[yellow]----------------------------------------------------------- [/yellow]")
-        logger.debug(f"[{current_index.strftime("%d.%m.%Y %H:%M")}] [yellow]- open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
+        logger.info(f"[{current_index.strftime("%d.%m.%Y %H:%M")}] [yellow]- open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
         
         #-------------------------------------------------------------
         # Алгоритм входа в позицию и создание позиции
@@ -78,84 +78,38 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
         # рассчитываем индикаторы стратегии ищем точку входа
         signal = strategy.find_entry_point(current_data)
         
+        #-------------------------------------------------------------
+        # проверяем если появился противоположный сигнал
+        # закрываем позицию
+        #-------------------------------------------------------------
         if position is not None and signal != {}:
             if position.direction != signal['direction']:
                 logger.debug(f"⚠️ Внимание: получен противоположный сигнал, позиция открыта {position.id[:6]}.")
                 logger.debug(f"🔶 Закрываем позицию по рынку перед открытием новой позиции.")
                 
                 # Отменяем все активные ордера
-                manager.cansel_position(position.id, close_bar=current_index)
+                manager.cansel_active_orders(position.id, close_bar=current_index)
                 
                 # создаем закрывающий маркет ордер по текущей рыночной цене
                 manager.close_position_at_market(position.id, Decimal(str(current_open)), close_bar=current_index)
            
-        
-        # Если нет открытой позиции, ищем точку входа
-        if position is None:
-            if signal != {}:
-                direction = signal['direction']
-                logger.debug(f"🔷 Сигнал на вход получен: {direction} по цене {signal.get('price')}")
-
-                # Риск менеджмент - установка объема позиции
-                entry_price = signal.get("price")
-                if entry_price is None:
-                    logger.error("Ошибка: цена входа не определена в сигнале.")
-                else:
-                    # 1. создаем позицию
-                    position = manager.open_position(symbol=symbol, direction=direction, tick_size=tick_size, open_bar=current_index)
-                    
-                    entry_price = position.round_to_tick(Decimal(entry_price))
-                    # -------------------------------------------------------------
-                    # Добавить риск менеджмент - расчет объема позиции
-                    # -------------------------------------------------------------
-                    # объем позиции в нативной валюте (например, в BTC) покупаем по текущей цене
-                    volume = rm.calculate_position_size(entry_price=entry_price)
-                    logger.debug(f"🔶 Размер позиции рассчитан RiskManager: {volume}")
-
-                    # создаем ордер на вход
-                    order = make_order(OrderType.ENTRY, price=entry_price, volume=volume, direction=direction, created_bar=current_index)
-            
-                    # добавляем ордер в позицию
-                    position.add_order(order)
-                    
-                    # 2. Добовляем teke profit
-                    if signal["take_profits"] is not None:
-                        sum_tp_volume: Decimal = Decimal('0')
-                        for tp in signal["take_profits"]: 
-                            
-                            tp_volume = position.round_to_tick(volume*Decimal(str(tp["volume"])))
-                            tp_price = position.round_to_tick(Decimal(str(tp["price"])))
-                            
-                            if tp.get('tp_to_break', False):
-                                tp_order = make_order(OrderType.TAKE_PROFIT, price=tp_price, volume=tp_volume, direction=direction, created_bar=current_index, meta={"tp_to_break": True})
-                            else:
-                                tp_order = make_order(OrderType.TAKE_PROFIT, price=tp_price, volume=tp_volume, direction=direction, created_bar=current_index)
-                                
-                            position.add_order(tp_order)
-                            sum_tp_volume += tp_volume
-                            
-                        if sum_tp_volume < volume:
-                            volume_diff = volume - sum_tp_volume
-                            logger.debug(f"⚠️ Внимание: сумма объемов Take Profit ({sum_tp_volume}) меньше общего объема позиции ({volume}). Добавляем недостающий объем {volume_diff} к последнему TP.")
-                            position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему TP
-
-
-                    # 3. Добавляем stop loss
-                    if signal["sl"] is not None:
-                        sum_sl_volume: Decimal = Decimal('0')
-                        for sl in signal["sl"]:
-                            sl_volume = position.round_to_tick(volume*Decimal(str(sl["volume"])))
-                            sl_price = position.round_to_tick(Decimal(str(sl["price"])))
-                            sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=sl_volume, direction=direction, created_bar=current_index)
-                            position.add_order(order=sl)
-                            sum_sl_volume += sl_volume
-                        
-                        if sum_sl_volume < volume:
-                            volume_diff = volume - sum_sl_volume
-                            logger.debug(f"⚠️ Внимание: сумма объемов Stop Loss ({sum_sl_volume}) меньше общего объема позиции ({volume}). Добавляем недостающий объем {volume_diff} к последнему SL.")
-                            position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему TP
-
-
+        #-------------------------------------------------------------
+        # Если нет открытой позиции, и есть сигнал на вход
+        #-------------------------------------------------------------
+        if position is None and signal != {}:
+            # создание новой позиции по сигналу
+            logger.debug(f"[{symbol}]🔷 Сигнал на вход получен: {signal.get('direction')} по цене {signal.get('price')}")
+            position = create_position(signal=signal, manager=manager, coin=coin, current_index=current_index)
+            if position is None:
+                logger.error(f"[{symbol}]🔴 Позиция не создана")
+            else:    
+                logger.debug(f"[{symbol}]--------------------------------------------------")
+                
+            # logger.info(f"[green]Информация об исполнении по позиции id: {self.id} тип: {order.order_type}[/green]\n"
+            #     f"Цена {price};  объем {volume},\n"
+            #     f"Открытый объем={self.opened_volume}, Закрытый объем={self.closed_volume}\n"
+            #     f"Средняя цена входа={self.avg_entry_price}, Profit={self.profit}, СТАТУС={self.status.value}")
+       
         #-------------------------------------------------------------
         # Обработка исполнения ордеров на текущем баре
         #-------------------------------------------------------------
@@ -173,10 +127,12 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
             # обрабатываем исполнение ордеров
             process_orders(position=position, engine=engine,  current_range_1m=arr_1m)        
                     
-
+        #-------------------------------------------------------------
+        # Алгоритм закрытия позиции
+        #-------------------------------------------------------------
         if position is not None and position.status in {Position_Status.TAKEN_FULL, Position_Status.STOPPED, Position_Status.TAKEN_PART, Position_Status.CANCELED}:
             # если активных ордеров нет, позиция закрыта
-            manager.cansel_position(position.id, close_bar=current_index)
+            manager.cansel_active_orders(position.id, close_bar=current_index)
 
             executed_positions.append(position)
             # сбрасываем позицию
@@ -185,12 +141,81 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
 
     return executed_positions
 
+# сщздаем позициию по сигналу
+def create_position(signal, manager, coin, current_index) -> Optional[Position]:
+    direction = signal['direction']
+    symbol = coin.get("SYMBOL")+"/USDT"
+    tick_size = Decimal(str(coin.get("MINIMAL_TICK_SIZE")))
+
+    # Риск менеджмент - установка объема позиции
+    entry_price = signal.get("price")
+    if entry_price is None:
+        logger.error("Ошибка: цена входа не определена в сигнале.")
+        return None
+    else:
+        # 1. создаем позицию
+        position = manager.open_position(symbol=symbol, direction=direction, tick_size=tick_size, open_bar=current_index)
+        
+        entry_price = position.round_to_tick(Decimal(entry_price))
+        # -------------------------------------------------------------
+        # Добавить риск менеджмент - расчет объема позиции
+        # -------------------------------------------------------------
+        # объем позиции в нативной валюте (например, в BTC) покупаем по текущей цене
+        rm = RiskManager(coin=coin)
+        volume = rm.calculate_position_size(entry_price=entry_price)
+        
+
+        # создаем ордер на вход
+        order = make_order(OrderType.ENTRY, price=entry_price, volume=volume, direction=direction, created_bar=current_index)
+
+        # добавляем ордер в позицию
+        position.add_order(order)
+        
+        # 2. Добовляем teke profit
+        if signal["take_profits"] is not None:
+            sum_tp_volume: Decimal = Decimal('0')
+            for tp in signal["take_profits"]: 
+                
+                tp_volume = position.round_to_tick(volume*Decimal(str(tp["volume"])))
+                tp_price = position.round_to_tick(Decimal(str(tp["price"])))
+                
+                if tp.get('tp_to_break', False):
+                    tp_order = make_order(OrderType.TAKE_PROFIT, price=tp_price, volume=tp_volume, direction=direction, created_bar=current_index, meta={"tp_to_break": True})
+                else:
+                    tp_order = make_order(OrderType.TAKE_PROFIT, price=tp_price, volume=tp_volume, direction=direction, created_bar=current_index)
+                    
+                position.add_order(tp_order)
+                sum_tp_volume += tp_volume
+                
+            if sum_tp_volume < volume:
+                volume_diff = volume - sum_tp_volume
+                logger.debug(f"⚠️ Внимание: сумма объемов Take Profit ({sum_tp_volume}) меньше общего объема позиции ({volume}). Добавляем недостающий объем {volume_diff} к последнему TP.")
+                position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему TP
+
+
+        # 3. Добавляем stop loss
+        if signal["sl"] is not None:
+            sum_sl_volume: Decimal = Decimal('0')
+            for sl in signal["sl"]:
+                sl_volume = position.round_to_tick(volume*Decimal(str(sl["volume"])))
+                sl_price = position.round_to_tick(Decimal(str(sl["price"])))
+                sl = make_order(order_type=OrderType.STOP_LOSS, price=sl_price, volume=sl_volume, direction=direction, created_bar=current_index)
+                position.add_order(order=sl)
+                sum_sl_volume += sl_volume
+            
+            if sum_sl_volume < volume:
+                volume_diff = volume - sum_sl_volume
+                logger.debug(f"⚠️ Внимание: сумма объемов Stop Loss ({sum_sl_volume}) меньше общего объема позиции ({volume}). Добавляем недостающий объем {volume_diff} к последнему SL.")
+                position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему TP
+        return position
+
+
+
 # метод исполнения ордера на баре 
 # перебор по минутному таймфрейму   
 def process_orders(position: Position, engine: ExecutionEngine, current_range_1m):
     try:
-        logger.debug (f"♻️ Проверка исполнения ордеров для созданной позиции {position.id[:6]}")
-
+        logger.debug (f"♻️ Проверка исполнения ордеров для позиции {position.id[:6]}")
         for j in range(len(current_range_1m)):
             bar1m = current_range_1m[j]
             # передаем бар в движок исполнения

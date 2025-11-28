@@ -147,15 +147,15 @@
         </div>
 
         <div class="stat-item">
-            <strong>Winrate:</strong><br>{{ "%.1f"|format(stats.winrate) }}%
+            <strong>Процент прибыльных сделок]:</strong><br>{{ "%.1f"|format(stats.winrate) }}%
         </div>
 
         <div class="stat-item">
-            <strong>Прибыльных:</strong><br>{{ stats.wins }}
+            <strong>Прибыльных/прибыль:</strong><br>{{ stats.wins }}/{{ "%.2f"|format(stats.total_win) }}
         </div>
 
         <div class="stat-item">
-            <strong>Убыточных:</strong><br>{{ stats.losses }}
+            <strong>Убыточных/убыток:</strong><br>{{ stats.losses }} / {{ "%.2f"|format(stats.total_loss) }}
         </div>
 
     </div>

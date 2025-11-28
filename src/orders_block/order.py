@@ -115,7 +115,8 @@ class Order:
             self.close_bar = close_bar
         else:
             # частичное заполнение ордера
-            self.status = OrderStatus.PARTIAL
+            self.status = OrderStatus.FILLED
+            # self.status = OrderStatus.PARTIAL
             self.close_bar = close_bar
     
     # Расчет профита
@@ -153,7 +154,7 @@ class Position:
     # Order management
     # ------------------------
     def add_order(self, order: Order):
-        logger.debug(f"Position {self.id}: adding order {order.id} {order.order_type} {order.price} {order.volume}")
+        logger.info(f"[{self.symbol}] Позиция {self.id[:6]}: ордер {order.id[:6]} {order.order_type} /price = {order.price} /volume = {order.volume} /status = {order.status}")
         self.orders.append(order)
 
     # Отмена ордера по ID
@@ -216,7 +217,7 @@ class Position:
 
             # mark active if at least some opened
             self.status = Position_Status.ACTIVE
-            logger.info(f"🔵 Позиция {self.id} открыта. Статус: {self.status.value} Объем: {self.opened_volume}, Средняя цена входа: {self.avg_entry_price}")  
+            logger.info(f"☑️ Ордер {order.id[:6]} Тип: {order.order_type.value} Исполнен.  Объем: {order.volume}, Средняя цена входа: {self.avg_entry_price}")  
 
         # если это закрывающий ордер (TP/SL/CLOSE)
         elif order.order_type in {OrderType.TAKE_PROFIT, OrderType.CLOSE, OrderType.STOP_LOSS}:
@@ -230,6 +231,7 @@ class Position:
                     pnl = (self.avg_entry_price - price) * volume
                 self.profit += pnl
                 order.profit = pnl
+                logger.info(f"☑️ Ордер {order.id[:6]} [bool cyan] Тип:{order.order_type.value}[/bool cyan] Исполнен. Объем: {order.volume} profit: {order.profit}")
 
         # обновить статус позиции
 
@@ -238,15 +240,10 @@ class Position:
             # Меняет Статус на закрывающий. Может быть TAKEN_FULL, STOPPED, TAKEN_PART
             self.setStatus()
 
-        elif self.closed_volume > Decimal("0") and self.round_to_tick(self.closed_volume)  < self.round_to_tick(self.opened_volume):
-            # закрыта частично
-            logger.info(f"🟡 Позиция {self.id} частично закрыта. Статус: {self.status.value}")
-            
 
-        logger.info(f"[green]Информация об исполнении по позиции id: {self.id} тип: {order.order_type}[/green]\n"
-            f"Цена {price};  объем {volume},\n"
-            f"Открытый объем ={self.opened_volume}, Закрытый объем={self.closed_volume}\n"
-            f"Средняя цена входа={self.avg_entry_price}, Profit={self.profit}, СТАТУС={self.status.value}")
+        elif self.closed_volume > Decimal("0") and self.closed_volume  < self.opened_volume:
+            # закрыта частично
+            logger.info(f"[symbol]🟢 Позиция {self.id[:6]} частично закрыта. Статус: {self.status.value}")
 
 
 
@@ -266,24 +263,24 @@ class Position:
                     sum_vol_tp += o.volume
                 if o.status == OrderStatus.FILLED and o.order_type == OrderType.STOP_LOSS:
                     sum_vol_sl += o.volume
-                if o.status == OrderStatus.FILLED and o.order_type == OrderType.CLOSE:
+                if o.status in {OrderStatus.FILLED} and o.order_type == OrderType.CLOSE:
                     sum_vol_cl += o.volume
 
             if sum_vol_cl > Decimal("0"):
                 self.status = Position_Status.CANCELED
-                logger.info(f"🟡 Позиция {self.id} закрыта. Статус: {self.status.value}"
+                logger.info(f"✅ Позиция {self.id[:6]} закрыта. Статус: {self.status.value}"
                             )
             elif sum_vol_tp > Decimal("0") and sum_vol_sl > Decimal("0"):
                 self.status = Position_Status.TAKEN_PART
-                logger.info(f"🟡 Позиция {self.id} частично закрыта. Статус: {self.status.value}")
+                logger.info(f"✅ Позиция {self.id[:6]} частично закрыта в профит и закрыта в без убыток. Статус: {self.status.value}")
                 
             elif sum_vol_tp >= self.opened_volume:
                 self.status = Position_Status.TAKEN_FULL
-                logger.info(f"🟡 Позиция {self.id} полностью закрыта в профит Закрыты все TP. Статус: {self.status.value}")
+                logger.info(f"✅ Позиция {self.id[:6]} полностью закрыта в профит Закрыты все TP. Статус: {self.status.value}")
                 
             elif sum_vol_sl >= self.opened_volume:
                 self.status = Position_Status.STOPPED
-                logger.info(f"🟡 Позиция {self.id} полностью закрыта по SL. Статус: {self.status.value}")
+                logger.info(f"✅ Позиция {self.id[:6]} полностью закрыта по SL. Статус: {self.status.value}")
                 
                 
                 
@@ -336,7 +333,7 @@ class Position:
             meta={"moved_to_break": True}
         )
         self.add_order(new_stop)
-        logger.debug(f"Position {self.id}: стоп перенесен в точку безубыточности {new_stop.price}")
+        logger.info(f"Позиция {self.id[:6]}: стоп перенесен в точку безубыточности цена: {new_stop.price}, volume={new_stop.volume}")
         return new_stop
 
 
@@ -362,21 +359,21 @@ class PositionManager:
         pos = Position(symbol=symbol, direction=direction, tick_size=tick_size)
         self.positions[pos.id] = pos
         self.positions[pos.id].bar_opened = open_bar
-        logger.info(f"[{symbol}] 📚 Создана новая позиция  {direction.value} id: {pos.id} ")
+        logger.debug(f"[{symbol}] 📚 Создана новая позиция  {direction.value} id: {pos.id} ")
         return pos
 
     # ------------------------
     # закрытие по ID
     # ------------------------
-    def cansel_position(self, position_id: str, close_bar: Optional[datetime] = None):
+    def cansel_active_orders(self, position_id: str, close_bar: Optional[datetime] = None):
         pos = self.positions.get(position_id)
         if not pos:
             return
         # cancel active orders
         for o in pos.get_active_orders():
             o.status = OrderStatus.CANCELLED
-        pos.bar_closed = close_bar
-        logger.info(f"📚 Позиция {position_id} закрыта/отменена на баре {pos.bar_closed}")
+        
+        logger.debug(f"📚По позиции {position_id[:6]} Все активные ордера отменены на баре {pos.bar_closed}")
 
     # ------------------------
     # Закрытие позиции по текущей цене
@@ -400,7 +397,6 @@ class PositionManager:
                 price=current_price,
                 volume=remaining_vol,
                 direction=pos.direction,
-                filled=remaining_vol,
                 status=OrderStatus.ACTIVE
             )
             pos.add_order(market_order)

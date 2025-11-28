@@ -147,7 +147,7 @@ BACKTEST_SETTINGS:
 # ======================================================================
 LOGGING_SETTINGS:
   # Уровень логирования: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  LEVEL: WARNING
+  LEVEL: DEBUG
   # Директория для хранения логов
   LOG_DIR: LOGS
   # Имя основного файла логов

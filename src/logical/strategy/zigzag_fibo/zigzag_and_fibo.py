@@ -69,7 +69,6 @@ class ZigZagAndFibo:
         # logger.info(f"index_bar {index_bar} == z2_index {z2_index}")
         
         if direction_zigzag == -1: #индикатор zigzag показывает что нужно входить в long
-            logger.debug(f"Индикатор zigzag показывает что нужно входить в long {direction_zigzag}")
             # проверяем цену входа в позицию с первым тейком 1 уровня фибоначчи цена входа должна быть меньше уровня 1
             if entry_price < fiboLev[78.6]['level_price']:
                 logger.debug(f"Цена входа {entry_price} [bold green] < [/bold green] {fiboLev[78.6]['level_price']} [bold green]long[/bold green]")
