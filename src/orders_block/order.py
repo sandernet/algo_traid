@@ -115,8 +115,8 @@ class Order:
             self.close_bar = close_bar
         else:
             # частичное заполнение ордера
-            self.status = OrderStatus.FILLED
-            # self.status = OrderStatus.PARTIAL
+            # self.status = OrderStatus.FILLED
+            self.status = OrderStatus.PARTIAL
             self.close_bar = close_bar
     
     # Расчет профита
