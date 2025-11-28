@@ -259,11 +259,11 @@ class Position:
             sum_vol_cl = Decimal("0")
             
             for o in self.orders:
-                if o.status == OrderStatus.FILLED and o.order_type == OrderType.TAKE_PROFIT:
+                if o.status in {OrderStatus.FILLED, OrderStatus.PARTIAL} and o.order_type == OrderType.TAKE_PROFIT:
                     sum_vol_tp += o.volume
-                if o.status == OrderStatus.FILLED and o.order_type == OrderType.STOP_LOSS:
+                if o.status in {OrderStatus.FILLED, OrderStatus.PARTIAL} and o.order_type == OrderType.STOP_LOSS:
                     sum_vol_sl += o.volume
-                if o.status in {OrderStatus.FILLED} and o.order_type == OrderType.CLOSE:
+                if o.status in {OrderStatus.FILLED, OrderStatus.PARTIAL} and o.order_type == OrderType.CLOSE:
                     sum_vol_cl += o.volume
 
             if sum_vol_cl > Decimal("0"):
