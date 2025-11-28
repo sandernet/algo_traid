@@ -133,6 +133,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> list:
         if position is not None and position.status in {Position_Status.TAKEN_FULL, Position_Status.STOPPED, Position_Status.TAKEN_PART, Position_Status.CANCELED}:
             # если активных ордеров нет, позиция закрыта
             manager.cansel_active_orders(position.id, close_bar=current_index)
+            position.bar_closed = current_index
 
             executed_positions.append(position)
             # сбрасываем позицию
