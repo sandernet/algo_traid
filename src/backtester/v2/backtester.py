@@ -2,6 +2,9 @@
 # Симуляция выполнения сделок. 
 # Расчет метрик производительности (прибыльность, просадка, Sharpe Ratio).
 
+from decimal import Decimal
+from uuid import uuid4
+from typing import Dict
 
 # Логирование
 # ====================================================
@@ -15,6 +18,43 @@ from src.backtester.v2.utils import select_range_becktest
 from src.backtester.v2.report_generator import generate_report
 
 ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускается последняя точка zigzag
+
+
+class Test():
+    # окно тестирования
+    def __init__(self, start_date, end_date, data_dir, exchange, symbol, timeframe, full_datafile, min_bars, max_bars):
+        self.id = uuid4().hex
+        self.start_date = start_date
+        self.end_date = end_date
+        self.data_dir = data_dir
+        self.exchange = exchange
+        self.symbol = symbol
+        self.timeframe = timeframe
+        self.full_datafile = full_datafile
+        self.min_bars = min_bars
+        self.max_bars = max_bars
+        
+        
+    def set_data_results(self):
+        self.pofit = Decimal("0")
+        self.positions = {}
+        self.statistics = {}
+        self.reports = {}
+        # self.step_bars = step_bars #
+        
+
+
+# -------------------------
+# Manager & Executor
+# -------------------------
+class TestManager:
+    """
+    Управление тестами: запуск, получение списка позиций, подсчет статистики.
+    Проведение паралельное тестирования 
+    """
+    def __init__(self):
+        self.tests: Dict[str, Test] = {}
+        
 # ====================================================
 # точка входа для бэктеста
 # ====================================================
@@ -35,7 +75,7 @@ def run_local_backtest():
     start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")
     end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
     # Получение минимальное количество баров из настроек
-    MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMAL_BARS")
+    MIN_BARS = config.get_setting("STRATEGY_SETTINGS", "MINIMUM_BARS_FOR_STRATEGY_CALCULATION")
     
     # 1. Получение массива монет из конфигурации
     try:

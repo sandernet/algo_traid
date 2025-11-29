@@ -81,7 +81,8 @@ EXCHANGE_SETTINGS:
 # СЕКЦИЯ СТРАТЕГИИ (STRATEGY_SETTINGS)
 # ======================================================================
 STRATEGY_SETTINGS:
-  MINIMAL_BARS: 100 # Минимальное количество баров для расчета индикаторов
+  MINIMUM_BARS_FOR_STRATEGY_CALCULATION: 100
+  # MINIMAL_BARS_COUNT: 100 # Минимальное количество баров для расчета индикаторов
   # Параметр отклонения ZigZag
   ZIGZAG_DEPTH: 12
   ZIGZAG_DEVIATION: 5

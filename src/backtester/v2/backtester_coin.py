@@ -9,7 +9,7 @@ from typing import Optional
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
-from src.config.config import config
+
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
 from src.orders_block.order import PositionManager,  make_order, Position
 from src.orders_block.order import OrderType, Position_Status
@@ -33,12 +33,10 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> dict:
     """
     
     symbol = coin.get("SYMBOL")+"/USDT"
-    tick_size = coin.get("MINIMAL_TICK_SIZE")   
+    # tick_size = coin.get("MINIMAL_TICK_SIZE")   
     timeframe = coin.get("TIMEFRAME")
     
-    
-    # executed_positions = []  # Список для хранения исполненных позиций
-    
+        
     if allowed_min_bars > len(data_df):
         logger.error(f"Невозможно запустить бектест: не хватает баров для расчета индикаторов.")
         return {}
