@@ -16,7 +16,7 @@ REQUIRED_SETTINGS: Dict[str, Dict[str, Any]] = {
         "LIMIT": int,
     },
     "STRATEGY_SETTINGS": {
-        "MINIMAL_BARS": int,
+        "MINIMUM_BARS_FOR_STRATEGY_CALCULATION": int,
         "ZIGZAG_DEPTH": (int, float),
         "ZIGZAG_DEVIATION": (int, float),
         "ZIGZAG_BACKTEP": (int, float),
