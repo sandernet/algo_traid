@@ -8,7 +8,7 @@ logger = get_logger(__name__)
 # ====================================================
 # Выбор диапазона дат для бэктеста
 # ==================================================== 
-def select_range_becktest(data_df, timeframe, full_datafile, allowed_min_bars, start_date = None, end_date = None)  -> pd.DataFrame:
+def select_range_backtest(data_df, timeframe, full_datafile, allowed_min_bars, start_date = None, end_date = None)  -> pd.DataFrame:
     """
     Фильтрация DataFrame по заданному диапазону дат.
     Если full_datafile = True, то возвращаем исходный DataFrame
