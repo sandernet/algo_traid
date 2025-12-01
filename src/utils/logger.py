@@ -33,7 +33,7 @@ class LoggerManager:
             '%(message)s'
         )
         self.formatter_files = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            '%(asctime)s - %(name)s - %(levelname)s- [%(context)s] - %(message)s'
         )   
 
         # 3. Базовая настройка

@@ -1,6 +1,7 @@
 import argparse
 import os
 
+
 # ====================================================
 # Основная функция
 # ====================================================
@@ -78,8 +79,11 @@ def main():
             
         # 2. Запуск бэктестера
         logger.info(f"Запуск бэктестера с локальными данными из {data_dir} ...")
-        from src.backtester.v2.backtester import run_local_backtest
-        run_local_backtest()
+        from src.backtester.v2.backtester import TestManager
+        test_manager = TestManager()
+        # test_manager.set_settings()
+        test_manager.run_parallel_backtest()
+        
         logger.info("Бэктестер завершил работу.")
     
 
