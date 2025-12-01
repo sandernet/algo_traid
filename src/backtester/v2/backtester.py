@@ -1,10 +1,10 @@
 # backtest	Тестирование стратегии на исторических данных.	
 # Симуляция выполнения сделок. 
 # Расчет метрик производительности (прибыльность, просадка, Sharpe Ratio).
-
+import concurrent.futures
 from decimal import Decimal
 from uuid import uuid4
-from typing import Dict
+from typing import Dict, List, Tuple, Any
 
 # Логирование
 # ====================================================
@@ -56,6 +56,8 @@ class TestManager:
     """
     def __init__(self):
         self.tests: Dict[str, Test] = {}
+        self.all_executed_positions = []  # Для агрегации всех позиций
+        self.all_reports = []  # Для агрегации всех отчетов
         
     def compute_metrics(positions, equity_curve):
         return {
@@ -90,6 +92,94 @@ class TestManager:
             logger.error(f"Ошибка при получении настроек биржи: {e}")
             
 
+    def _execute_single_backtest(self, coin, timeframe) -> Dict[str, Any]:
+        """
+        Выполняет один бэктест для конкретной монеты и таймфрейма.
+        Возвращает выполненные позиции и сгенерированный отчет.
+        """
+        symbol = coin.get("SYMBOL") + "/USDT"
+        logger.info(f"[{symbol}, {timeframe}] 🟢 Начало обработки...")
+        
+        # Обновляем таймфрейм в словаре монеты
+        coin["TIMEFRAME"] = timeframe
+
+        # 1. Загрузка данных
+        fetcher = DataFetcher(coin, exchange=self.exchange, directory=self.data_dir)
+        data_df_1m = fetcher.load_from_csv(file_type="csv")
+        data_df = fetcher.load_from_csv(file_type="csv", timeframe=timeframe)
+        
+        if data_df is None or data_df_1m is None:
+            logger.error(f"[{symbol}, {timeframe}] Невозможно запустить бэктест: данные не загружены.")
+            return {}
+
+        # 2. Выбор периода для бэктеста (используем self.start_date/end_date)
+        select_data = select_range_backtest(
+            data_df,  self.full_datafile,  self.start_date, self.end_date
+        )
+        
+        if select_data is None or len(select_data) == 0:
+            logger.error(f"[{symbol}, {timeframe}] Нет достаточного объема данных для выбранного периода.")
+            return {}
+
+        # 3. Выполнение бэктеста
+        executed_positions = backtest_coin(select_data, data_df_1m, coin, self.MIN_BARS)
+        
+        logger.info(f"[{symbol}, {timeframe}] ✅ Обработка завершена. Всего позиций: {len(executed_positions)}")
+        return executed_positions
+
+
+    # ====================================================
+    # Точка входа для параллельного бэктеста
+    # ====================================================
+    def run_parallel_backtest(self, max_workers=4):
+        """Основной конвейер для параллельного бэктеста."""
+        self.set_settings()
+        
+        tasks = []
+        for coin in self.coins_list:
+            for timeframe in self.timeframe_list:
+                # Создаем список задач (кортежей: coin, timeframe)
+                tasks.append((coin.copy(), timeframe)) # .copy() чтобы избежать изменения одного объекта coin в разных потоках
+                
+        logger.info(f"📊 Всего задач бэктеста: {len(tasks)}")
+
+        # Запуск параллельного выполнения
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Маппинг функции выполнения _execute_single_backtest на список аргументов
+            # Важно: `executor.map` работает только с одной итерируемой переменной.
+            # Используем `executor.submit` для нескольких аргументов и собираем `Future` объекты.
+            future_to_task = {
+                executor.submit(self._execute_single_backtest, coin_task, tf_task): (coin_task, tf_task)
+                for coin_task, tf_task in tasks
+            }
+            
+            # Обработка результатов по мере их завершения
+            for future in concurrent.futures.as_completed(future_to_task):
+                coin_task, tf_task = future_to_task[future]
+                symbol = coin_task.get("SYMBOL") + "/USDT"
+                try:
+                    executed_positions, report_data = future.result()
+                    
+                    if executed_positions is not None:
+                        # Агрегация позиций и отчетов
+                        self.all_executed_positions.extend(executed_positions)
+                    
+                    if report_data is not None:
+                        self.all_reports.append(report_data)
+                        
+                    logger.info(f"[{symbol}, {tf_task}] ✅ Результаты получены и агрегированы.")
+                        
+                except Exception as exc:
+                    logger.error(f"[{symbol}, {tf_task}] ❌ Задача вызвала исключение: {exc}")
+
+        logger.info("============================================================================")
+        logger.info("📈 Все параллельные бэктесты завершены!")
+        logger.info("============================================================================")
+        
+        # 5. Формирование полного отчета по всем тестам
+        self._generate_full_summary_report()
+        
+        
     # ====================================================
     # точка входа для бэктеста
     # ====================================================
