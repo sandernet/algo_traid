@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 from src.config.config import config
 from src.backtester.v2.backtester_coin import backtest_coin
-from src.backtester.v2.utils import select_range_backtest
+from src.data_fetcher.utils import select_range_backtest
 
 from src.backtester.v2.report_generator import generate_report
 
@@ -125,8 +125,8 @@ def run_local_backtest():
                 
                 # 2. Выбор периода для бэктеста
                 with LoggingTimer("[symbol] Формируем данные для бэктеста"):
-                    select_data = select_range_backtest(data_df, timeframe, full_datafile, MIN_BARS, start_date, end_date)
-                    if not full_datafile:
+                    select_data = select_range_backtest(data_df,  full_datafile,  start_date, end_date)
+                    if select_data is not None:
                         logger.info(f"[symbol] Данные для бэктеста отобраны с {select_data.index[0]} по {select_data.index[-1]}. Всего баров: {len(select_data)}")
                         start_date = select_data.index[0]
                         end_date = select_data.index[-1]

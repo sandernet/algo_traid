@@ -1,5 +1,6 @@
 from pandas import Timedelta, DateOffset
 import pandas as pd
+from typing import Optional
 
 from src.utils.logger import get_logger 
 
@@ -8,23 +9,83 @@ logger = get_logger(__name__)
 # ====================================================
 # Выбор диапазона дат для бэктеста
 # ==================================================== 
-def select_range_backtest(data_df, timeframe, full_datafile, allowed_min_bars, start_date = None, end_date = None)  -> pd.DataFrame:
+def select_range_backtest(
+    data_df: pd.DataFrame,
+    full_datafile: bool,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+) -> pd.DataFrame:
     """
     Фильтрация DataFrame по заданному диапазону дат.
-    Если full_datafile = True, то возвращаем исходный DataFrame
+    Если full_datafile = True, возвращается исходный DataFrame без изменений.
     
-    :param data_df: pd.DataFrame — исходный DataFrame с данными
-    :return: pd.DataFrame — отфильтрованный DataFrame
+    :param data_df: Исходный DataFrame с колонкой 'timestamp' или индексом datetime
+    :param timeframe: Таймфрейм данных (например, '1h', '4h') — используется только если full_datafile=False
+    :param full_datafile: Если True — игнорировать даты и вернуть весь data_df
+    :param allowed_min_bars: Минимальное количество баров (используется только в оригинальной логике, но здесь не применяется при отключённом смещении)
+    :param start_date: Начальная дата в формате, понятном pd.to_datetime (например, '2023-01-01')
+    :param end_date: Конечная дата в том же формате
+    :return: Отфильтрованный DataFrame
+    :raises ValueError: При недопустимых входных данных
     """
-    
+    if not isinstance(data_df, pd.DataFrame):
+        raise ValueError("data_df должен быть pandas DataFrame")
+
+    if not isinstance(full_datafile, bool):
+        raise ValueError("full_datafile должен быть булевым значением")
 
     if full_datafile:
-        logger.info("Используется полный исторический диапазон. full_datafile = True")
-        return data_df
+        return data_df.copy()
+
+    # Проверки на даты
+    if start_date is None or end_date is None:
+        raise ValueError("При full_datafile=False необходимо указать обе даты: start_date и end_date")
+
+    try:
+        start_ts = pd.to_datetime(start_date)
+        end_ts = pd.to_datetime(end_date)
+    except Exception as e:
+        raise ValueError(f"Некорректный формат даты: {e}")
+
+    if start_ts > end_ts:
+        raise ValueError("start_date не может быть позже end_date")
+
+    # Убедимся, что DataFrame имеет datetime-совместимый индекс или колонку 'timestamp'
+    df = data_df.copy()
+    if isinstance(df.index, pd.DatetimeIndex):
+        time_series = df.index
+    elif 'timestamp' in df.columns and pd.api.types.is_datetime64_any_dtype(df['timestamp']):
+        time_series = df['timestamp']
     else:
-        start_date = shift_timestamp(start_date, allowed_min_bars, timeframe, direction=-1)
-        logger.info(f"📅 Период тестированияыы: {start_date} ↔️   {end_date}")
-        return select_range(data_df, start_date, end_date)
+        raise ValueError("DataFrame должен иметь DatetimeIndex или колонку 'timestamp' с datetime типом")
+
+    # Фильтрация без смещения
+    mask = (time_series >= start_ts) & (time_series <= end_ts)
+    filtered_df = df[mask]
+
+    if filtered_df.empty:
+        logger.warning("Выделенный диапазон дат не содержит данных.")
+
+    logger.info(f"📅 Период тестирования: {start_ts} ↔️  {end_ts}")
+    return filtered_df
+
+# def select_range_backtest(data_df, timeframe, full_datafile, allowed_min_bars, start_date = None, end_date = None)  -> pd.DataFrame:
+#     """
+#     Фильтрация DataFrame по заданному диапазону дат.
+#     Если full_datafile = True, то возвращаем исходный DataFrame
+    
+#     :param data_df: pd.DataFrame — исходный DataFrame с данными
+#     :return: pd.DataFrame — отфильтрованный DataFrame
+#     """
+    
+
+#     if full_datafile:
+#         logger.info("Используется полный исторический диапазон. full_datafile = True")
+#         return data_df
+#     else:
+#         start_date = shift_timestamp(start_date, allowed_min_bars, timeframe, direction=-1)
+#         logger.info(f"📅 Период тестированияыы: {start_date} ↔️   {end_date}")
+#         return select_range(data_df, start_date, end_date)
     
 def select_range(data_df, start_date, end_date):
     # Преобразование строковых дат в datetime объекты

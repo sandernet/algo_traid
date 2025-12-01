@@ -37,19 +37,23 @@ class DataFetcher:
     # Инициализация с параметрами монеты и биржи
     # ======================================================
     def __init__(self, coin, exchange,  directory: str): 
-        # Параметры биржи
-        self.exchange_id = exchange.get("EXCHANGE_ID")
-        self.limit = exchange.get("LIMIT")
-        
-        # Параметры, зависящие от монеты
-        self.market_type = coin.get("MARKET_TYPE", "spot")   # spot | linear | inverse
-        self.base = coin.get("SYMBOL")
-        self.symbol = self._detect_symbol_format() # assigned after load_markets()
+        try:
+            # Параметры биржи
+            self.exchange_id = exchange.get("EXCHANGE_ID")
+            self.limit = exchange.get("LIMIT")
+            
+            # Параметры, зависящие от монеты
+            self.market_type = coin.get("MARKET_TYPE", "spot")   # spot | linear | inverse
+            self.base = coin.get("SYMBOL")
+            self.symbol = self._detect_symbol_format() # assigned after load_markets()
 
-        self.timeframe = coin.get("TIMEFRAME") 
-        self.min_timeframe = coin.get("MIN_TIMEFRAME") if coin.get("MIN_TIMEFRAME") else "1"
+            # self.timeframe = coin.get("TIMEFRAME") 
+            self.min_timeframe = coin.get("MIN_TIMEFRAME") if coin.get("MIN_TIMEFRAME") else "1"
 
-        self.directory = directory
+            self.directory = directory
+        except Exception as e:
+            logger.error(f"Критическая ошибка при инициализации класса: {e}")
+            raise
         # self.file_extension = file_extension
         
     

@@ -16,7 +16,7 @@ from src.orders_block.order import OrderType, Position_Status
 from src.backtester.v2.execution_engine import ExecutionEngine
 
 from src.orders_block.risk_manager import RiskManager
-from src.backtester.v2.utils import select_range, shift_timestamp
+from src.data_fetcher.utils import select_range, shift_timestamp
 
 ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускается последняя точка zigzag
 
