@@ -6,6 +6,8 @@ import os
 # Основная функция
 # ====================================================
 def main():
+    # Загружаем и валидируем конфигурацию
+    # ====================================================
     from src.config.config import config
     # ------------------------------------------
     # аргументы командной строки
@@ -37,14 +39,10 @@ def main():
     )
     
     args = parser.parse_args()
-    
-    # Загружаем и валидируем конфигурацию
-    # ====================================================
-    from src.config.config import config
 
     # Логирование
     # ====================================================
-    from src.utils.logger import get_logger, logging
+    from src.utils.logger import get_logger
     logger = get_logger(__name__)
     
     # Проверяем параметры
@@ -69,21 +67,11 @@ def main():
     
     # бектестинг стратегии на исторических данных
     if args.btest:
-        # # 1. Проверяем есть ли данные для бэктеста
-        # if not os.path.exists(data_dir+"csv_files"):
-        #     logger.info(f"Нет данных для бэктеста.")
-        #     logger.info("Загружаем данные с биржи...")
-        #     from data_fetcher.get_data_from_exchange import run_data_update_pipeline
-        #     run_data_update_pipeline()
-        #     logger.info("Загрузка данных с биржи завершена.")
-            
-        # 2. Запуск бэктестера
-        logger.info(f"Запуск бэктестера с локальными данными из {data_dir} ...")
+        logger.info("Запуск бэктестера...")
+        max_workers = config.get_setting("BACKTEST_SETTINGS", "MAX_WORKERS")
         from src.backtester.v2.backtester import TestManager
         test_manager = TestManager()
-        # test_manager.set_settings()
-        test_manager.run_parallel_backtest()
-        
+        test_manager.run_parallel_backtest(max_workers=max_workers)
         logger.info("Бэктестер завершил работу.")
     
 

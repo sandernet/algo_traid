@@ -4,11 +4,12 @@
 import concurrent.futures
 from decimal import Decimal
 from uuid import uuid4
-from typing import Dict, Mapping, Tuple, Any
+from typing import Dict, Any, Tuple, List
+from pandas import DataFrame
 
 # Логирование
 # ====================================================
-from src.utils.logger import get_logger, LoggingTimer
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -20,34 +21,38 @@ from src.data_fetcher.data_fetcher import DataFetcher
 from src.backtester.v2.backtester_coin import backtest_coin
 from src.data_fetcher.utils import select_range_backtest
 
-from src.backtester.v2.report_generator import generate_report
+from src.backtester.v2.report_generator import MultiReportGenerator
 
-ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускается последняя точка zigzag
 
 
 class Test():
     # окно тестирования
-    def __init__(self, data_dir, exchange, symbol, timeframe):
+    def __init__(self, data, symbol, timeframe, data_dir):
         self.id = uuid4().hex
-        self.data_dir = data_dir
-        self.exchange = exchange
         self.symbol = symbol
         self.timeframe = timeframe
+        self.data_dir = data_dir
+        self.data = data
+        
         self.profit = Decimal("0")
         self.positions = {}
         self.statistics = {}
-        self.reports = {}
+        # self.reports = {}
 
 
     # добавить расчеты и статистику для каждого теста
     def set_data_results(self):
         self.profit = Decimal("0")
-        self.positions = {}
         self.statistics = {}
-        self.reports = {}
-        # self.step_bars = step_bars #
 
+        
+    # TODO: Добавить расчеты статистики прибыльности
+    def get_statistics(self):
+        
+        # TODO: Добавить расчеты статистики
+        self.statistics = {}
 
+    
 # -------------------------
 # Manager & Executor
 # -------------------------
@@ -57,22 +62,6 @@ class TestManager:
     Проведение паралельное тестирования 
     """
     def __init__(self):
-        self.tests: Dict[str, Test] = {}
-        self.all_executed_positions = []  # Для агрегации всех позиций
-        self.all_reports = []  # Для агрегации всех отчетов
-        
-    def compute_metrics(positions, equity_curve):
-        return {
-            "profit": ...,
-            "max_drawdown": ...,
-            "sharpe": ...,
-            "winrate": ...,
-            "avg_rr": ...,
-            "profit_factor": ...,
-            "recovery_factor": ...
-        }
-
-    def set_settings(self):
         try:
             # Параметры биржи
             self.exchange = config.get_section("EXCHANGE_SETTINGS")
@@ -92,11 +81,31 @@ class TestManager:
             logger.info(f"Загружено {len(self.coins_list)} монет из конфигурации.")
         except Exception as e:
             logger.error(f"Ошибка при получении настроек биржи: {e}")
+        
+        self.tests: Dict[str, Test] = {}
+        self.data_ohlc: DataFrame
+        
+    # def compute_metrics(positions, equity_curve):
+    #     return {
+    #         "profit": ...,
+    #         "max_drawdown": ...,
+    #         "sharpe": ...,
+    #         "winrate": ...,
+    #         "avg_rr": ...,
+    #         "profit_factor": ...,
+    #         "recovery_factor": ...
+    #     }
+
+    # ====================================================
+    # 0. Загрузка конфигурации
+    # ====================================================
+    # def set_settings(self):
+
             
     # ====================================================
     # 1. Выполнение одного бэктеста
     # ====================================================
-    def _execute_single_backtest(self, coin, timeframe) -> Dict[str, Any]:
+    def _execute_single_backtest(self, coin, timeframe): # Dict[str, Any]:
         """
         Выполняет один бэктест для конкретной монеты и таймфрейма.
         Возвращает все позиции которые были за указанный период
@@ -126,16 +135,17 @@ class TestManager:
             return {}
 
         # 3. Выполнение бэктеста
-        test = Test(self.data_dir, self.exchange, symbol, timeframe)
+        test = Test(select_data,  symbol, timeframe, self.data_dir)
         
+        # расчет позиций по тесту 
         positions = backtest_coin(select_data, data_df_1m, coin, self.minimal_count_bars)
         test.positions = positions
+        # расчет статистики
         test.set_data_results()
         self.tests[test.id] = test
-        
-        
-        logger.info(f"[{symbol}, {timeframe}] ✅ Обработка завершена. Всего позиций: {len(positions)}")
-        return self.tests
+        self.data_ohlc = select_data
+        logger.warning(f"[{symbol}, {timeframe}] ✅ Обработка завершена. Всего позиций: {len(positions)}")
+
 
 
     # ====================================================
@@ -143,12 +153,12 @@ class TestManager:
     # ====================================================
     def run_parallel_backtest(self, max_workers=4):
         """Основной конвейер для параллельного бэктеста."""
-        self.set_settings()
         
         tasks = []
         for coin in self.coins_list:
             for timeframe in self.timeframe_list:
                 # Создаем список задач (кортежей: coin, timeframe)
+                coin["TIMEFRAME"] = timeframe
                 tasks.append((coin.copy(), timeframe)) # .copy() чтобы избежать изменения одного объекта coin в разных потоках
                 
         logger.info(f"📊 Всего задач бэктеста: {len(tasks)}")
@@ -168,107 +178,104 @@ class TestManager:
                 coin_task, tf_task = future_to_task[future]
                 symbol = coin_task.get("SYMBOL") + "/USDT"
                 try:
-                    executed_positions, report_data = future.result()
-                    
-                    if executed_positions is not None:
-                        # Агрегация позиций и отчетов
-                        self.all_executed_positions.extend(executed_positions)
-                    
-                    if report_data is not None:
-                        self.all_reports.append(report_data)
+                    future.result()
+                    # if report_data is not None:
+                    #     self.all_reports.append(report_data)
                         
                     logger.info(f"[{symbol}, {tf_task}] ✅ Результаты получены и агрегированы.")
                         
                 except Exception as exc:
                     logger.error(f"[{symbol}, {tf_task}] ❌ Задача вызвала исключение: {exc}")
+        
+
 
         logger.info("============================================================================")
         logger.info("📈 Все бэктесты завершены!")
         logger.info("============================================================================")
+
+        # Формируем отчет
+        # TODO: 1. Агрегировать результаты, 2. Печатать отчет
         
-        # 5. Формирование полного отчета по всем тестам
-        # 
         
-        
-    # ====================================================
-    # точка входа для бэктеста
-    # ====================================================
-    def run_local_backtest(self):
-        """Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации."""
+    # # ====================================================
+    # # точка входа для бэктеста
+    # # ====================================================
+    # def run_local_backtest(self):
+    #     """Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации."""
 
             
 
-        # 2. Обработка каждой монеты   
-        for coin in self.coins_list:
-            # try:
-            logger.info("============================================================================")
-            logger.info(f"[bold yellow] [{coin.get('SYMBOL')}/USDT][/bold yellow] 🚀 Запуск бэктеста ...")
-            logger.info("============================================================================")
+    #     # 2. Обработка каждой монеты   
+    #     for coin in self.coins_list:
+    #         # try:
+    #         logger.info("============================================================================")
+    #         logger.info(f"[bold yellow] [{coin.get('SYMBOL')}/USDT][/bold yellow] 🚀 Запуск бэктеста ...")
+    #         logger.info("============================================================================")
 
-            symbol = coin.get("SYMBOL")+"/USDT"
-            tick_size = coin.get("MINIMAL_TICK_SIZE")
-            # 1. Загрузка из файла
-            # Инициализируем DataFetcher
-            fetcher = DataFetcher( coin,
-                exchange=self.exchange, 
-                directory=self.data_dir,
-                )
-            with LoggingTimer("[symbol] Загрузка минутных данных для точного исполнения стопов и тейков"):
-                data_df_1m = fetcher.load_from_csv(file_type="csv") # загружаем минутные данные для точного исполнения стопов и тейков
+    #         symbol = coin.get("SYMBOL")+"/USDT"
+    #         tick_size = coin.get("MINIMAL_TICK_SIZE")
+    #         # 1. Загрузка из файла
+    #         # Инициализируем DataFetcher
+    #         fetcher = DataFetcher( coin,
+    #             exchange=self.exchange, 
+    #             directory=self.data_dir,
+    #             )
+    #         with LoggingTimer("[symbol] Загрузка минутных данных для точного исполнения стопов и тейков"):
+    #             data_df_1m = fetcher.load_from_csv(file_type="csv") # загружаем минутные данные для точного исполнения стопов и тейков
         
-            for timeframe in self.timeframe_list:
-                # coin["TIMEFRAME"] = tf
-                logger.info(f"[{symbol}] 🪙, 🕒 Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный шаг цены {tick_size}")
-                coin["TIMEFRAME"] = timeframe
-                # timeframe = coin.get("TIMEFRAME")
+    #         for timeframe in self.timeframe_list:
+    #             # coin["TIMEFRAME"] = tf
+    #             logger.info(f"[{symbol}] 🪙, 🕒 Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный шаг цены {tick_size}")
+    #             coin["TIMEFRAME"] = timeframe
+    #             # timeframe = coin.get("TIMEFRAME")
 
 
-                # Загружаем данные из CSV файла
-                with LoggingTimer("[symbol] Загрузка данных торгового таймфрейма для бэктеста"):
-                    data_df = fetcher.load_from_csv(file_type="csv", timeframe=timeframe) # загружаем данные нужного таймфрейма
+    #             # Загружаем данные из CSV файла
+    #             with LoggingTimer("[symbol] Загрузка данных торгового таймфрейма для бэктеста"):
+    #                 data_df = fetcher.load_from_csv(file_type="csv", timeframe=timeframe) # загружаем данные нужного таймфрейма
                 
-                if data_df is None:
-                    continue
+    #             if data_df is None:
+    #                 continue
                 
-                # 2. Выбор периода для бэктеста
-                with LoggingTimer("[symbol] Формируем данные для бэктеста"):
-                    select_data = select_range_backtest(data_df,  self.full_datafile,  self.start_date, self.end_date)
-                    if select_data is not None:
-                        logger.info(f"[symbol] Данные для бэктеста отобраны с {select_data.index[0]} по {select_data.index[-1]}. Всего баров: {len(select_data)}")
-                        start_date = select_data.index[0]
-                        end_date = select_data.index[-1]
+    #             # 2. Выбор периода для бэктеста
+    #             with LoggingTimer("[symbol] Формируем данные для бэктеста"):
+    #                 select_data = select_range_backtest(data_df,  self.full_datafile,  self.start_date, self.end_date)
+    #                 if select_data is not None:
+    #                     logger.info(f"[symbol] Данные для бэктеста отобраны с {select_data.index[0]} по {select_data.index[-1]}. Всего баров: {len(select_data)}")
+    #                     start_date = select_data.index[0]
+    #                     end_date = select_data.index[-1]
 
-                # 3. Выполнение бэктеста
-                #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
-                with LoggingTimer("[symbol] Выполнение бэктеста"):
-                    executed_positions = backtest_coin(select_data,data_df_1m, coin, self.minimal_count_bars)
+    #             # 3. Выполнение бэктеста
+    #             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
+    #             with LoggingTimer("[symbol] Выполнение бэктеста"):
+    #                 executed_positions = backtest_coin(select_data,data_df_1m, coin, self.minimal_count_bars)
                 
-                if data_df is not None:
-                    logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
+    #             if data_df is not None:
+    #                 logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
                     
-                    # 2. Выбор периода для бэктеста
-                    with LoggingTimer("[symbol] Формируем данные для бэктеста"):
-                        select_data = select_range_backtest(data_df, self.full_datafile,  self.start_date, self.end_date)
-                        if not self.full_datafile:
-                            logger.info(f"[symbol] Данные для бэктеста отобраны с {select_data.index[0]} по {select_data.index[-1]}. Всего баров: {len(select_data)}")
-                            start_date = select_data.index[0]
-                            end_date = select_data.index[-1]
+    #                 # 2. Выбор периода для бэктеста
+    #                 with LoggingTimer("[symbol] Формируем данные для бэктеста"):
+    #                     select_data = select_range_backtest(data_df, self.full_datafile,  self.start_date, self.end_date)
+    #                     if not self.full_datafile:
+    #                         logger.info(f"[symbol] Данные для бэктеста отобраны с {select_data.index[0]} по {select_data.index[-1]}. Всего баров: {len(select_data)}")
+    #                         start_date = select_data.index[0]
+    #                         end_date = select_data.index[-1]
 
-                    # 3. Выполнение бэктеста
-                    #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
-                    with LoggingTimer("[symbol] Выполнение бэктеста"):
-                        executed_positions = backtest_coin(select_data,data_df_1m, coin, self.minimal_count_bars)
+    #                 # 3. Выполнение бэктеста
+    #                 #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
+    #                 with LoggingTimer("[symbol] Выполнение бэктеста"):
+    #                     executed_positions = backtest_coin(select_data,data_df_1m, coin, self.minimal_count_bars)
                     
-                    # 4. Генерация отчета по результатам бэктеста
-                    with LoggingTimer("[symbol] Генерация отчета"):
-                        generate_report(select_data, executed_positions, coin, self.start_date, self.end_date)
+    #                 # 4. Генерация отчета по результатам бэктеста
+    #                 with LoggingTimer("[symbol] Генерация отчета"):
+    #                     generate_report(select_data, executed_positions, coin, self.start_date, self.end_date)
                     
-                    logger.info(f"[symbol] Закончена обработка бэктеста. Всего позиций: {len(executed_positions)}")
+    #                 logger.info(f"[symbol] Закончена обработка бэктеста. Всего позиций: {len(executed_positions)}")
                     
-                else:
-                    logger.error(f"Невозможно запустить бектест для {symbol}: данные не загружены.")
-                # except Exception as e:
-                #     logger.error(f"Ошибка при бэктесте для монеты {coin.get('SYMBOL')}/USDT: {e}")
+    #             else:
+    #                 logger.error(f"Невозможно запустить бектест для {symbol}: данные не загружены.")
+    #             # except Exception as e:
+    #             #     logger.error(f"Ошибка при бэктесте для монеты {coin.get('SYMBOL')}/USDT: {e}")
                 
 
 

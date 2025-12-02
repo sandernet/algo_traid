@@ -1,0 +1,80 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Global Tests Report</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .card { padding: 20px; border: 1px solid #ccc; margin-bottom: 10px; border-radius: 8px; }
+        summary { cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+
+<body>
+
+<h1>GLOBAL BACKTEST REPORT</h1>
+
+{% for coin, data in coins.items() %}
+    <div class="card">
+        <h2>{{ coin }}</h2>
+
+        <h3>Summary</h3>
+        <ul>
+            <li>Tests count: {{ data.summary.tests_count }}</li>
+            <li>Timeframes: {{ data.summary.timeframes }}</li>
+            <li>Avg Profit: {{ data.summary.avg_profit }}</li>
+            <li>Avg Winrate: {{ data.summary.avg_winrate }}</li>
+            <li>Total execution time: {{ data.summary.total_exec_time }} sec</li>
+        </ul>
+
+        {% for tf, test in data.tests.items() %}
+            <details>
+                <summary>Test {{ tf }}</summary>
+                <div class="card">
+
+                    <h3>Test info</h3>
+                    <ul>
+                        <li>Profit: {{ test.stats.total_pnl }}</li>
+                        <li>Winrate: {{ test.stats.winrate }}%</li>
+                        <li>Positions: {{ test.stats.total_positions }}</li>
+                        <li>Wins: {{ test.stats.wins }}</li>
+                        <li>Losses: {{ test.stats.losses }}</li>
+                        <li>Period: {{ test.period_start }} → {{ test.period_end }}</li>
+                        <li>Execution time: {{ test.exec_time }} sec</li>
+                    </ul>
+
+                    <h3>Chart</h3>
+                    {{ test.chart_html | safe }}
+
+                    <h3>Positions</h3>
+                    {% for p in test.positions %}
+                        <details>
+                            <summary>Position #{{ p.id }} ({{ p.direction }}) — Profit: {{ p.profit }}</summary>
+                            <ul>
+                                <li>Open: {{ p.bar_opened }}</li>
+                                <li>Close: {{ p.bar_closed }}</li>
+                                <li>Entry price: {{ p.avg_entry_price }}</li>
+                            </ul>
+
+                            <h4>Orders</h4>
+                            <ul>
+                                {% for o in p.orders %}
+                                    <li>
+                                        {{ o.order_type }} {{ o.direction }}
+                                        Price={{ o.price }}
+                                        Volume={{ o.volume }}
+                                        Time={{ o.created_bar }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </details>
+                    {% endfor %}
+
+                </div>
+            </details>
+        {% endfor %}
+    </div>
+
+{% endfor %}
+
+</body>
+</html>

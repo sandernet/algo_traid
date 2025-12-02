@@ -13,6 +13,47 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 from src.config.config import config
 
+class MultiReportGenerator:
+    """
+    Мультирепорт: Монеты → Тесты → Позиции → Ордера
+    """
+
+    def __init__(self, data: dict):
+        """
+        data = {
+            "BTC": {
+                "1h": {
+                    "ohlcv": ...,
+                    "positions": {...}
+                },
+                "4h": {
+                    ...
+                }
+            },
+            "ETH": { ... }
+        }
+        """
+        self.data = data
+
+    def build_report(self):
+        coins_report = {}
+
+        for coin, tests in self.data.items():
+            coin_entry = {}
+
+            for timeframe, test_data in tests.items():
+
+                gen = ReportGenerator(
+                    data_ohlcv=test_data["ohlcv"],
+                    positions=test_data["positions"]
+                )
+
+                test_report = gen.build_report()
+                coin_entry[timeframe] = test_report   # ← вложенный отчёт теста
+
+            coins_report[coin] = coin_entry
+
+        return coins_report
 
 class ReportGenerator:
     """
@@ -177,7 +218,7 @@ def get_export_path(coin, file_extension: str = "html") -> str:
 # -----------------------
 # Генерация HTML отчёта
 # -----------------------
-def generate_html_report(data_ohlcv, positions, coin, period_start, period_end, target_path, template_dir):
+def generate_html_report(data, coin, period_start, period_end, target_path, template_dir):
     """
     Генерация HTML-отчёта по списку объектов TradeReport или dict.
     Использует Jinja2-шаблон.
@@ -187,8 +228,10 @@ def generate_html_report(data_ohlcv, positions, coin, period_start, period_end, 
     period_start = pd.to_datetime(period_start).strftime("%Y-%m-%d")
     period_end = pd.to_datetime(period_end).strftime("%Y-%m-%d")
 
-    gen = ReportGenerator(data_ohlcv,positions)
-    report = gen.build_report()
+    multi = MultiReportGenerator(data)
+    report = multi.build_report()
+    # gen = ReportGenerator(data_ohlcv,positions)
+    # report = gen.build_report()
     
     env = Environment(
         loader=FileSystemLoader(template_dir),
@@ -211,15 +254,15 @@ def generate_html_report(data_ohlcv, positions, coin, period_start, period_end, 
 # -----------------------
 # Основная функция генерации отчёта
 # -----------------------
-def generate_report(data_ohlcv, executed_positions, coin, start_date, end_date):
+def generate_report(data, coin, start_date, end_date):
     # try:
     template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
     files_report = get_export_path(coin=coin, file_extension="html")
             
+    
             
     path = generate_html_report(
-        data_ohlcv = data_ohlcv,
-        positions = executed_positions,
+        data = data,
         coin = coin, 
         period_start =start_date,
         period_end =end_date,
