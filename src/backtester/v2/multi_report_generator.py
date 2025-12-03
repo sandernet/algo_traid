@@ -17,7 +17,7 @@ class MultiReportGenerator:
     def __init__(self, data: Dict[str, Any], template_dir: str = "TEMPLATES"):
         """
         data = {
-            "BTC": {
+            "BTC/USDT": {
                 "1h": {
                     "ohlcv": ... (pd.DataFrame),
                     "positions": {...} (dict of Position objects OR serialized)
@@ -105,16 +105,16 @@ class MultiReportGenerator:
         # Кривая Эквити
         fig.add_trace(
             go.Scatter(x=equity.index, y=equity.values, 
-                       mode='lines', name='Кривая Эквити (Накопленный PnL)', 
-                       line=dict(color='green')),
+                    mode='lines', name='Кривая Эквити (Накопленный PnL)', 
+                    line=dict(color='green')),
             secondary_y=False,
         )
         
         # Кривая Просадки (Отображаем как отрицательное значение для наглядности)
         fig.add_trace(
             go.Scatter(x=drawdown.index, y=drawdown.values, 
-                       mode='lines', name='Просадка (Drawdown)', 
-                       line=dict(color='red', dash='dot'), opacity=0.5),
+                    mode='lines', name='Просадка (Drawdown)', 
+                    hmtline=dict(color='red', dash='dot'), opacity=0.5),
             secondary_y=False,
         )
 
