@@ -6,6 +6,7 @@ from decimal import Decimal
 from uuid import uuid4
 from typing import Dict, Any, Tuple, List
 from pandas import DataFrame
+import pandas as pd
 
 # Логирование
 # ====================================================
@@ -21,36 +22,158 @@ from src.data_fetcher.data_fetcher import DataFetcher
 from src.backtester.v2.backtester_coin import backtest_coin
 from src.data_fetcher.utils import select_range_backtest
 
-from src.backtester.v2.report_generator import MultiReportGenerator
+
 
 
 
 class Test():
     # окно тестирования
     def __init__(self, data, symbol, timeframe, data_dir):
+        # параметры теста
         self.id = uuid4().hex
         self.symbol = symbol
         self.timeframe = timeframe
         self.data_dir = data_dir
-        self.data = data
-        
-        self.profit = Decimal("0")
+        # Результаты теста
+        self.ohlcv = data
         self.positions = {}
-        self.statistics = {}
-        # self.reports = {}
+        
+        # статистика теста
+        self.total_pnl      = Decimal("0") # общий PnL
+        self.total_loss     = Decimal("0") # общий убыток
+        self.total_win      = Decimal("0") # общий прибыль
+        self.wins           = Decimal("0") # общее количество побед
+        self.losses         = Decimal("0") # общее количество проигрышей
+        self.count_positions = Decimal("0") # общее количество позиций
+        self.winrate        = Decimal("0") # процент побед
+        
+        # Данные для графиков
+        self.equity_curve: pd.Series = pd.Series(dtype=float)
+        self.daily_profit: pd.Series = pd.Series(dtype=float)
+
+    # расчеты для каждого теста
+    # сумма депозита на каждый бар
+    # def build_equity_curve(self):
+    #     equity = 0
+    #     curve: pd.Series = pd.Series(dtype=float)
+    #     for pos in sorted(self.positions.values(), key=lambda p: p.bar_closed):
+    #         equity += pos.profit
+    #         timestamp = self.ohlcv.index[pos.bar_closed]
+    #         curve.append({"timestamp": timestamp, "equity": float(equity)})
+    #     self.equity_curve = curve
+    def build_equity_curve(self):
+        """
+        Рассчитывает кривую эквити, используя datetime (pos.bar_closed) 
+        напрямую в качестве индекса.
+        """
+        # Используем список для сбора данных, что гораздо быстрее, чем pd.Series.append()
+        equity_data = [] 
+        current_equity = Decimal("0")
+        
+        # Фильтрация и сортировка
+        # Убедимся, что мы берем только закрытые позиции с меткой времени
+        closed_positions = [
+            pos for pos in self.positions.values() 
+            if getattr(pos, 'bar_closed', None) is not None
+        ]
+
+        # Сортировка позиций по времени закрытия (datetime)
+        sorted_positions = sorted(closed_positions, key=lambda p: p.bar_closed)
+
+        for pos in sorted_positions:
+            # 1. Накопление прибыли
+            # Предполагаем, что pos.profit имеет тип Decimal
+            current_equity += pos.profit
+            
+            # 2. Сохранение точки (Timestamp, Накопленный PnL)
+            # pos.bar_closed (datetime) используется напрямую как метка времени
+            timestamp = pos.bar_closed
+            
+            # Добавляем точку в список: (timestamp, PnL)
+            equity_data.append((timestamp, float(current_equity))) 
+
+        # 3. Создание Series за один раз для эффективности
+        if equity_data:
+            timestamps, equities = zip(*equity_data)
+            # Используем pd.to_datetime для гарантии правильного типа индекса
+            self.equity_curve = pd.Series(data=equities, 
+                                        index=pd.to_datetime(timestamps), 
+                                        name="Equity Curve", 
+                                        dtype=float)
+        else:
+            self.equity_curve = pd.Series(dtype=float)
+            
+            
+    
+    # # # профит на каждый день
+    # def build_daily_profit(self):
+    #     df = {}
+    #     for pos in self.positions.values():
+    #         date = self.ohlcv.index[pos.bar_closed].date()
+    #         df.setdefault(date, 0)
+    #         df[date] += pos.profit
+    #     self.daily_profit = pd.Series(df, dtype=float)
+    
+    # # профит на каждый день
+    def build_daily_profit(self):
+        """
+        Рассчитывает ежедневный PnL (Daily Profit).
+        Использует pos.bar_closed (datetime) напрямую.
+        """
+        daily_pnl_map = {}
+        
+        for pos in self.positions.values():
+            # Проверка 1: Игнорируем активные позиции (у них нет времени закрытия)
+            if pos.bar_closed is None:
+                continue
+            
+            # 2. Получаем дату напрямую из datetime объекта, без обращения к self.ohlcv.index
+            # Это устраняет ошибку индексации.
+            date = pos.bar_closed.date() 
+            
+            # 3. Суммирование PnL. Преобразуем pos.profit (Decimal) в float.
+            profit_amount = float(pos.profit)
+            
+            # Инициализация словаря с 0.0 и суммирование
+            daily_pnl_map.setdefault(date, 0.0)
+            daily_pnl_map[date] += profit_amount
+            
+        # 4. Создание финальной Series
+        # Индекс Series будет состоять из объектов date (датированных ключей словаря)
+        self.daily_profit = pd.Series(daily_pnl_map, dtype=float)
+        
+    # Максимальная просадка
+    def calc_max_drawdown(self):
+        highs = []
+        dd = 0
+        max_eq = float("-inf")
+        for x in self.equity_curve:
+            eq = x
+            max_eq = max(max_eq, eq)
+            dd = min(dd, eq - max_eq)
+        self.max_drawdown = dd
 
 
     # добавить расчеты и статистику для каждого теста
-    def set_data_results(self):
-        self.profit = Decimal("0")
-        self.statistics = {}
-
         
     # TODO: Добавить расчеты статистики прибыльности
-    def get_statistics(self):
+    def calculate_statistics(self):
         
         # TODO: Добавить расчеты статистики
-        self.statistics = {}
+        self.total_pnl = sum(pos.profit for pos in self.positions.values())
+        self.total_win = sum(pos.profit for pos in self.positions.values() if pos.profit > 0)
+        self.total_loss = sum(pos.profit for pos in self.positions.values() if pos.profit < 0)
+        self.wins = sum(1 for pos in self.positions.values() if pos.profit > 0)
+        self.losses = sum(1 for pos in self.positions.values() if pos.profit < 0)
+        self.count_positions = len(self.positions)
+        self.winrate = (self.wins / self.count_positions * 100) if self.count_positions > 0 else 0
+        
+        # ==================================
+        # Добавить вызовы расчетов:
+        # ==================================
+        # self.build_equity_curve() 
+        # self.build_daily_profit()
+        # self.calc_max_drawdown()
 
     
 # -------------------------
@@ -85,27 +208,12 @@ class TestManager:
         self.tests: Dict[str, Test] = {}
         self.data_ohlc: DataFrame
         
-    # def compute_metrics(positions, equity_curve):
-    #     return {
-    #         "profit": ...,
-    #         "max_drawdown": ...,
-    #         "sharpe": ...,
-    #         "winrate": ...,
-    #         "avg_rr": ...,
-    #         "profit_factor": ...,
-    #         "recovery_factor": ...
-    #     }
-
-    # ====================================================
-    # 0. Загрузка конфигурации
-    # ====================================================
-    # def set_settings(self):
 
             
     # ====================================================
     # 1. Выполнение одного бэктеста
     # ====================================================
-    def _execute_single_backtest(self, coin, timeframe): # Dict[str, Any]:
+    def _execute_single_backtest(self, coin, timeframe) -> Test: # Dict[str, Any]:
         """
         Выполняет один бэктест для конкретной монеты и таймфрейма.
         Возвращает все позиции которые были за указанный период
@@ -123,7 +231,7 @@ class TestManager:
         
         if data_df is None or data_df_1m is None:
             logger.error(f"[{symbol}, {timeframe}] Невозможно запустить бэктест: данные не загружены.")
-            return {}
+            raise ValueError("Невозможно запустить бэктест: данные не загружены.")
 
         # 2. Выбор периода для бэктеста (используем self.start_date/end_date)
         select_data = select_range_backtest(
@@ -132,7 +240,7 @@ class TestManager:
         
         if select_data is None or len(select_data) == 0:
             logger.error(f"[{symbol}, {timeframe}] Нет достаточного объема данных для выбранного периода.")
-            return {}
+            raise ValueError("Нет достаточного объема данных для выбранного периода.")
 
         # 3. Выполнение бэктеста
         test = Test(select_data,  symbol, timeframe, self.data_dir)
@@ -141,10 +249,13 @@ class TestManager:
         positions = backtest_coin(select_data, data_df_1m, coin, self.minimal_count_bars)
         test.positions = positions
         # расчет статистики
-        test.set_data_results()
-        self.tests[test.id] = test
-        self.data_ohlc = select_data
+        test.calculate_statistics()
+        
+        
+        # self.tests[test.id] = test
         logger.warning(f"[{symbol}, {timeframe}] ✅ Обработка завершена. Всего позиций: {len(positions)}")
+        
+        return test
 
 
 
@@ -162,6 +273,9 @@ class TestManager:
                 tasks.append((coin.copy(), timeframe)) # .copy() чтобы избежать изменения одного объекта coin в разных потоках
                 
         logger.info(f"📊 Всего задач бэктеста: {len(tasks)}")
+        
+        # Словарь для структурирования результатов: {"BTC": {"1h": Test_obj, "4h": Test_obj}, ...}
+
 
         # Запуск параллельного выполнения
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -178,17 +292,48 @@ class TestManager:
                 coin_task, tf_task = future_to_task[future]
                 symbol = coin_task.get("SYMBOL") + "/USDT"
                 try:
-                    future.result()
-                    # if report_data is not None:
-                    #     self.all_reports.append(report_data)
+                    test_result = future.result()
+                    if test_result:
+                        self.tests[test_result.id] = test_result # Сохраняем все тесты
                         
-                    logger.info(f"[{symbol}, {tf_task}] ✅ Результаты получены и агрегированы.")
+                        logger.info(f"[{symbol}, {tf_task}] ✅ Результаты получены и агрегированы.")
                         
                 except Exception as exc:
                     logger.error(f"[{symbol}, {tf_task}] ❌ Задача вызвала исключение: {exc}")
         
+        
 
-
+        reports_structure = {}
+        # Формируем отчет
+        if len(self.tests) > 0:
+            logger.info(f"📊 Генерация отчета... всего тестов {len(self.tests)}")
+            try:
+                
+                for test in self.tests.values():
+                    if test.symbol not in reports_structure:
+                        reports_structure[test.symbol] = {}
+                    reports_structure[test.symbol][test.timeframe] = test
+                
+                # Импортируем MultiReportGenerator из нужного файла (зависит от вашей структуры, 
+                # но я предполагаю, что это класс, который мы модифицируем далее)
+                # NOTE: Убедитесь, что у вас правильный импорт для MultiReportGenerator, который умеет генерировать HTML
+                from src.backtester.v2.multi_report_generator import MultiReportGenerator 
+                
+                # ReportGenerator требует путь к шаблонам, берем его из конфига
+                template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
+                
+                # Создаем экземпляр и генерируем отчет
+                report_gen = MultiReportGenerator(reports_structure, template_dir=template_dir)
+                
+                # Передаем период тестирования из конфига
+                report_path = report_gen.generate_html_report(
+                    template_name="multi_backtest_report.html", 
+                )
+                logger.info(f"💾 Мульти-отчет сохранен в: {report_path}")
+            except Exception as e:
+                logger.error(f"Ошибка при генерации мульти-отчета: {e}")
+                
+                
         logger.info("============================================================================")
         logger.info("📈 Все бэктесты завершены!")
         logger.info("============================================================================")

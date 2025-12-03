@@ -12,48 +12,9 @@ from pathlib import Path
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
 from src.config.config import config
+from src.backtester.v2.backtester import Test
+from src.orders_block.order import Position_Status
 
-class MultiReportGenerator:
-    """
-    Мультирепорт: Монеты → Тесты → Позиции → Ордера
-    """
-
-    def __init__(self, data: dict):
-        """
-        data = {
-            "BTC": {
-                "1h": {
-                    "ohlcv": ...,
-                    "positions": {...}
-                },
-                "4h": {
-                    ...
-                }
-            },
-            "ETH": { ... }
-        }
-        """
-        self.data = data
-
-    def build_report(self):
-        coins_report = {}
-
-        for coin, tests in self.data.items():
-            coin_entry = {}
-
-            for timeframe, test_data in tests.items():
-
-                gen = ReportGenerator(
-                    data_ohlcv=test_data["ohlcv"],
-                    positions=test_data["positions"]
-                )
-
-                test_report = gen.build_report()
-                coin_entry[timeframe] = test_report   # ← вложенный отчёт теста
-
-            coins_report[coin] = coin_entry
-
-        return coins_report
 
 class ReportGenerator:
     """
@@ -62,6 +23,7 @@ class ReportGenerator:
     """
 
     def __init__(self, data_ohlcv, positions: dict[str, Any]):
+        self.tests: Dict[str, Test] = {}
         self.positions = positions
         self.data_ohlcv = data_ohlcv
 
@@ -89,6 +51,7 @@ class ReportGenerator:
             "direction": getattr(order.direction, "name", order.direction),
             "created_bar": getattr(order, "created_bar", None),
             "close_bar": getattr(order, "close_bar", None),
+            "time": self.data_ohlcv.index[order.close_bar],
             "meta":  self.serialize_meta(getattr(order, "meta", {})),  # на случай использования оригинального объекта
         }
 
@@ -120,14 +83,9 @@ class ReportGenerator:
     def serialize_all_positions(self) -> List[Dict[str, Any]]:
         """
         Сериализует все позиции.
-        
         """
-        # x = []
-        # for p in self.positions:
-        #     x.append(self.serialize_position(p))
-        
         return [self.serialize_position(p) for _, p in self.positions.items()]
-        # return x
+
 
     # -----------------------------
     # СТАТИСТИКА
@@ -171,6 +129,11 @@ class ReportGenerator:
             logger.error(f"Error building statistics: {e}")
             return {"total_positions": 0, "total_pnl": 0, "wins": 0, "losses": 0, "winrate": 0, "total_win": 0, "total_loss": 0}
 
+    def build_report_data(self) -> List[Dict[str, Any]]:
+        """Главный метод, собирающий список сериализованных позиций."""
+        # Фильтруем и сериализуем только закрытые позиции для отчета
+        closed_positions = [p for p in self.positions.values() if p.status != Position_Status.ACTIVE]
+        return [self.serialize_position(pos) for pos in closed_positions]
     
     # -----------------------------
     # ОСНОВНАЯ ФОРМА ОТЧЁТА
@@ -198,12 +161,17 @@ class ReportGenerator:
 # -------------------------------------------------------------
 # Формирование пути для экспорта и импорта файлов
 # -------------------------------------------------------------
-def get_export_path(coin, file_extension: str = "html") -> str:
+def get_export_path(coin = None, file_extension: str = "html") -> str:
     """
     Формирует полный путь для сохранения файла и гарантирует существование директории.
     """
-    symbol = coin.get('SYMBOL')
-    timeframe = coin.get('TIMEFRAME', '-')
+    if not coin:
+        symbol = "all"
+        timeframe = "all"
+    else:
+        symbol = coin.get('SYMBOL')
+        timeframe = coin.get('TIMEFRAME', '-')
+    
     # report_date = datetime.date.today().isoformat()
     file_prefix = f"{symbol}_UDDT__timeframe {timeframe}"
     path = config.get_setting("BACKTEST_SETTINGS", "REPORT_DIRECTORY")
@@ -228,8 +196,8 @@ def generate_html_report(data, coin, period_start, period_end, target_path, temp
     period_start = pd.to_datetime(period_start).strftime("%Y-%m-%d")
     period_end = pd.to_datetime(period_end).strftime("%Y-%m-%d")
 
-    multi = MultiReportGenerator(data)
-    report = multi.build_report()
+    gen = ReportGenerator(data, coin)
+    report = gen.build_report()
     # gen = ReportGenerator(data_ohlcv,positions)
     # report = gen.build_report()
     
