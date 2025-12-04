@@ -312,12 +312,9 @@ class TestManager:
                         reports_structure[test.symbol] = {}
                     reports_structure[test.symbol][test.timeframe] = test
                 
-                # Импортируем MultiReportGenerator из нужного файла (зависит от вашей структуры, 
-                # но я предполагаю, что это класс, который мы модифицируем далее)
-                # NOTE: Убедитесь, что у вас правильный импорт для MultiReportGenerator, который умеет генерировать HTML
                 from src.backtester.v2.multi_report_generator import MultiReportGenerator 
                 
-                # Создаем экземпляр и генерируем отчет
+                # Создаем экземпляр
                 report_gen = MultiReportGenerator(reports_structure, template_dir=self.template_dir)
                 
                 # Передаем период тестирования из конфига
