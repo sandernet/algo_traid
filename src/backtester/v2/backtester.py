@@ -322,7 +322,7 @@ class TestManager:
                 
                 # Передаем период тестирования из конфига
                 report_path = report_gen.generate_html_report(
-                    template_name="multi_backtest_report.html", 
+                    template_name="report.html", 
                 )
                 logger.info(f"💾 Мульти-отчет сохранен в: {report_path}")
             except Exception as e:
