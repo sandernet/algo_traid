@@ -28,10 +28,16 @@ from src.data_fetcher.utils import select_range_backtest
 # Класс Test (окно тестирования) монета и таймфрейм период
 class Test():
     # окно тестирования
-    def __init__(self, data, symbol, timeframe, data_dir):
+    def __init__(self, data, coin, timeframe, data_dir):
         # параметры теста
         self.id = uuid4().hex
-        self.symbol = symbol
+        self.symbol = coin.get("SYMBOL") + "/USDT"
+        self.coin = coin
+        # self.start_deposit_usdt = coin.get("START_DEPOSIT_USDT")
+        # self.market_type = coin.get("MARKET_TYPE", "spot")
+        # self.leverage = coin.get("LEVERAGE")
+        # self.minimal_qty = coin.get("MINIMAL_TICK_SIZE")
+        # self.volume_size = coin.get("VOLUME_SIZE")
         self.timeframe = timeframe
         self.data_dir = data_dir
         # Результаты теста
@@ -235,7 +241,7 @@ class TestManager:
             raise ValueError("Нет достаточного объема данных для выбранного периода.")
 
         # 3. Выполнение бэктеста
-        test = Test(select_data,  symbol, timeframe, self.data_dir)
+        test = Test(select_data,  coin, timeframe, self.data_dir)
         
         # расчет позиций по тесту 
         positions = backtest_coin(select_data, data_df_1m, coin, self.minimal_count_bars)

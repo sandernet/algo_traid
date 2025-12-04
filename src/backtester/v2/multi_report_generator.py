@@ -13,6 +13,11 @@ from src.backtester.v2.backtester import Test
 from src.orders_block.order import OrderStatus, OrderType
 from src.backtester.v2.report_generator import ReportGenerator, get_export_path
 
+# Логирование
+# ====================================================
+from src.utils.logger import get_logger
+logger = get_logger(__name__)
+
 class MultiReportGenerator:
     def __init__(self, data: Dict[str, Any], template_dir: str = "TEMPLATES"):
         """
@@ -71,6 +76,8 @@ class MultiReportGenerator:
             total_wins += test.wins
             total_losses += test.losses
             
+            
+            
         count_positions = total_wins + total_losses
         winrate = (total_wins / count_positions) * 100 if count_positions > 0 else 0.0
 
@@ -83,6 +90,8 @@ class MultiReportGenerator:
         # Получаем название монеты/рынка из первого теста
         symbol = next(iter(tests.values())).symbol 
         
+        coin = next(iter(tests.values())).coin 
+        
         return {
             "symbol": symbol,
             "period_start": str(period_start.strftime("%Y-%m-%d")) if period_start else "N/A",
@@ -92,6 +101,12 @@ class MultiReportGenerator:
             "wins": total_wins,
             "losses": total_losses,
             "winrate": f"{winrate:.2f}%",
+            "start_deposit_usdt" : coin.get("START_DEPOSIT_USDT"),
+            "market_type" : "Test",
+            "leverage" : "0.0",
+            "minimal_qty" : "0.0",
+            "volume_size" : "0.0",
+            
         }
         
         
@@ -229,7 +244,6 @@ class MultiReportGenerator:
     # ---------------------------------------------------------
     # Генерация HTML-отчета (ОБНОВЛЕНО)
     # --------------------------------------------------------
-    # Добавляем report_period для отображения в отчете
     def generate_html_report(self, template_name: str):
         """
         Основная функция генерации отчета.
@@ -266,28 +280,37 @@ class MultiReportGenerator:
                 test.calc_max_drawdown()
                 test.build_daily_profit()
 
-                # Генератор для сериализации позиций
+                # создаем объект отчета
                 reporter = ReportGenerator(test.ohlcv, test.positions)
                 
                 test_report = {}
                 test_report["timeframe"] = timeframe
                 
                 # Графики Plotly (конвертируются в JSON для встраивания)
-                test_report["equity_drawdown_chart"] = self.build_profit_drawdown_chart(test)
-                test_report["daily_profit_chart"]    = self.build_daily_profit_chart(test)
-                test_report["order_execution_chart"] = self.build_order_execution_chart(test)
+                # test_report["equity_drawdown_chart"] = self.build_profit_drawdown_chart(test)
+                # test_report["daily_profit_chart"]    = self.build_daily_profit_chart(test)
+                # test_report["order_execution_chart"] = self.build_order_execution_chart(test)
                 
-                # Все закрытые позиции (сериализованный список)
-                test_report["closed_positions"] = reporter.build_report_data()
+                # Все позиции (сериализованный список)
+                test_report["positions"] = reporter.build_report_data()
 
                 # Статистика конкретного теста
                 test_report["test_stats"] = {
                     "total_pnl": float(test.total_pnl),
                     "winrate": f"{test.winrate:.2f}%",
-                    "max_drawdown": float(test.max_drawdown),
-                    "count_positions": test.count_positions,
-                    "ohlcv_start": str(test.ohlcv.index.min()),
-                    "ohlcv_end": str(test.ohlcv.index.max()),
+                    
+                    "total_win"         : test.total_win, # общий прибыль
+                    "total_loss"        : test.total_loss, # общий убыток
+                    "wins"              : test.wins, # общее количество побед
+                    "losses"            : test.losses, # общее количество проигрышей
+                    "count_positions"   : test.count_positions, # общее количество позиций
+                    "winrate"           : test.winrate, # процент побед
+                    
+                                
+                    # "max_drawdown": float(test.max_drawdown),
+                    # "count_positions": test.count_positions,
+                    # "ohlcv_start": str(test.ohlcv.index.min()),
+                    # "ohlcv_end": str(test.ohlcv.index.max()),
                 }
 
                 tests_reports[timeframe] = test_report
@@ -303,8 +326,12 @@ class MultiReportGenerator:
             "report_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "testing_period": f"{coin_summary.get('period_start', 'N/A')} - {coin_summary.get('period_end', 'N/A')}",
         }
-
-        html = template.render(**global_report_data)
-        files_report = get_export_path(coin=None, file_extension="html")
-        Path(files_report).write_text(html, encoding="utf-8")
-        print(f"✅ Отчет успешно сохранен: {files_report}")
+        try:
+            html = template.render(**global_report_data)
+            files_report = get_export_path(coin=None, file_extension="html")
+            Path(files_report).write_text(html, encoding="utf-8")
+            logger.info(f"✅ Отчет успешно сохранен: {files_report}")
+        except Exception as e:
+            logger.error(f"❌ Ошибка при сохранении отчета: {e}")
+            pass
+        

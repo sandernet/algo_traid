@@ -23,7 +23,7 @@ COINS:
     MIN_TIMEFRAME: "1" # Для проверки ордеров на исполнение. если не нужно осатавлять, пустая строка ""
     MARKET_TYPE: "spot" # spot, linear, inverse
     AUTO_TRADING: true
-    START_DEPOSIT_USDT: 10000
+    START_DEPOSIT_USDT: 10000 #usdt
     MINIMAL_TICK_SIZE: 0.01 # Минимальный размер шага цены
     LEVERAGE: 2  # Плечо
     # Размер ордера (в usdt )
