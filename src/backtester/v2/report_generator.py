@@ -51,7 +51,6 @@ class ReportGenerator:
             "direction": getattr(order.direction, "name", order.direction),
             "created_bar": getattr(order, "created_bar", None),
             "close_bar": getattr(order, "close_bar", None),
-            "time": self.data_ohlcv.index[order.close_bar],
             "meta":  self.serialize_meta(getattr(order, "meta", {})),  # на случай использования оригинального объекта
         }
 

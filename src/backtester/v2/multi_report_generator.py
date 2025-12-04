@@ -19,8 +19,14 @@ class MultiReportGenerator:
         data = {
             "BTC/USDT": {
                 "1h": {
-                    "ohlcv": ... (pd.DataFrame),
+                    "ohlcv": ... (pd.DataFrame), columns=['timestamp', 'open', 'high', 'low', 'close', 'volume']
                     "positions": {...} (dict of Position objects OR serialized)
+                    "total_pnl": ... (Decimal),
+                    "total_win": ... (Decimal),
+                    "total_loss": ... (Decimal),
+                    "wins": ... (Decimal),
+                    "losses": ... (Decimal),
+                    "winrate": ... (Decimal),
                 },
                 ...
             },
@@ -34,7 +40,8 @@ class MultiReportGenerator:
     def _plot_to_json(self, fig: go.Figure) -> str:
         """Преобразует Plotly Figure в JSON для встраивания в HTML."""
         # Используем fig.to_json() для передачи Plotly данных, чтобы HTML-шаблон мог их отобразить.
-        return json.dumps(fig.to_dict())
+        # return json.dumps(fig.to_dict())
+        return json.dumps(fig.to_json())
     
     # Helper: унифицировать positions (словарь -> список)
     def _normalize_positions(self, positions_obj):
@@ -114,7 +121,7 @@ class MultiReportGenerator:
         fig.add_trace(
             go.Scatter(x=drawdown.index, y=drawdown.values, 
                     mode='lines', name='Просадка (Drawdown)', 
-                    hmtline=dict(color='red', dash='dot'), opacity=0.5),
+                    line=dict(color='red', dash='dot'), opacity=0.5),
             secondary_y=False,
         )
 
@@ -180,7 +187,7 @@ class MultiReportGenerator:
                         'time': order.close_bar,
                         'price': float(order.price),
                         'type': order.order_type.value,
-                        'pnl_abs': float(pos.pnl_abs) if order.order_type != OrderType.ENTRY else 0
+                        'pnl_abs': float(pos.profit) if order.order_type != OrderType.ENTRY else 0
                     })
         
         if filled_orders:

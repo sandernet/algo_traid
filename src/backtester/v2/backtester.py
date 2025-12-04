@@ -25,7 +25,7 @@ from src.data_fetcher.utils import select_range_backtest
 
 
 
-
+# Класс Test (окно тестирования) монета и таймфрейм период
 class Test():
     # окно тестирования
     def __init__(self, data, symbol, timeframe, data_dir):
@@ -104,16 +104,6 @@ class Test():
             self.equity_curve = pd.Series(dtype=float)
             
             
-    
-    # # # профит на каждый день
-    # def build_daily_profit(self):
-    #     df = {}
-    #     for pos in self.positions.values():
-    #         date = self.ohlcv.index[pos.bar_closed].date()
-    #         df.setdefault(date, 0)
-    #         df[date] += pos.profit
-    #     self.daily_profit = pd.Series(df, dtype=float)
-    
     # # профит на каждый день
     def build_daily_profit(self):
         """
@@ -199,6 +189,8 @@ class TestManager:
             # 1. Получение массива монет из конфигурации
             self.coins_list = config.get_section("COINS")
             self.timeframe_list = config.get_setting("BACKTEST_SETTINGS", "TIMEFRAME_LIST")
+            # ReportGenerator требует путь к шаблонам, берем его из конфига
+            self.template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
             
             
             logger.info(f"Загружено {len(self.coins_list)} монет из конфигурации.")
@@ -319,11 +311,8 @@ class TestManager:
                 # NOTE: Убедитесь, что у вас правильный импорт для MultiReportGenerator, который умеет генерировать HTML
                 from src.backtester.v2.multi_report_generator import MultiReportGenerator 
                 
-                # ReportGenerator требует путь к шаблонам, берем его из конфига
-                template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
-                
                 # Создаем экземпляр и генерируем отчет
-                report_gen = MultiReportGenerator(reports_structure, template_dir=template_dir)
+                report_gen = MultiReportGenerator(reports_structure, template_dir=self.template_dir)
                 
                 # Передаем период тестирования из конфига
                 report_path = report_gen.generate_html_report(
