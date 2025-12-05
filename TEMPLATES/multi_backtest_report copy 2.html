@@ -126,7 +126,7 @@
                 </div>
             <div class="stat-item">
                 <strong>Период тестирования:</strong> 
-                {{ coin_data.sum.period_start | default('N/A') }} - {{ coin_data.summary.period_end | default('N/A') }}
+                {{ coin_data.summary.period_start | default('N/A') }} - {{ coin_data.summary.period_end | default('N/A') }}
             </div>
             <div class="stat-item">
                 <strong>total_pnl:</strong> 
@@ -136,7 +136,7 @@
                 <strong>start_deposit_usdt:</strong> 
                 {{ "%.2f"|format(coin_data.summary.start_deposit_usdt) }}
             </div>
-            <!-- <div class="stat-item">
+            {# <div class="stat-item">
                 <strong>market_type:</strong> 
                 {{ "%.2f"|format(summary.market_type) }}
             </div>
@@ -147,7 +147,7 @@
             <div class="stat-item">
                 <strong>volume_size:</strong> 
                 {{ "%.2f"|format(summary.volume_size) }}
-            </div> -->
+            </div> #}
         </div> 
         
         {% for timeframe, test_data in coin_data.tests.items() %}

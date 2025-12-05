@@ -1,5 +1,5 @@
 from pathlib import Path
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 import pandas as pd
 from datetime import datetime
 import json
@@ -163,7 +163,7 @@ class MultiReportGenerator:
         fig = go.Figure()
         fig.add_trace(
             go.Bar(x=test.daily_profit.index, y=test.daily_profit.values, 
-                   name='Дневной PnL', marker_color=colors)
+                    name='Дневной PnL', marker_color=colors)
         )
 
         fig.update_layout(
@@ -255,7 +255,8 @@ class MultiReportGenerator:
             loader=FileSystemLoader(self.template_dir),
             autoescape=True,
             trim_blocks=True,
-            lstrip_blocks=True
+            lstrip_blocks=True,
+            undefined=StrictUndefined,
         )
         template = env.get_template(template_name)
         
@@ -330,7 +331,7 @@ class MultiReportGenerator:
             html = template.render(**global_report_data)
             files_report = get_export_path(coin=None, file_extension="html")
             Path(files_report).write_text(html, encoding="utf-8")
-            logger.info(f"✅ Отчет успешно сохранен: {files_report}")
+            logger.warning(f"✅ Отчет успешно сохранен: {files_report}")
         except Exception as e:
             logger.error(f"❌ Ошибка при сохранении отчета: {e}")
             pass

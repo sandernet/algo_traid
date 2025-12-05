@@ -6,7 +6,7 @@
 
     {% block styles %}
         <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; padding: 10px; background-color: #f4f7f9; }
+            body { font-family: Arial, sans-serif; line-height: 1.6; padding: 10px; background-color: #549fd1; }
 
             .header-box {
                 background: #ffffff;
@@ -128,22 +128,17 @@
             /**
             * Функция для переключения видимости блоков (collapse/expand)
             */
+
             function toggleBlock(id) {
                 var block = document.getElementById(id);
-                var icon = document.getElementById('icon-' + id);
                 
                 if (block.style.display === "none" || block.style.display === "") {
                     block.style.display = "block";
-                    if (icon) {
-                        icon.classList.add('rotated');
-                    }
                 } else {
                     block.style.display = "none";
-                    if (icon) {
-                        icon.classList.remove('rotated');
-                    }
                 }
             }
+
             function toggleDetails(id) {
                 const block = document.getElementById(id);
                 if(block.style.display === 'none' || block.style.display === ''){
