@@ -11,7 +11,7 @@ services:
       - ./configs:/app/configs
       - ./logs:/app/LOGS
       - ./reports:/app/REPORTS
-      - ./templates:/APP/TEMPLATES
+      - ./templates:/app/TEMPLATES
     environment:
       - PYTHONUNBUFFERED=1
     command: python app.py --ldata --ld_min
