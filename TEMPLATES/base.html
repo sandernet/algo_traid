@@ -6,14 +6,14 @@
 
     {% block styles %}
         <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; padding: 10px; background-color: #549fd1; }
+            body { font-family: Arial, sans-serif; line-height: 1.6; padding: 3px; background-color: #549fd1; }
 
             .header-box {
                 background: #ffffff;
-                padding: 20px;
+                padding: 10px;
                 border-radius: 12px;
                 box-shadow: 0 2px 7px rgba(0,0,0,0.1);
-                margin-bottom: 25px;
+                margin-bottom: 10px;
             }
             .stats-grid {
                 display: flex;
@@ -32,11 +32,11 @@
                 font-size: 14px;
             }
 
-            .coin-report { background-color: #fff; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-            .coin-report h2 { color: #333; border-bottom: 2px solid #5cb85c; padding-bottom: 10px; margin-top: 0; }
-            .test-block { border: 1px solid #eee; border-radius: 6px; margin-top: 15px; overflow: hidden; }
+            .coin-report { background-color: #d4dcffb0; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 5px; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+            .coin-report h2 { color: #333; border-bottom: 2px solid #5cb85c; padding-bottom: 3px; margin-top: 0; }
+            .test-block { border: 1px solid #eee; border-radius: 6px; margin-top: 5px; overflow: hidden; }
 
-            .timeframe-header { background-color: #e9ecef; padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 1.1em; }
+            .timeframe-header { background-color: #e9ecef; padding: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 1.1em; }
             
             .test-details { padding: 20px; border-top: 1px solid #eee; background-color: #f8f9fa; }
             .positive { color: #28a745; font-weight: bold; }
@@ -87,7 +87,7 @@
                 border-collapse: collapse;
                 margin-top: 6px;
                 border: 1px solid #ccc;       /* общий тонкий бордюр */
-                border-radius: 6px;
+                border-radius: 8px;
             }
 
             /* стили для ячеек вложенных таблиц */
@@ -129,24 +129,18 @@
             * Функция для переключения видимости блоков (collapse/expand)
             */
 
-            function toggleBlock(id) {
-                var block = document.getElementById(id);
-                
-                if (block.style.display === "none" || block.style.display === "") {
-                    block.style.display = "block";
-                } else {
-                    block.style.display = "none";
-                }
+            /**
+            * Переключает видимость элемента.
+            * 
+            * @param {string} id — ID элемента.
+            * @param {string} [displayType='block'] — Значение display при раскрытии.
+            */
+            function toggleVisibility(id, displayType = 'block') {
+                const element = document.getElementById(id);
+                if (!element) return;
+                    const isVisible = window.getComputedStyle(element).display !== 'none';
+                element.style.display = isVisible ? 'none' : displayType;
             }
-
-            function toggleDetails(id) {
-                const block = document.getElementById(id);
-                if(block.style.display === 'none' || block.style.display === ''){
-                    block.style.display = 'table-row';
-                } else {
-                    block.style.display = 'none';
-                }
-            }  
         </script>
     {% endblock %} 
 

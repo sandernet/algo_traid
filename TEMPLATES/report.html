@@ -4,16 +4,17 @@
 
 {% block content %}
 
-{% for coin_name, coin_data in coins.items() %}
+    {% for coin_name, coin_data in coins.items() %}
 
-    {% include "_coin_header.html" %}
+        {% include "_coin_header.html" %}
 
-    {% for timeframe, test_data in coin_data.tests.items() %}
+        {% for timeframe, test_data in coin_data.tests.items() %}
 
-        {% include "_timeframe_block.html" %}
+            {% include "_timeframe_block.html" %}
 
+        {% endfor %}
+        </div>
     {% endfor %}
 
-{% endfor %}
 
 {% endblock %}
