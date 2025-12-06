@@ -19,7 +19,7 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 class MultiReportGenerator:
-    def __init__(self, data: Dict[str, Any], template_dir: str = "TEMPLATES"):
+    def __init__(self, data: Dict[str, Any], template_dir: str = "templates"):
         """
         data = {
             "BTC/USDT": {

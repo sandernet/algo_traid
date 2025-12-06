@@ -134,7 +134,7 @@ RISK_SETTINGS:
 # ======================================================================
 BACKTEST_SETTINGS:
   # Директория для хранения исторических данных
-  TIMEFRAME_LIST: ["15","30","60", "4h", "D"]
+  TIMEFRAME_LIST: ["30","60", "4h", "D"]
   # TIMEFRAME_LIST: ["4h", "D"]
   DATA_DIR: DATA_OHLCV/
   REPORT_DIRECTORY: REPORTS/
