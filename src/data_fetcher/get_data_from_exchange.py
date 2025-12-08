@@ -16,13 +16,14 @@ from src.config.config import config
 # ====================================================
 # Основной конвейер для получения и сохранения исторических данных
 # ====================================================
-def run_data_update_pipeline(loading_min=False):
+def run_data_update_pipeline(loading_min=True):
     """Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации."""
     
     
     # Получение настроек Биржи
     exchange = config.get_section("EXCHANGE_SETTINGS")
     data_dir = config.get_setting("BACKTEST_SETTINGS", "DATA_DIR")
+    loading_update_min = False
     
     # 1. Получение массива монет
     try:
@@ -53,6 +54,11 @@ def run_data_update_pipeline(loading_min=False):
         for timeframe in timeframe_list:
             # coin["TIMEFRAME"] = tf
             logger.info(f"[{symbol}] 🪙, 🕒 Таймфрейм: [bold yellow]{timeframe}[/bold yellow]")
+            # проверка на существование данных 
+            if fetcher.check_file_exists(timeframe) and loading_min:
+                logger.info(f"[{symbol}] 🪙, 🕒 Таймфрейм: [bold yellow]{timeframe}[/bold yellow] уже существует пропускаем")
+                continue
+            
             # Загрузка данных
             with LoggingTimer(f"[bold yellow]{symbol}[/bold yellow] load timeframe.....: {timeframe}"):
                 data_df = fetcher.fetch_entire_history(timeframe)
@@ -63,10 +69,12 @@ def run_data_update_pipeline(loading_min=False):
                         
                         # Сохранить в под папку 'excel_files'
                     fetcher.export_to_excel(data_df, timeframe)
+                    
+                    loading_update_min = True
             
         logger.info(f"[{symbol}] 🪙, 🕒 Таймфрейм: [bold yellow]{min_timeframe}[/bold yellow] pause..........")
         time.sleep(100) # Пауза в 100 секунд
-        if loading_min:
+        if loading_min or loading_update_min:
             if min_timeframe != "":
                 with LoggingTimer(f"[bold yellow]{symbol}[/bold yellow] load timeframe.....: {timeframe}"):
                     data_df_min = fetcher.fetch_entire_history(min_timeframe)

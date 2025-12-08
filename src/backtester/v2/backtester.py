@@ -21,6 +21,7 @@ from src.config.config import config
 from src.data_fetcher.data_fetcher import DataFetcher
 from src.backtester.v2.backtester_coin import backtest_coin
 from src.data_fetcher.utils import select_range_backtest
+from src.backtester.v2.report_generator import ReportGenerator
 
 
 
@@ -233,7 +234,11 @@ class TestManager:
 
         # 2. Выбор периода для бэктеста (используем self.start_date/end_date)
         select_data = select_range_backtest(
-            data_df,  self.full_datafile,  self.start_date, self.end_date
+            data_df=data_df,  
+            full_datafile=self.full_datafile,  
+            start_date=self.start_date, 
+            end_date=self.end_date,
+            offset_bars=self.minimal_count_bars
         )
         
         if select_data is None or len(select_data) == 0:
@@ -280,10 +285,13 @@ class TestManager:
             # Маппинг функции выполнения _execute_single_backtest на список аргументов
             # Важно: `executor.map` работает только с одной итерируемой переменной.
             # Используем `executor.submit` для нескольких аргументов и собираем `Future` объекты.
-            future_to_task = {
-                executor.submit(self._execute_single_backtest, coin_task, tf_task): (coin_task, tf_task)
-                for coin_task, tf_task in tasks
-            }
+
+            future_to_task = {}
+            
+            # запускаем задачи строго в том порядке как идут в tasks
+            for coin_task, tf_task in tasks:
+                future = executor.submit(self._execute_single_backtest, coin_task, tf_task)
+                future_to_task[future] = (coin_task, tf_task)
             
             # Обработка результатов по мере их завершения
             for future in concurrent.futures.as_completed(future_to_task):
@@ -293,6 +301,10 @@ class TestManager:
                     test_result = future.result()
                     if test_result:
                         self.tests[test_result.id] = test_result # Сохраняем все тесты
+                        
+                        report_gen = ReportGenerator(test_result.ohlcv, test_result.positions)
+                        report_gen.generate_report(test_result, coin_task)
+                        
                         
                         logger.info(f"[{symbol}, {tf_task}] ✅ Результаты получены и агрегированы.")
                         
@@ -329,91 +341,4 @@ class TestManager:
         logger.info("============================================================================")
         logger.info("📈 Все бэктесты завершены!")
         logger.info("============================================================================")
-
-        # Формируем отчет
-        # TODO: 1. Агрегировать результаты, 2. Печатать отчет
-        
-        
-    # # ====================================================
-    # # точка входа для бэктеста
-    # # ====================================================
-    # def run_local_backtest(self):
-    #     """Основной конвейер для получения и сохранения исторических данных по монетам из конфигурации."""
-
-            
-
-    #     # 2. Обработка каждой монеты   
-    #     for coin in self.coins_list:
-    #         # try:
-    #         logger.info("============================================================================")
-    #         logger.info(f"[bold yellow] [{coin.get('SYMBOL')}/USDT][/bold yellow] 🚀 Запуск бэктеста ...")
-    #         logger.info("============================================================================")
-
-    #         symbol = coin.get("SYMBOL")+"/USDT"
-    #         tick_size = coin.get("MINIMAL_TICK_SIZE")
-    #         # 1. Загрузка из файла
-    #         # Инициализируем DataFetcher
-    #         fetcher = DataFetcher( coin,
-    #             exchange=self.exchange, 
-    #             directory=self.data_dir,
-    #             )
-    #         with LoggingTimer("[symbol] Загрузка минутных данных для точного исполнения стопов и тейков"):
-    #             data_df_1m = fetcher.load_from_csv(file_type="csv") # загружаем минутные данные для точного исполнения стопов и тейков
-        
-    #         for timeframe in self.timeframe_list:
-    #             # coin["TIMEFRAME"] = tf
-    #             logger.info(f"[{symbol}] 🪙, 🕒 Таймфрейм: [bold yellow]{timeframe}[/bold yellow], Минимальный шаг цены {tick_size}")
-    #             coin["TIMEFRAME"] = timeframe
-    #             # timeframe = coin.get("TIMEFRAME")
-
-
-    #             # Загружаем данные из CSV файла
-    #             with LoggingTimer("[symbol] Загрузка данных торгового таймфрейма для бэктеста"):
-    #                 data_df = fetcher.load_from_csv(file_type="csv", timeframe=timeframe) # загружаем данные нужного таймфрейма
-                
-    #             if data_df is None:
-    #                 continue
-                
-    #             # 2. Выбор периода для бэктеста
-    #             with LoggingTimer("[symbol] Формируем данные для бэктеста"):
-    #                 select_data = select_range_backtest(data_df,  self.full_datafile,  self.start_date, self.end_date)
-    #                 if select_data is not None:
-    #                     logger.info(f"[symbol] Данные для бэктеста отобраны с {select_data.index[0]} по {select_data.index[-1]}. Всего баров: {len(select_data)}")
-    #                     start_date = select_data.index[0]
-    #                     end_date = select_data.index[-1]
-
-    #             # 3. Выполнение бэктеста
-    #             #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
-    #             with LoggingTimer("[symbol] Выполнение бэктеста"):
-    #                 executed_positions = backtest_coin(select_data,data_df_1m, coin, self.minimal_count_bars)
-                
-    #             if data_df is not None:
-    #                 logger.info(f"🚀 Запуск стратегии для {symbol} с локальными данными.")
-                    
-    #                 # 2. Выбор периода для бэктеста
-    #                 with LoggingTimer("[symbol] Формируем данные для бэктеста"):
-    #                     select_data = select_range_backtest(data_df, self.full_datafile,  self.start_date, self.end_date)
-    #                     if not self.full_datafile:
-    #                         logger.info(f"[symbol] Данные для бэктеста отобраны с {select_data.index[0]} по {select_data.index[-1]}. Всего баров: {len(select_data)}")
-    #                         start_date = select_data.index[0]
-    #                         end_date = select_data.index[-1]
-
-    #                 # 3. Выполнение бэктеста
-    #                 #  Здесь вы передаете data_df в ваш модуль стратегии или бэктеста
-    #                 with LoggingTimer("[symbol] Выполнение бэктеста"):
-    #                     executed_positions = backtest_coin(select_data,data_df_1m, coin, self.minimal_count_bars)
-                    
-    #                 # 4. Генерация отчета по результатам бэктеста
-    #                 with LoggingTimer("[symbol] Генерация отчета"):
-    #                     generate_report(select_data, executed_positions, coin, self.start_date, self.end_date)
-                    
-    #                 logger.info(f"[symbol] Закончена обработка бэктеста. Всего позиций: {len(executed_positions)}")
-                    
-    #             else:
-    #                 logger.error(f"Невозможно запустить бектест для {symbol}: данные не загружены.")
-    #             # except Exception as e:
-    #             #     logger.error(f"Ошибка при бэктесте для монеты {coin.get('SYMBOL')}/USDT: {e}")
-                
-
-
 

@@ -137,7 +137,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> dict:
 
     return manager.positions
 
-# сщздаем позициию по сигналу
+# создаем позицию по сигналу
 def create_position(signal, manager, coin, current_index) -> Optional[Position]:
     direction = signal['direction']
     symbol = coin.get("SYMBOL")+"/USDT"

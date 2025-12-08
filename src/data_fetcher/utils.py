@@ -13,7 +13,8 @@ def select_range_backtest(
     data_df: pd.DataFrame,
     full_datafile: bool,
     start_date: Optional[str] = None,
-    end_date: Optional[str] = None
+    end_date: Optional[str] = None,
+    offset_bars: int = 0
 ) -> pd.DataFrame:
     """
     Фильтрация DataFrame по заданному диапазону дат.
@@ -59,14 +60,29 @@ def select_range_backtest(
     else:
         raise ValueError("DataFrame должен иметь DatetimeIndex или колонку 'timestamp' с datetime типом")
 
+    # ==============================
+    # 1. Ищем ближайший индекс >= start_ts
+    # ==============================
+    try:
+        start_idx = time_series.get_indexer([start_ts], method="bfill")[0]
+    except:
+        start_idx = 0  # безопасный fallback
+    # ==============================
+    # 2. Отнимаем offset_bars
+    # ==============================
+    shifted_start_idx = max(0, start_idx - offset_bars)
+
+    # Новый start_ts для фильтрации
+    shifted_start_ts = time_series[shifted_start_idx]
+
     # Фильтрация без смещения
-    mask = (time_series >= start_ts) & (time_series <= end_ts)
+    mask = (time_series >= shifted_start_ts) & (time_series <= end_ts)
     filtered_df = df[mask]
 
     if filtered_df.empty:
         logger.warning("Выделенный диапазон дат не содержит данных.")
 
-    logger.info(f"📅 Период тестирования: {start_ts} ↔️  {end_ts}")
+    logger.info(f"📅 Период тестирования: {shifted_start_ts} ↔️  {end_ts}")
     return filtered_df
 
 # def select_range_backtest(data_df, timeframe, full_datafile, allowed_min_bars, start_date = None, end_date = None)  -> pd.DataFrame:

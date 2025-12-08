@@ -322,6 +322,13 @@ class DataFetcher:
             return None
 
     # -------------------------------------------------------------
+    # Метод проверки существования файла
+    # -------------------------------------------------------------
+    def check_file_exists(self, timeframe: str, file_extension: str = "csv") -> bool:
+        file_path = self._get_export_path(timeframe, file_extension)
+        return os.path.exists(file_path)
+    
+    # -------------------------------------------------------------
     # 4. МЕТОД: Экспорт в Excel
     # -------------------------------------------------------------
     def export_to_excel(self, df: pd.DataFrame , timeframe: str = "1") -> Optional[str]:
