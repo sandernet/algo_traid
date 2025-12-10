@@ -282,7 +282,7 @@ class MultiReportGenerator:
                 test.build_daily_profit()
 
                 # создаем объект отчета
-                reporter = ReportGenerator(test.ohlcv, test.positions)
+                reporter = ReportGenerator() #test.ohlcv, test.positions)
                 
                 test_report = {}
                 test_report["timeframe"] = timeframe

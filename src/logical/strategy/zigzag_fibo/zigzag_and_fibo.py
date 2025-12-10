@@ -5,6 +5,7 @@ from pandas import Timedelta, DateOffset
 # ====================================================
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
+from src.config.config import config
 
 
 # индикатор фибоначчи
@@ -25,6 +26,7 @@ class ZigZagAndFibo:
         self.symbol = coin.get("SYMBOL")+"/USDT"
         # tick_size = coin.get("MINIMAL_TICK_SIZE")
         self.timeframe = coin.get("TIMEFRAME")
+        self.allowed_min_bars = config.get_setting("STRATEGY_SETTINGS", "MINIMUM_BARS_FOR_STRATEGY_CALCULATION")
         self.coin = coin
         self.ALLOWED_Z2_OFFSET = 1
 

@@ -14,6 +14,7 @@ logger = get_logger(__name__)
 from src.config.config import config
 
 from src.orders_block.order import Position_Status
+from src.backtester.v2.backtester import Test
 
 
 class ReportGenerator:
@@ -22,11 +23,8 @@ class ReportGenerator:
     Подготовленные данные предназначены для передачи в Jinja2-шаблон.
     """
 
-    def __init__(self, data_ohlcv, positions: dict[str, Any]):
-        from src.backtester.v2.backtester import Test
-        self.tests: Dict[str, Test] = {}
-        self.positions = positions
-        self.data_ohlcv = data_ohlcv
+    def __init__(self, test):
+        self.test = test
 
     def serialize_meta(self,meta):
         if not isinstance(meta, dict) or not meta:
@@ -84,7 +82,7 @@ class ReportGenerator:
         """
         Сериализует все позиции.
         """
-        return [self.serialize_position(p) for _, p in self.positions.items()]
+        return [self.serialize_position(p) for _, p in self.test.positions.items()]
 
 
     # -----------------------------
@@ -132,7 +130,7 @@ class ReportGenerator:
     def build_report_data(self) -> List[Dict[str, Any]]:
         """Главный метод, собирающий список сериализованных позиций."""
         # Фильтруем и сериализуем только закрытые позиции для отчета
-        closed_positions = [p for p in self.positions.values() if p.status != Position_Status.ACTIVE]
+        closed_positions = [p for p in self.test.positions.values() if p.status != Position_Status.ACTIVE]
         return [self.serialize_position(pos) for pos in closed_positions]
     
     # -----------------------------
@@ -159,67 +157,74 @@ class ReportGenerator:
         }
 
 
-    # -----------------------
-    # Генерация HTML отчёта
-    # -----------------------
-    def generate_html_report(self, data, coin, template_dir, period_start, period_end, target_path ):
-        """
-        Генерация HTML-отчёта по списку объектов TradeReport или dict.
-        Использует Jinja2-шаблон.
-        """
+# -----------------------
+# Генерация HTML отчёта
+# -----------------------
+def generate_html_report(test: Test):#data, coin, template_dir, period_start, period_end, target_path ):
+    """
+    Генерация HTML-отчёта по списку объектов TradeReport или dict.
+    Использует Jinja2-шаблон.
+    """
+    symbol, timeframe = test.coin.symbol, test.coin.timeframe
+    market_type = test.coin.market_type
+    period_start = test.ohlcv.index.min()
+    period_end = test.ohlcv.index.max()
+    template_dir = test.settings_test.get("TEMPLATE_DIRECTORY", "")
+    
 
 
-        title = f"{coin.get('SYMBOL', '')} Trade Report, timeframe {coin.get('TIMEFRAME', '')}, market_type {coin.get('MARKET_TYPE', '')}"
-        period_start = pd.to_datetime(period_start).strftime("%Y-%m-%d")
-        period_end = pd.to_datetime(period_end).strftime("%Y-%m-%d")
+    title = f"{symbol} Trade Report, timeframe {timeframe}, market_type {market_type}"
+    
 
-        gen = ReportGenerator(data, coin)
-        report = gen.build_report()
-        # gen = ReportGenerator(data_ohlcv,positions)
-        # report = gen.build_report()
-        
-        env = Environment(
-            loader=FileSystemLoader(template_dir),
-            autoescape=True,
-            trim_blocks=True,
-            lstrip_blocks=True
-        )
+    gen = ReportGenerator(test=test)
+    report = gen.build_report()
+    
+    env = Environment(
+        loader=FileSystemLoader(template_dir),
+        autoescape=True,
+        trim_blocks=True,
+        lstrip_blocks=True
+    )
 
-        template = env.get_template("trade_report2.html")
+    template = env.get_template("report_one_coin.html")
+    try:
         html_content = template.render(
             title=title,
             period_start=period_start,
             period_end=period_end,
             **report,
         )
+    except Exception as e:
+        logger.error(f"Ошибка при генерации HTML-отчета:  {e}")
+        return
+    files_report = get_export_path(coin=test.coin, file_extension="html")
+    Path(files_report).write_text(html_content, encoding="utf-8")
+    return files_report
 
-        Path(target_path).write_text(html_content, encoding="utf-8")
-        return target_path
-
-    # -----------------------
-    # Основная функция генерации отчёта по монете
-    # -----------------------
-    def generate_report(self, data, coin):
-        # try:
-        template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
-        start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")
-        end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
-        
-        files_report = get_export_path(coin=coin, file_extension="html")
-                
-        
-                
-        path = self.generate_html_report(
-            data = data,
-            coin = coin, 
-            period_start =start_date,
-            period_end =end_date,
-            target_path = files_report, 
-            template_dir = template_dir
-            )
-        logger.info(f"Отчет сохранен в: {path}")
-        # except Exception as e:
-        #     logger.error(f"Ошибка при генерации отчета для {symbol}: {e}")
+# # -----------------------
+# # Основная функция генерации отчёта по монете
+# # -----------------------
+# def generate_report(self, data_ohlcv, positions: dict[str, Any], template_name:str):
+#     # try:
+#     template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
+#     start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")
+#     end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
+    
+#     files_report = get_export_path(coin=coin, file_extension="html")
+            
+    
+            
+#     path = self.generate_html_report(
+#         data = data,
+#         coin = coin, 
+#         period_start =start_date,
+#         period_end =end_date,
+#         target_path = files_report, 
+#         template_dir = template_dir
+#         )
+#     logger.info(f"Отчет сохранен в: {path}")
+#     # except Exception as e:
+#     #     logger.error(f"Ошибка при генерации отчета для {symbol}: {e}")
         
 # -------------------------------------------------------------
 # Формирование пути для экспорта и импорта файлов
@@ -236,7 +241,7 @@ def get_export_path(coin = None, file_extension: str = "html") -> str:
         timeframe = coin.get('TIMEFRAME', '-')
     
     # report_date = datetime.date.today().isoformat()
-    file_prefix = f"{symbol}_UDDT__timeframe {timeframe}"
+    file_prefix = f"{symbol}-USDT_TF-{timeframe}"
     path = config.get_setting("BACKTEST_SETTINGS", "REPORT_DIRECTORY")
 
     if not os.path.exists(path):

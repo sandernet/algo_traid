@@ -23,23 +23,15 @@ ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускает
 # ====================================================
 # Запуск бэктеста для одной монеты
 # ====================================================
-def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> dict:
+def backtest_coin(data_df, data_df_1m, coin) -> dict:
     """
     Запуск бэктеста с данными, загруженными из локального файла.
     :param data_df: pd.DataFrame — исторические данные по монете
     :param data_df_1m: pd.DataFrame — исторические данные по монете на 1 минуту
     :param coin: dict — конфигурация монеты
-    :param allowed_min_bars: int — минимальное количество баров для расчета индикаторов
     """
     
-    symbol = coin.get("SYMBOL")+"/USDT"
-    # tick_size = coin.get("MINIMAL_TICK_SIZE")   
-    timeframe = coin.get("TIMEFRAME")
-    
-        
-    if allowed_min_bars > len(data_df):
-        logger.error(f"Невозможно запустить бектест: не хватает баров для расчета индикаторов.")
-        return {}
+    symbol, timeframe = coin.get("SYMBOL"), coin.get("TIMEFRAME")
     
     # Инициализация стратегии    
     strategy = ZigZagAndFibo(coin=coin)
@@ -57,10 +49,10 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> dict:
     arr['dt'] = data_df.index.to_numpy()
     arr = arr.to_numpy()
     
-    for i in range(allowed_min_bars, len(arr)):
+    for i in range(strategy.allowed_min_bars, len(arr)):
 
         
-        current_data    = arr[i-allowed_min_bars:i] # окно для расчета индикаторов
+        current_data    = arr[i-strategy.allowed_min_bars:i] # окно для расчета индикаторов
         current_open    = arr[i][0] # текущий бар открытие
         current_high    = arr[i][1] # текущий бар высота
         current_low     = arr[i][2] # текущий бар низ
@@ -68,7 +60,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> dict:
         current_index   = arr[i][4] # текущий бар индекс (Datetime)
         
         logger.debug(f"[yellow]----------------------------------------------------------- [/yellow]")
-        logger.info(f"[{current_index.strftime("%d.%m.%Y %H:%M")}] [yellow]- open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
+        logger.debug(f"[{current_index.strftime("%d.%m.%Y %H:%M")}] [yellow]- open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
         
         #-------------------------------------------------------------
         # Алгоритм входа в позицию и создание позиции
@@ -90,7 +82,7 @@ def backtest_coin(data_df, data_df_1m, coin, allowed_min_bars) -> dict:
                 
                 # создаем закрывающий маркет ордер по текущей рыночной цене
                 manager.close_position_at_market(position.id, Decimal(str(current_open)), close_bar=current_index)
-           
+
         #-------------------------------------------------------------
         # Если нет открытой позиции, и есть сигнал на вход
         #-------------------------------------------------------------

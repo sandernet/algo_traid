@@ -1,18 +1,3 @@
-"""
-Universal position & order management module for algorithmic trading.
-
-Features:
-- Order abstraction (ENTRY/TP/SL/CLOSE/..)
-- Position with multi-entry & multi-exit support
-- ExecutionEngine: simulates bar-by-bar execution (OHLC)
-- PositionManager: manages multiple positions (hedging supported)
-- Decimal arithmetic for prices/volumes
-- Simple demonstration at bottom
-
-Notes:
-- Execution rules are simplified for backtest: when a bar's range touches a price, the order is considered filled at that price (or slight rules for stop/limit)
-- Extend ExecutionEngine.should_execute logic to match your exchange/order model if needed.
-"""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
