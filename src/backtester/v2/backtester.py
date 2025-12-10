@@ -17,7 +17,7 @@ from src.config.config import config
 from src.data_fetcher.data_fetcher import DataFetcher
 from src.backtester.v2.backtester_coin import backtest_coin
 from src.data_fetcher.utils import select_range_backtest
-from src.backtester.v2.report_generator import generate_html_report
+from src.backtester.v2.report_generator import generate_report
 
 
 
@@ -214,7 +214,7 @@ class TestManager:
                         self.tests[test_result.id] = coin_task # Сохраняем все тесты
 
                         # TODO Генерация отчета по одной монете
-                        generate_html_report(test_result)
+                        generate_report(test_result)
                         
 
                         logger.info(f"[{coin_task}, {tf_task}] ✅ Результаты получены и агрегированы.")

@@ -171,10 +171,8 @@ def generate_html_report(test: Test):#data, coin, template_dir, period_start, pe
     period_end = test.ohlcv.index.max()
     template_dir = test.settings_test.get("TEMPLATE_DIRECTORY", "")
     
-
-
     title = f"{symbol} Trade Report, timeframe {timeframe}, market_type {market_type}"
-    
+
 
     gen = ReportGenerator(test=test)
     report = gen.build_report()
@@ -197,34 +195,21 @@ def generate_html_report(test: Test):#data, coin, template_dir, period_start, pe
     except Exception as e:
         logger.error(f"Ошибка при генерации HTML-отчета:  {e}")
         return
+
     files_report = get_export_path(coin=test.coin, file_extension="html")
+
     Path(files_report).write_text(html_content, encoding="utf-8")
     return files_report
 
-# # -----------------------
-# # Основная функция генерации отчёта по монете
-# # -----------------------
-# def generate_report(self, data_ohlcv, positions: dict[str, Any], template_name:str):
-#     # try:
-#     template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
-#     start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")
-#     end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
-    
-#     files_report = get_export_path(coin=coin, file_extension="html")
-            
-    
-            
-#     path = self.generate_html_report(
-#         data = data,
-#         coin = coin, 
-#         period_start =start_date,
-#         period_end =end_date,
-#         target_path = files_report, 
-#         template_dir = template_dir
-#         )
-#     logger.info(f"Отчет сохранен в: {path}")
-#     # except Exception as e:
-#     #     logger.error(f"Ошибка при генерации отчета для {symbol}: {e}")
+# -----------------------
+# Основная функция генерации отчёта по монете
+# -----------------------
+def generate_report(test: Test):
+    try:
+        path = generate_html_report( test = test)
+        logger.info(f"Отчет сохранен в: {path}")
+    except Exception as e:
+        logger.error(f"Ошибка при генерации отчета для {test.coin}: {e}")
         
 # -------------------------------------------------------------
 # Формирование пути для экспорта и импорта файлов
