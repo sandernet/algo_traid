@@ -1,6 +1,10 @@
 # backtest	Тестирование стратегии на исторических данных.	
 # Симуляция выполнения сделок. 
 # Расчет метрик производительности (прибыльность, просадка, Sharpe Ratio).
+from uuid import uuid4
+from typing import Dict, Any, Tuple, List
+from pandas import DataFrame
+import pandas as pd
 
 from decimal import Decimal
 from typing import Optional
@@ -19,6 +23,48 @@ from src.orders_block.risk_manager import RiskManager
 from src.data_fetcher.utils import select_range, shift_timestamp
 
 ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускается последняя точка zigzag
+
+# Класс Test (окно тестирования) монета и таймфрейм период
+class Test():
+    # окно тестирования
+    def __init__(self, data, coin, settings_test):
+        # параметры теста
+        self.id = uuid4().hex
+        self.coin = coin
+        self.settings_test = settings_test
+        
+        # Результаты теста
+        self.ohlcv = data
+        self.positions = {}
+        
+        # статистика теста
+        self.total_pnl      = Decimal("0") # общий PnL
+        self.total_loss     = Decimal("0") # общий убыток
+        self.total_win      = Decimal("0") # общий прибыль
+        self.wins           = Decimal("0") # общее количество побед
+        self.losses         = Decimal("0") # общее количество проигрышей
+        self.count_positions = Decimal("0") # общее количество позиций
+        self.winrate        = Decimal("0") # процент побед
+        
+
+        
+    def calculate_statistics(self):
+        
+        # TODO: Добавить расчеты статистики
+        self.total_pnl = sum(pos.profit for pos in self.positions.values())
+        self.total_win = sum(pos.profit for pos in self.positions.values() if pos.profit > 0)
+        self.total_loss = sum(pos.profit for pos in self.positions.values() if pos.profit < 0)
+        self.wins = sum(1 for pos in self.positions.values() if pos.profit > 0)
+        self.losses = sum(1 for pos in self.positions.values() if pos.profit < 0)
+        self.count_positions = len(self.positions)
+        self.winrate = (self.wins / self.count_positions * 100) if self.count_positions > 0 else 0
+        
+        # Максимальная просадка
+        
+        # TODO: Добавить расчеты статистики прибыльности
+        # ==================================
+        # Добавить вызовы расчетов:
+        # ==================================
 
 # ====================================================
 # Запуск бэктеста для одной монеты

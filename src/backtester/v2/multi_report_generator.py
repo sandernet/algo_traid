@@ -11,7 +11,7 @@ from typing import Any, Dict, Tuple, List
 
 from src.backtester.v2.backtester import Test
 from src.orders_block.order import OrderStatus, OrderType
-from src.backtester.v2.report_generator import ReportGenerator, get_export_path
+from src.backtester.v2.report import ReportGenerator, get_export_path
 
 # Логирование
 # ====================================================
