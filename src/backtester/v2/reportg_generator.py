@@ -75,7 +75,7 @@ class ReportGenerator:
 
 
     # -----------------------------
-    def serialize_statistics(self, serialized: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def serialize_statistics(self) -> Dict[str, Any]:
         """
         Создаёт статистику по всем позициям.
         """
@@ -120,7 +120,7 @@ class ReportGenerator:
         Это итоговый объект для шаблона Jinja2.
         """
         serialized_positions = self.serialize_all_positions()
-        stats = self.serialize_statistics(serialized_positions)
+        stats = self.serialize_statistics()
         settings = self.test.settings_test
         coin = self.test.coin
         
