@@ -120,6 +120,7 @@ class ReportGenerator:
         serialized_positions = self.serialize_all_positions()
         stats = self.serialize_statistics(serialized_positions)
         settings = self.test.settings_test
+        coin = self.test.coin
         
         # 1. Подготовка данных OHLCV
         # ohlcv_df = self.data_ohlcv
@@ -130,5 +131,6 @@ class ReportGenerator:
         return {
             "positions": serialized_positions,
             "stats": stats,
-            "settings": settings
+            "settings": settings,
+            "coin": coin,
         }

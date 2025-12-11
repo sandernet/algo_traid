@@ -1,0 +1,107 @@
+{
+    "positions": [
+        {
+            "id": 1,
+            "symbol": "BTCUSDT",
+            "direction": "LONG",
+            "status": "CLOSED",
+            "opened_volume": 0.5,
+            "closed_volume": 0.5,
+            "bar_opened": 120,
+            "bar_closed": 138,
+            "avg_entry_price": 42000.0,
+            "profit": 350.0,
+            "meta": {"reason": "signal_long"},
+            "orders": [
+                {
+                    "id": 101,
+                    "order_type": "MARKET",
+                    "status": "FILLED",
+                    "price": 42000.0,
+                    "volume": 0.5,
+                    "profit": 0,
+                    "filled": True,
+                    "direction": "LONG",
+                    "created_bar": 120,
+                    "close_bar": None,
+                    "meta": "source=strategyA"
+                },
+                {
+                    "id": 102,
+                    "order_type": "MARKET",
+                    "status": "FILLED",
+                    "price": 42700.0,
+                    "volume": 0.5,
+                    "profit": 350.0,
+                    "filled": True,
+                    "direction": "LONG",
+                    "created_bar": 138,
+                    "close_bar": 138,
+                    "meta": ""
+                }
+            ]
+        },
+
+        {
+            "id": 2,
+            "symbol": "BTCUSDT",
+            "direction": "SHORT",
+            "status": "CLOSED",
+            "opened_volume": 1.0,
+            "closed_volume": 1.0,
+            "bar_opened": 150,
+            "bar_closed": 160,
+            "avg_entry_price": 43000.0,
+            "profit": -120.0,
+            "meta": {},
+            "orders": [
+                {
+                    "id": 201,
+                    "order_type": "MARKET",
+                    "status": "FILLED",
+                    "price": 43000.0,
+                    "volume": 1.0,
+                    "profit": 0,
+                    "filled": True,
+                    "direction": "SHORT",
+                    "created_bar": 150,
+                    "close_bar": None,
+                    "meta": ""
+                },
+                {
+                    "id": 202,
+                    "order_type": "MARKET",
+                    "status": "FILLED",
+                    "price": 43120.0,
+                    "volume": 1.0,
+                    "profit": -120.0,
+                    "filled": True,
+                    "direction": "SHORT",
+                    "created_bar": 160,
+                    "close_bar": 160,
+                    "meta": ""
+                }
+            ]
+        }
+    ],
+
+    "stats": {
+        "total_positions": 2,
+        "total_pnl": 230.0,
+        "total_win": 350.0,
+        "total_loss": -120.0,
+        "wins": 1,
+        "losses": 1,
+        "winrate": 50.0
+    },
+
+    "settings": {
+        "sl": 0.5,
+        "tp": 1.0,
+        "max_positions": 10,
+        "strategy": "BreakoutStrategy",
+        "timeframe": "1h"
+    },
+
+    "coin": "BTCUSDT"
+}
