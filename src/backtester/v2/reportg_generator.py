@@ -1,6 +1,7 @@
 # report_generator.py
 from typing import List, Dict, Any
 from src.position_manager.order import Position_Status
+from src.backtester.v2.backtester import Test
 
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
@@ -11,7 +12,7 @@ class ReportGenerator:
     Подготовленные данные предназначены для передачи в Jinja2-шаблон.
     """
 
-    def __init__(self, test):
+    def __init__(self, test: Test):
         self.test = test
 
     def serialize_meta(self,meta):
@@ -74,33 +75,20 @@ class ReportGenerator:
 
 
     # -----------------------------
-    # СТАТИСТИКА
-    # -----------------------------
-    def build_statistics(self, serialized: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def serialize_statistics(self, serialized: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Создаёт статистику по всем позициям.
         """
-        try:
-            total_pnl = 0 # общий PnL
-            total_loss = 0 # общий убыток
-            total_win = 0 # общий прибыль
-            wins = 0 # общее количество побед
-            losses = 0 # общее количество проигрышей
-            count = 0 # общее количество позиций
-            winrate = 0 # процент побед
-
-            for p in serialized:
-                profit = p.get("profit") or 0
-                total_pnl += profit
-                if profit > 0:
-                    wins += 1
-                    total_win += profit
-                elif profit < 0:
-                    losses += 1
-                    total_loss += profit
-
-            count = len(serialized)
-            winrate = (wins / count * 100) if count else 0
+        self.test
+        
+        try:        
+            total_pnl = self.test.total_pnl # общий PnL
+            total_loss = self.test.total_loss # общий убыток
+            total_win = self.test.total_win # общий прибыль
+            wins = self.test.wins # общее количество побед
+            losses = self.test.losses # общее количество проигрышей
+            count = self.test.count_positions # общее количество позиций
+            winrate = self.test.winrate # процент побед
 
             return {
                 "total_positions": count,
@@ -130,7 +118,8 @@ class ReportGenerator:
         Это итоговый объект для шаблона Jinja2.
         """
         serialized_positions = self.serialize_all_positions()
-        stats = self.build_statistics(serialized_positions)
+        stats = self.serialize_statistics(serialized_positions)
+        settings = self.test.settings_test
         
         # 1. Подготовка данных OHLCV
         # ohlcv_df = self.data_ohlcv
@@ -141,5 +130,5 @@ class ReportGenerator:
         return {
             "positions": serialized_positions,
             "stats": stats,
-            # "chart_html": chart_html # Добавляем HTML-код графика
+            "settings": settings
         }

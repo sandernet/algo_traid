@@ -11,6 +11,14 @@
             </div>
             <div class="stat-item">
                 <strong>Период тестирования:</strong> 
+                {{ period_start | default('N/A') }} - {{ period_end | default('N/A') }}
+            </div>
+            <div class="stat-item">
+                
+                {{ stats }}
+            </div>
+            <!-- <div class="stat-item">
+                <strong>Период тестирования:</strong> 
                 {{ coin_data.summary.period_start | default('N/A') }} - {{ coin_data.summary.period_end | default('N/A') }}
             </div>
             <div class="stat-item">
@@ -20,7 +28,7 @@
             <div class="stat-item">
                 <strong>start_deposit_usdt:</strong> 
                 {{ "%.2f"|format(coin_data.summary.start_deposit_usdt) }}
-            </div>
+            </div> -->
             {# <div class="stat-item">
                 <strong>market_type:</strong> 
                 {{ "%.2f"|format(summary.market_type) }}

@@ -28,7 +28,7 @@ ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускает
 class Test():
     """
     Класс тестирования стратегии на исторических данных.
-    содержит результаты тестирования
+    содержит результаты тестирования и расчетную статистику
     """
     def __init__(self, data, coin, settings_test):
         # параметры теста
@@ -89,7 +89,6 @@ def backtest_coin(data_df, data_df_1m, coin) -> dict:
     manager = PositionManager()
     engine = ExecutionEngine(manager)
     position: Optional[Position] = None
-
     
     
     # перебираем все бары начиная с минимального количества
@@ -185,7 +184,7 @@ def create_position(signal, manager, coin, current_index) -> Optional[Position]:
     tick_size = Decimal(str(coin.get("MINIMAL_TICK_SIZE")))
 
     # Риск менеджмент - установка объема позиции
-    entry_price = signal.get("price")
+    entry_price = signal.get("price", None)
     if entry_price is None:
         logger.error("Ошибка: цена входа не определена в сигнале.")
         return None
@@ -193,16 +192,17 @@ def create_position(signal, manager, coin, current_index) -> Optional[Position]:
         # 1. создаем позицию
         position = manager.open_position(symbol=symbol, direction=direction, tick_size=tick_size, open_bar=current_index)
         
+        # Цена входа округляем до ближайшего тикера
         entry_price = position.round_to_tick(Decimal(entry_price))
-        # -------------------------------------------------------------
-        # Добавить риск менеджмент - расчет объема позиции
-        # -------------------------------------------------------------
+        
+
+        # Риск менеджмент - расчет объема позиции
         # объем позиции в нативной валюте (например, в BTC) покупаем по текущей цене
         rm = RiskManager(coin=coin)
         volume = rm.calculate_position_size(entry_price=entry_price)
         
 
-        # создаем ордер на вход
+        # создаем ордер на вход в позицию
         order = make_order(OrderType.ENTRY, price=entry_price, volume=volume, direction=direction, created_bar=current_index)
 
         # добавляем ордер в позицию

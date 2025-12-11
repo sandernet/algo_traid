@@ -24,7 +24,6 @@ def generate_html_report(test: Test):#data, coin, template_dir, period_start, pe
     symbol, timeframe = test.coin.get("SYMBOL"), test.coin.get("TIMEFRAME")
     market_type = test.coin.get("MARKET_TYPE")
     period_start = test.settings_test.get("START_DATE", test.ohlcv.index.min())
-    
     period_end = test.settings_test.get("END_DATE", test.ohlcv.index.max())
     template_dir = test.settings_test.get("TEMPLATE_DIRECTORY", "")
     
@@ -45,6 +44,7 @@ def generate_html_report(test: Test):#data, coin, template_dir, period_start, pe
     try:
         html_content = template.render(
             title=title,
+            coin_name=symbol,
             period_start=period_start,
             period_end=period_end,
             **report,

@@ -121,7 +121,6 @@ class TestManager:
         
         # self.tests[test.id] = test
         logger.warning(f"[{symbol}, {timeframe}] ✅ Обработка завершена. Всего позиций: {len(positions)}")
-        
         return test
 
 
@@ -164,7 +163,7 @@ class TestManager:
                     test_result = future.result()
                     # получили результат структура тест
                     if test_result:
-                        self.tests[test_result.id] = coin_task # Сохраняем все тесты
+                        self.tests[test_result.id] = test_result # Сохраняем все тесты
 
                         # TODO Генерация отчета по одной монете
                         generate_report(test_result)
