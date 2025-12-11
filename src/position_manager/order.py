@@ -58,17 +58,6 @@ class Direction(Enum):
     SHORT = "short"
 
 
-# # -------------------------
-# # Core data structures
-# # -------------------------
-# @dataclass
-# class Execution:
-#     price: Decimal
-#     volume: Decimal
-#     bar_index: Optional[datetime]  # индекс бара исполнения
-#     order_id: str
-
-
 @dataclass
 class Order:
     id: str
@@ -112,6 +101,13 @@ class Order:
             else:
                 self.profit = (self.price - current_price) * self.volume
 
+    # Расчет профита
+    def cancel_order(self, current_price: Decimal):
+        if self.order_type in {OrderType.TAKE_PROFIT, OrderType.STOP_LOSS, OrderType.CLOSE} and self.price and self.volume:
+            if self.direction == Direction.LONG:
+                self.profit = (current_price - self.price) * self.volume
+            else:
+                self.profit = (self.price - current_price) * self.volume
 
 
 class Position:
@@ -143,7 +139,7 @@ class Position:
         self.orders.append(order)
 
     # Отмена ордера по ID
-    def cancel_order(self, order_id: str):
+    def __cancel_order(self, order_id: str):
         for o in self.orders:
             if o.id == order_id and o.status == OrderStatus.ACTIVE:
                 o.status = OrderStatus.CANCELLED

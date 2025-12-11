@@ -1,8 +1,8 @@
-from src.orders_block.order import Order
-from src.orders_block.order import OrderType
-from src.orders_block.order import to_decimal
-from src.orders_block.order import Direction
-from src.orders_block.order import PositionManager
+from src.position_manager.order import Order
+from src.position_manager.order import OrderType, Position_Status
+from src.position_manager.order import to_decimal
+from src.position_manager.order import Direction
+from src.position_manager.order import PositionManager
 from datetime import datetime
 
 from decimal import Decimal
@@ -19,15 +19,15 @@ class ExecutionEngine:
     """
     Упрощенный движок исполнения, который обрабатывает бар по бару и заполняет активные ордера.
     Правила (упрощенные):
-      - MARKET-ордеры: заполняются немедленно при закрытии бара
-      - ОРДЕРЫ ЛИМИТ на вход (для LONG): заполняются, если низкая цена бара <= цены лимита <= высокая цена бара
+        - MARKET-ордеры: заполняются немедленно при закрытии бара
+        - ОРДЕРЫ ЛИМИТ на вход (для LONG): заполняются, если низкая цена бара <= цены лимита <= высокая цена бара
         (аналогично для SHORT: если низкая цена бара <= цены лимита <= высокая цена бара)
-      - ОРДЕРЫ СТОП-ЛОСС:
-          - для LONG стоп-лосс (продажа для закрытия): запускается, если низкая цена бара <= цены стопа
-          - для SHORT стоп-лосс (покупка для закрытия): запускается, если высокая цена бара >= цены стопа
-      - ОРДЕРЫ ТЕЙК-ПРОФИТ:
-          - для LONG: запускается, если высокая цена бара >= цены тейка
-          - для SHORT: запускается, если низкая цена бара <= цены тейка
+    - ОРДЕРЫ СТОП-ЛОСС:
+        - для LONG стоп-лосс (продажа для закрытия): запускается, если низкая цена бара <= цены стопа
+        - для SHORT стоп-лосс (покупка для закрытия): запускается, если высокая цена бара >= цены стопа
+    - ОРДЕРЫ ТЕЙК-ПРОФИТ:
+        - для LONG: запускается, если высокая цена бара >= цены тейка
+        - для SHORT: запускается, если низкая цена бара <= цены тейка
     Частичные заполнения не моделируются (полное заполнение).
     """
     def __init__(self, manager: PositionManager):
@@ -69,6 +69,13 @@ class ExecutionEngine:
                     # действия после выполнения: если запись заполнена, могут быть ордера в скобках (их может установить пользователь)
                     # здесь мы могли бы реализовать логику OCO, трейлинг-стопы и т. д. 
                     # На данный момент мы оставляем расширения на усмотрение пользователя.
+            
+            # Сделать универсальную проверку по переводу SL в безубыточность
+            # Пока проверяем только для активных позиций
+            # проверяем исполнен ли TP после которого переводим SL в без убыточность
+            if pos.status == Position_Status.ACTIVE and pos.check_stop_break():
+                # если закрыт хотя бы один TP, двигаем стоп в безубыточность
+                pos.move_stop_to_break_even()
 
 
     # ------------------------
@@ -78,7 +85,7 @@ class ExecutionEngine:
         """
         Проверка условий исполнения ордера на текущем баре.
         Если ордер может быть заполнен на этом баре, то возвращает True, иначе False.
-       """
+        """
         low = to_decimal(bar[2])
         high = to_decimal(bar[1])
         close = to_decimal(bar[3])
@@ -115,10 +122,10 @@ class ExecutionEngine:
     def get_execution_price(self, order: Order, bar: list[float]) -> Decimal:
         """
         Определить цену исполнения. Для упрощения:
-         - MARKET -> цена закрытия
-         - TP -> цена тейка
-         - SL -> цена стопа
-         - LIMIT/ENTRY -> цена ордера (если достигнута)
+            - MARKET -> цена закрытия
+            - TP -> цена тейка
+            - SL -> цена стопа
+            - LIMIT/ENTRY -> цена ордера (если достигнута)
         Вы можете улучшить метод, моделируя слэп, заполнение при открытии, VWAP и т.д.
         """
         close = to_decimal(bar[3])

@@ -13,7 +13,7 @@ from src.logical.indicators.fibonacci import fibonacci_levels
 # индикатор zigzag
 from src.logical.indicators.zigzag import ZigZag
 # класс позиции
-from src.orders_block.order import  Direction  # статусы
+from src.position_manager.order import  Direction  # статусы
 
 # ALLOWED_Z2_OFFSET = 1
 

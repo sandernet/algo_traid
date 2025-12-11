@@ -1,6 +1,6 @@
 # report_generator.py
 from typing import List, Dict, Any
-from src.orders_block.order import Position_Status
+from src.position_manager.order import Position_Status
 
 from src.utils.logger import get_logger
 logger = get_logger(__name__)

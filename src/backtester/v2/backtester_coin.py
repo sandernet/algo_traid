@@ -15,36 +15,39 @@ logger = get_logger(__name__)
 
 
 from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
-from src.orders_block.order import PositionManager,  make_order, Position
-from src.orders_block.order import OrderType, Position_Status
+from src.position_manager.order import PositionManager,  make_order, Position
+from src.position_manager.order import OrderType, Position_Status
 from src.backtester.v2.execution_engine import ExecutionEngine
 
-from src.orders_block.risk_manager import RiskManager
+from src.position_manager.risk_manager import RiskManager
 from src.data_fetcher.utils import select_range, shift_timestamp
 
 ALLOWED_Z2_OFFSET = 1  # сколько баров назад допускается последняя точка zigzag
 
-# Класс Test (окно тестирования) монета и таймфрейм период
+# Класс Test 
 class Test():
-    # окно тестирования
+    """
+    Класс тестирования стратегии на исторических данных.
+    содержит результаты тестирования
+    """
     def __init__(self, data, coin, settings_test):
         # параметры теста
         self.id = uuid4().hex
-        self.coin = coin
-        self.settings_test = settings_test
+        self.coin = coin # монета и её настройки из файла конфигурации
+        self.settings_test = settings_test # настройки тестирования из файла конфигурации
         
         # Результаты теста
-        self.ohlcv = data
-        self.positions = {}
+        self.ohlcv = data # данные теста
+        self.positions = {} # список позиций в тесте
         
-        # статистика теста
-        self.total_pnl      = Decimal("0") # общий PnL
-        self.total_loss     = Decimal("0") # общий убыток
-        self.total_win      = Decimal("0") # общий прибыль
-        self.wins           = Decimal("0") # общее количество побед
-        self.losses         = Decimal("0") # общее количество проигрышей
-        self.count_positions = Decimal("0") # общее количество позиций
-        self.winrate        = Decimal("0") # процент побед
+        # статистика теста расчитывается после получения результатов тестирования
+        self.total_pnl          = Decimal("0") # общий PnL
+        self.total_loss         = Decimal("0") # общий убыток
+        self.total_win          = Decimal("0") # общий прибыль
+        self.wins               = Decimal("0") # общее количество побед
+        self.losses             = Decimal("0") # общее количество проигрышей
+        self.count_positions    = Decimal("0") # общее количество позиций
+        self.winrate            = Decimal("0") # процент побед
         
 
         
@@ -255,10 +258,6 @@ def process_orders(position: Position, engine: ExecutionEngine, current_range_1m
             # передаем бар в движок исполнения
             engine.process_bar(bar=bar1m, bar_index=bar1m[4])
             
-            # проверяем исполнен ли TP после которого переводим SL в без убыточность
-            if position.status == Position_Status.ACTIVE and position.check_stop_break():
-                # если закрыт хотя бы один TP, двигаем стоп в безубыточность
-                position.move_stop_to_break_even()
     except Exception as e:
         logger.error(f"Ошибка при обработке ордеров: {e}")
         raise
