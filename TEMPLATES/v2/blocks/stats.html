@@ -1,0 +1,34 @@
+{# templates/blocks/stats.html #}
+<div class="header-box">
+    <h2>Statistics</h2>
+    <div class="stats-grid">
+        <div class="stat-item">
+            <strong>Total positions:</strong> 
+            {{ stats.total_positions }}
+        </div>
+        <div class="stat-item">
+            <strong>total_pnl:</strong> 
+            {{ "%.2f"|format(stats.total_pnl) }}
+        </div>
+        <div class="stat-item">
+            <strong>Wins:</strong> 
+            {{ "%.2f"|format(stats.wins) }}
+        </div>
+        <div class="stat-item">
+            <strong>Losses:</strong> 
+            {{ "%.2f"|format(stats.losses) }}
+        </div>
+        <div class="stat-item">
+            <strong>Winrate (%):</strong> 
+            {{ "%.2f"|format(stats.winrate) }}
+        </div>
+        <div class="stat-item">
+            <strong>Total win:</strong> 
+            {{ "%.2f"|format(stats.total_win) }}
+        </div>
+        <div class="stat-item">
+            <strong>Total loss:</strong> 
+            {{ "%.2f"|format(stats.total_loss) }}
+        </div>
+    </div> 
+</div>

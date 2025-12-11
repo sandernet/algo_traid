@@ -169,7 +169,7 @@ class TestManager:
                         generate_report(test_result)
                         
 
-                        logger.info(f"[{coin_task}, {tf_task}] ✅ Результаты получены и агрегированы.")
+                        logger.info(f"[{coin_task.get('SYMBOL')}, {tf_task}] ✅ Результаты получены и агрегированы.")
                         
                 except Exception as exc:
                     logger.error(f"[{coin_task}, {tf_task}] ❌ Задача вызвала исключение: {exc}")

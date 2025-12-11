@@ -40,7 +40,7 @@ def generate_html_report(test: Test):#data, coin, template_dir, period_start, pe
         lstrip_blocks=True
     )
 
-    template = env.get_template("report_coin.html")
+    template = env.get_template("v2/report_coin.html")
     try:
         html_content = template.render(
             title=title,
