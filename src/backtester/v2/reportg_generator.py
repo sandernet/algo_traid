@@ -89,8 +89,10 @@ class ReportGenerator:
             losses = self.test.losses # общее количество проигрышей
             count = self.test.count_positions # общее количество позиций
             winrate = self.test.winrate # процент побед
+            test_id = self.test.id
 
             return {
+                "test_id": test_id,
                 "total_positions": count,
                 "total_pnl": total_pnl,
                 "total_win": total_win,

@@ -9,21 +9,9 @@
     {% include "v2/blocks/settings.html" %}
 
     {% include "v2/blocks/stats.html" %}
-    <h2 class="toggle-positions-btn" onclick="toggleVisibility('{{ unique_id }}_positions')">
-            Все позиции ({{ stats.count_positions | default(0) }})
-    </h2>
-    <h2 class="toggle-positions-btn" onclick="toggleVisibility('{{ unique_id }}_graphics')">
-            Все позиции ({{ stats.count_positions | default(0) }})
-    </h2>
-    {#<div class="stat-item">
-        <button class="toggle-positions-btn" onclick="toggleVisibility('{{ unique_id }}_positions')">
-            Все позиции ({{ stats.count_positions | default(0) }})
-        </button>
-        <button class="toggle-positions-btn" onclick="toggleVisibility('{{ unique_id }}_graphics')">
-            Графики тестирования ({{ stats.count_positions | default(0) }})
-        </button>
-    </div>#}
+
     {% include "v2/blocks/position.html" %}
+    {% include "v2/blocks/graphic.html" %}
 </div>
 
 

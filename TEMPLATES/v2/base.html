@@ -18,9 +18,15 @@
             .stats-grid {
                 display: flex;
                 flex-direction: row;
-                justify-content: flex-start;
+                justify-content: space-between;
                 align-items: center;
                 gap: 10px;
+            }
+            /* Чтобы .stats-items не сжимался и занимал всё доступное пространство слева */
+            .stats-items {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap; /* на случай, если элементов слишком много */
             }
 
             .stat-item {
@@ -113,8 +119,12 @@
                 font-weight: bold;
                 text-decoration: underline;
             }
+            .button-group {
+                display: flex;
+                gap: 10px;
+            }
             
-            .toggle-positions-btn { background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 15px; }
+            .toggle-positions-btn { background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer;}
             .toggle-positions-btn:hover { background-color: #0056b3; }
         </style>
     {% endblock %}
