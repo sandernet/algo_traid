@@ -12,9 +12,9 @@ logger = get_logger(__name__)
 from src.config.config import config
 # Подключение модуля с загрузчиком данных
 from src.data_fetcher.data_fetcher import DataFetcher
-from src.backtester.v2.backtester_coin import backtest_coin, Test
+from src.backtester.v2.backtester_coin import Test
 from src.data_fetcher.utils import select_range_backtest
-from src.backtester.v2.report import generate_report
+from src.backtester.v2.report import generate_html_report
 
 
     
@@ -110,17 +110,14 @@ class TestManager:
 
         
         # Основной расчет по свечам на выходе получаем массив позиций с ордерами
-        positions = backtest_coin(select_data, select_data_1m, coin)
-        
         test = Test(select_data,  coin, self.settings_test)
-        
-        test.positions = positions
+
+        test.backtest_coin(select_data_1m)
         # расчет статистики
         test.calculate_statistics()
         
-        
         # self.tests[test.id] = test
-        logger.warning(f"[{symbol}, {timeframe}] ✅ Обработка завершена. Всего позиций: {len(positions)}")
+        logger.warning(f"[{symbol}, {timeframe}] ✅ Обработка завершена. Всего позиций: {len(test.positions)}")
         return test
 
 
@@ -140,7 +137,6 @@ class TestManager:
         logger.info(f"📊 Всего задач бэктеста: {len(tasks)}")
         
         # Словарь для структурирования результатов: {"BTC": {"1h": Test_obj, "4h": Test_obj}, ...}
-
 
         # Запуск параллельного выполнения
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -166,8 +162,7 @@ class TestManager:
                         self.tests[test_result.id] = test_result # Сохраняем все тесты
 
                         # TODO Генерация отчета по одной монете
-                        generate_report(test_result)
-                        
+                        generate_html_report(test_result)
 
                         logger.info(f"[{coin_task.get('SYMBOL')}, {tf_task}] ✅ Результаты получены и агрегированы.")
                         
@@ -178,29 +173,30 @@ class TestManager:
 
         # TODO формирование общего отчета по всем монетам
         # Перенести в модуль генерации отчета
+        
         reports_structure = {}
         # Формируем отчет
         if len(self.tests) > 0:
             logger.info(f"📊 Генерация отчета... всего тестов {len(self.tests)}")
-            # try:
+            try:
                 
-            #     for test in self.tests.values():
-            #         if test.symbol not in reports_structure:
-            #             reports_structure[test.symbol] = {}
-            #         reports_structure[test.symbol][test.timeframe] = test
+                for test in self.tests.values():
+                    if test.symbol not in reports_structure:
+                        reports_structure[test.symbol] = {}
+                    reports_structure[test.symbol][test.timeframe] = test
                 
-            #     from src.backtester.v2.multi_report_generator import MultiReportGenerator 
+                from src.backtester.v2.multi_report_generator import MultiReportGenerator 
                 
-            #     # Создаем экземпляр
-            #     report_gen = MultiReportGenerator(reports_structure, template_dir=self.template_dir)
+                # Создаем экземпляр
+                report_gen = MultiReportGenerator(reports_structure)
                 
-            #     # Передаем период тестирования из конфига
-            #     report_path = report_gen.generate_html_report(
-            #         template_name="report.html", 
-            #     )
-            #     logger.info(f"💾 Мульти-отчет сохранен в: {report_path}")
-            # except Exception as e:
-            #     logger.error(f"Ошибка при генерации мульти-отчета: {e}")
+                # Передаем период тестирования из конфига
+                report_path = report_gen.generate_html_report(
+                    template_name="report.html", 
+                )
+                logger.info(f"💾 Мульти-отчет сохранен в: {report_path}")
+            except Exception as e:
+                logger.error(f"Ошибка при генерации мульти-отчета: {e}")
                 
                 
         logger.info("============================================================================")

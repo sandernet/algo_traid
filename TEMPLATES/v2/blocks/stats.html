@@ -1,40 +1,70 @@
 {# templates/blocks/stats.html #}
 <div class="header-box">
-    <h2>{{ coin_name }} - Statistics</h2>
+
+    <h2>{{ coin_name }} / {{ stats.timeframe }} - Statistics</h2>
+<div class="statistics">
     <div class="stats-grid">
         <div class="stats-items">
             <div class="stat-item">
-                <strong>Total positions:</strong> 
+                <strong>Начальный депозит:</strong></br>
+                {{ stats.start_deposit }}
+            </div>
+            <div class="stat-item">
+                <strong>Минимальное движение цены :</strong></br>
+                {{ stats.minimal_tick_size }}
+            </div>
+            <div class="stat-item">
+                <strong>Плечо:</strong></br> 
+                {{ stats.leverage }}
+            </div>
+        </div> 
+    </div> 
+
+    <div class="stats-grid">
+        <div class="stats-items">
+            <div class="stat-item">
+                <strong>Total positions:</strong></br>
                 {{ stats.total_positions }}
             </div>
             <div class="stat-item">
-                <strong>total_pnl:</strong> 
+                <strong>total_pnl:</strong> </br>
                 {{ "%.2f"|format(stats.total_pnl) }}
             </div>
             <div class="stat-item">
-                <strong>Wins:</strong> 
+                <strong>Wins:</strong></br> 
                 {{ "%.2f"|format(stats.wins) }}
             </div>
             <div class="stat-item">
-                <strong>Losses:</strong> 
+                <strong>Losses:</strong></br> 
                 {{ "%.2f"|format(stats.losses) }}
             </div>
             <div class="stat-item">
-                <strong>Winrate (%):</strong> 
+                <strong>Winrate (%):</strong></br> 
                 {{ "%.2f"|format(stats.winrate) }}
             </div>
             <div class="stat-item">
-                <strong>Total win:</strong> 
+                <strong>Total win:</strong></br> 
                 {{ "%.2f"|format(stats.total_win) }}
             </div>
             <div class="stat-item">
-                <strong>Total loss:</strong> 
+                <strong>Total loss:</strong></br> 
                 {{ "%.2f"|format(stats.total_loss) }}
             </div>
         </div>
         <div class="button-group">
-            <button class="toggle-positions-btn" onclick="toggleVisibility('{{ stats.test_id }}_positions')">Все позиции ({{ stats.total_positions | default(0) }})</button>
-            <button class="toggle-positions-btn" onclick="toggleVisibility('{{ stats.test_id }}_graphics')" >Графики тестирования ({{ stats.total_positions | default(0) }})</button>
+            <button 
+                class="toggle-positions-btn" 
+                onclick="toggleVisibility('{{ stats.test_id }}_positions')">
+                    Все позиции ({{ stats.total_positions | default(0) }})
+            </button>
+            <button 
+                class="toggle-positions-btn" 
+                onclick="toggleVisibility('{{ stats.test_id }}_graphics')"
+                >
+                Графики ({{ stats.total_positions | default(0) }})
+            </button>
         </div>
     </div> 
+</div> 
 </div>
+

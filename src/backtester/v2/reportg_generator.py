@@ -83,6 +83,12 @@ class ReportGenerator:
         
         try:  
             test_id = self.test.id      
+            symbol = self.test.symbol 
+            timeframe = self.test.timeframe
+            start_deposit = self.test.coin.get("START_DEPOSIT_USDT")
+            minimal_tick_size = self.test.coin.get("MINIMAL_TICK_SIZE")
+            leverage = self.test.coin.get("LEVERAGE")
+            
             total_pnl = self.test.total_pnl # общий PnL
             total_loss = self.test.total_loss # общий убыток
             total_win = self.test.total_win # общий прибыль
@@ -94,6 +100,13 @@ class ReportGenerator:
 
             return {
                 "test_id": test_id,
+                "symbol": symbol,
+                "timeframe": timeframe,
+                "start_deposit": start_deposit,
+                "minimal_tick_size": minimal_tick_size,
+                "leverage": leverage,
+                
+                
                 "total_positions": count,
                 "total_pnl": total_pnl,
                 "total_win": total_win,

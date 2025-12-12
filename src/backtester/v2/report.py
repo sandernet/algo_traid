@@ -14,9 +14,9 @@ from src.backtester.v2.reportg_generator import ReportGenerator
 
 
 # -----------------------
-# Генерация HTML отчёта
+# Основная функция генерации отчёта по монете
 # -----------------------
-def generate_html_report(test: Test):#data, coin, template_dir, period_start, period_end, target_path ):
+def generate_html_report(test: Test):
     """
     Генерация HTML-отчёта по списку объектов TradeReport или dict.
     Использует Jinja2-шаблон.
@@ -56,17 +56,7 @@ def generate_html_report(test: Test):#data, coin, template_dir, period_start, pe
     files_report = get_export_path(coin=test.coin, file_extension="html")
 
     Path(files_report).write_text(html_content, encoding="utf-8")
-    return files_report
-
-# -----------------------
-# Основная функция генерации отчёта по монете
-# -----------------------
-def generate_report(test: Test):
-    try:
-        path = generate_html_report( test = test)
-        logger.info(f"Отчет сохранен в: {path}")
-    except Exception as e:
-        logger.error(f"Ошибка при генерации отчета для {test.coin}: {e}")
+    logger.info(f"Отчет сохранен в: {files_report}")
         
 # -------------------------------------------------------------
 # Формирование пути для экспорта и импорта файлов
