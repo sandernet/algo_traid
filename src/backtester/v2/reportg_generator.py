@@ -81,7 +81,8 @@ class ReportGenerator:
         """
         self.test
         
-        try:        
+        try:  
+            test_id = self.test.id      
             total_pnl = self.test.total_pnl # общий PnL
             total_loss = self.test.total_loss # общий убыток
             total_win = self.test.total_win # общий прибыль
@@ -89,7 +90,7 @@ class ReportGenerator:
             losses = self.test.losses # общее количество проигрышей
             count = self.test.count_positions # общее количество позиций
             winrate = self.test.winrate # процент побед
-            test_id = self.test.id
+            
 
             return {
                 "test_id": test_id,
