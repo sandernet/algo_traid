@@ -144,6 +144,23 @@
 
     {% block scripts %}
         <script>
+
+            // подсветка числовых статов: добавляет классы profit-positive / profit-negative
+            (function colorizeStats() {
+                const nodes = document.querySelectorAll('[data-numeric]');
+                for (const n of nodes) {
+                    const text = n.textContent.trim().replace(/\u00A0/g, '');
+                    // пробуем извлечь число (можно быть отрицательным, с % и т.д.)
+                    const m = text.match(/-?\d+(\.\d+)?/);
+                    if (!m) continue;
+                    const val = parseFloat(m[0]);
+                    if (isNaN(val)) continue;
+                    if (val > 0) n.classList.add('profit-positive');
+                    else if (val < 0) n.classList.add('profit-negative');
+                    // при желании: форматирование, например n.textContent = val.toFixed(2)
+                }
+            })();
+
             /**
             * Функция для переключения видимости блоков (collapse/expand)
             */

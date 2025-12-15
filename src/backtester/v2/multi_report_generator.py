@@ -10,7 +10,7 @@ from plotly.subplots import make_subplots
 from typing import Any, Dict, Tuple, List
 
 from src.backtester.v2.backtester import Test
-from src.orders_block.order import OrderStatus, OrderType
+from src.position_manager.order import OrderStatus, OrderType
 from src.backtester.v2.report import ReportGenerator, get_export_path
 
 # Логирование
@@ -22,8 +22,8 @@ class MultiReportGenerator:
     def __init__(self, data: Dict[str, Any], template_dir: str = "templates"):
         """
         data = {
-            "BTC/USDT": {
-                "1h": {
+            "BTC/USDT": [
+                {
                     "ohlcv": ... (pd.DataFrame), columns=['timestamp', 'open', 'high', 'low', 'close', 'volume']
                     "positions": {...} (dict of Position objects OR serialized)
                     "total_pnl": ... (Decimal),
@@ -34,7 +34,7 @@ class MultiReportGenerator:
                     "winrate": ... (Decimal),
                 },
                 ...
-            },
+            ],
             ...
         }
         """
@@ -110,136 +110,136 @@ class MultiReportGenerator:
         }
         
         
-    def build_profit_drawdown_chart(self, test: Test) -> str:
-        """
-        График 1: Кривая Эквити (Прибыль) и Просадка.
-        """
-        if test.equity_curve.empty:
-            return ""
+    # def build_profit_drawdown_chart(self, test: Test) -> str:
+    #     """
+    #     График 1: Кривая Эквити (Прибыль) и Просадка.
+    #     """
+    #     if test.equity_curve.empty:
+    #         return ""
 
-        # Расчет просадки (Drawdown)
-        equity = test.equity_curve
-        peak = equity.expanding(min_periods=1).max()
-        drawdown = peak - equity
+    #     # Расчет просадки (Drawdown)
+    #     equity = test.equity_curve
+    #     peak = equity.expanding(min_periods=1).max()
+    #     drawdown = peak - equity
         
-        fig = make_subplots(specs=[[{"secondary_y": False}]])
+    #     fig = make_subplots(specs=[[{"secondary_y": False}]])
         
-        # Кривая Эквити
-        fig.add_trace(
-            go.Scatter(x=equity.index, y=equity.values, 
-                    mode='lines', name='Кривая Эквити (Накопленный PnL)', 
-                    line=dict(color='green')),
-            secondary_y=False,
-        )
+    #     # Кривая Эквити
+    #     fig.add_trace(
+    #         go.Scatter(x=equity.index, y=equity.values, 
+    #                 mode='lines', name='Кривая Эквити (Накопленный PnL)', 
+    #                 line=dict(color='green')),
+    #         secondary_y=False,
+    #     )
         
-        # Кривая Просадки (Отображаем как отрицательное значение для наглядности)
-        fig.add_trace(
-            go.Scatter(x=drawdown.index, y=drawdown.values, 
-                    mode='lines', name='Просадка (Drawdown)', 
-                    line=dict(color='red', dash='dot'), opacity=0.5),
-            secondary_y=False,
-        )
+    #     # Кривая Просадки (Отображаем как отрицательное значение для наглядности)
+    #     fig.add_trace(
+    #         go.Scatter(x=drawdown.index, y=drawdown.values, 
+    #                 mode='lines', name='Просадка (Drawdown)', 
+    #                 line=dict(color='red', dash='dot'), opacity=0.5),
+    #         secondary_y=False,
+    #     )
 
-        fig.update_layout(
-            title_text=f"Кривая Эквити и Просадка ({test.timeframe})",
-            xaxis_title="Дата/Время",
-            yaxis_title="Накопленный PnL (USD)",
-            hovermode="x unified",
-            height=500
-        )
-        return self._plot_to_json(fig)
+    #     fig.update_layout(
+    #         title_text=f"Кривая Эквити и Просадка ({test.timeframe})",
+    #         xaxis_title="Дата/Время",
+    #         yaxis_title="Накопленный PnL (USD)",
+    #         hovermode="x unified",
+    #         height=500
+    #     )
+    #     return self._plot_to_json(fig)
 
 
-    def build_daily_profit_chart(self, test: Test) -> str:
-        """
-        График: Профит на каждый день (гистограмма).
-        """
-        if test.daily_profit.empty:
-            return ""
+    # def build_daily_profit_chart(self, test: Test) -> str:
+    #     """
+    #     График: Профит на каждый день (гистограмма).
+    #     """
+    #     if test.daily_profit.empty:
+    #         return ""
 
-        # Установка цвета для баров (зеленый для >0, красный для <0)
-        colors = ['green' if p >= 0 else 'red' for p in test.daily_profit.values]
+    #     # Установка цвета для баров (зеленый для >0, красный для <0)
+    #     colors = ['green' if p >= 0 else 'red' for p in test.daily_profit.values]
 
-        fig = go.Figure()
-        fig.add_trace(
-            go.Bar(x=test.daily_profit.index, y=test.daily_profit.values, 
-                    name='Дневной PnL', marker_color=colors)
-        )
+    #     fig = go.Figure()
+    #     fig.add_trace(
+    #         go.Bar(x=test.daily_profit.index, y=test.daily_profit.values, 
+    #                 name='Дневной PnL', marker_color=colors)
+    #     )
 
-        fig.update_layout(
-            title_text=f"Дневной PnL ({test.timeframe})",
-            xaxis_title="Дата",
-            yaxis_title="PnL за день (USD)",
-            hovermode="x unified",
-            height=300
-        )
-        return self._plot_to_json(fig)
+    #     fig.update_layout(
+    #         title_text=f"Дневной PnL ({test.timeframe})",
+    #         xaxis_title="Дата",
+    #         yaxis_title="PnL за день (USD)",
+    #         hovermode="x unified",
+    #         height=300
+    #     )
+    #     return self._plot_to_json(fig)
 
-    def build_order_execution_chart(self, test: Test) -> str:
-        """
-        График 2: OHLCV бары с метками исполнения ордеров (close_bar).
-        """
-        ohlcv = test.ohlcv
-        if ohlcv.empty:
-            return ""
+    # def build_order_execution_chart(self, test: Test) -> str:
+    #     """
+    #     График 2: OHLCV бары с метками исполнения ордеров (close_bar).
+    #     """
+    #     ohlcv = test.ohlcv
+    #     if ohlcv.empty:
+    #         return ""
 
-        # 1. Основной график OHLCV (Свечи)
-        fig = go.Figure(data=[go.Candlestick(
-            x=ohlcv.index,
-            open=ohlcv['open'],
-            high=ohlcv['high'],
-            low=ohlcv['low'],
-            close=ohlcv['close'],
-            name=f"{test.symbol} {test.timeframe}"
-        )])
+    #     # 1. Основной график OHLCV (Свечи)
+    #     fig = go.Figure(data=[go.Candlestick(
+    #         x=ohlcv.index,
+    #         open=ohlcv['open'],
+    #         high=ohlcv['high'],
+    #         low=ohlcv['low'],
+    #         close=ohlcv['close'],
+    #         name=f"{test.symbol} {test.timeframe}"
+    #     )])
 
-        # 2. Сбор данных об исполненных ордерах
-        filled_orders = []
-        for pos in test.positions.values():
-            for order in pos.orders:
-                if order.status == OrderStatus.FILLED and order.close_bar:
-                    filled_orders.append({
-                        'time': order.close_bar,
-                        'price': float(order.price),
-                        'type': order.order_type.value,
-                        'pnl_abs': float(pos.profit) if order.order_type != OrderType.ENTRY else 0
-                    })
+    #     # 2. Сбор данных об исполненных ордерах
+    #     filled_orders = []
+    #     for pos in test.positions.values():
+    #         for order in pos.orders:
+    #             if order.status == OrderStatus.FILLED and order.close_bar:
+    #                 filled_orders.append({
+    #                     'time': order.close_bar,
+    #                     'price': float(order.price),
+    #                     'type': order.order_type.value,
+    #                     'pnl_abs': float(pos.profit) if order.order_type != OrderType.ENTRY else 0
+    #                 })
         
-        if filled_orders:
-            orders_df = pd.DataFrame(filled_orders)
+    #     if filled_orders:
+    #         orders_df = pd.DataFrame(filled_orders)
             
-            # 3. Добавление маркеров ордеров на график
-            fig.add_trace(go.Scatter(
-                x=orders_df['time'],
-                y=orders_df['price'],
-                mode='markers',
-                name='Исполненные Ордера',
-                marker=dict(
-                    size=10,
-                    symbol='circle',
-                    color=[
-                        'blue' if t == 'entry' else
-                        'green' if t == 'take_profit' else
-                        'red' if t == 'stop_loss' or t == 'market_close' else 'black'
-                        for t in orders_df['type']
-                    ],
-                    line=dict(width=1, color='DarkSlateGrey')
-                ),
-                text=[
-                    f"Тип: {t.upper()}<br>Цена: {p:.2f}<br>PnL: {pnl:.2f}"
-                    for t, p, pnl in zip(orders_df['type'], orders_df['price'], orders_df['pnl_abs'])
-                ],
-                hoverinfo='text'
-            ))
+    #         # 3. Добавление маркеров ордеров на график
+    #         fig.add_trace(go.Scatter(
+    #             x=orders_df['time'],
+    #             y=orders_df['price'],
+    #             mode='markers',
+    #             name='Исполненные Ордера',
+    #             marker=dict(
+    #                 size=10,
+    #                 symbol='circle',
+    #                 color=[
+    #                     'blue' if t == 'entry' else
+    #                     'green' if t == 'take_profit' else
+    #                     'red' if t == 'stop_loss' or t == 'market_close' else 'black'
+    #                     for t in orders_df['type']
+    #                 ],
+    #                 line=dict(width=1, color='DarkSlateGrey')
+    #             ),
+    #             text=[
+    #                 f"Тип: {t.upper()}<br>Цена: {p:.2f}<br>PnL: {pnl:.2f}"
+    #                 for t, p, pnl in zip(orders_df['type'], orders_df['price'], orders_df['pnl_abs'])
+    #             ],
+    #             hoverinfo='text'
+    #         ))
 
-        fig.update_layout(
-            title_text=f"Исполнение Ордеров на графике Баров ({test.timeframe})",
-            xaxis_title="Дата/Время",
-            yaxis_title="Цена",
-            xaxis_rangeslider_visible=True, # Интерактивный слайдер для выбора периода
-            height=600
-        )
-        return self._plot_to_json(fig)
+    #     fig.update_layout(
+    #         title_text=f"Исполнение Ордеров на графике Баров ({test.timeframe})",
+    #         xaxis_title="Дата/Время",
+    #         yaxis_title="Цена",
+    #         xaxis_rangeslider_visible=True, # Интерактивный слайдер для выбора периода
+    #         height=600
+    #     )
+    #     return self._plot_to_json(fig)
 
     # ---------------------------------------------------------
     # Генерация HTML-отчета (ОБНОВЛЕНО)
@@ -261,7 +261,6 @@ class MultiReportGenerator:
         template = env.get_template(template_name)
         
         coins_output:   Dict[str, Any] = {}
-
         coin_summary:   Dict[str, Any] = {}
         tests_reports:  Dict[str, Any] = {}
             
@@ -276,13 +275,13 @@ class MultiReportGenerator:
             for timeframe, test in tests_by_timeframe.items():
                 
                 # Обновляем все необходимые метрики
-                test.calculate_statistics()
-                test.build_equity_curve()
-                test.calc_max_drawdown()
-                test.build_daily_profit()
+                # test.calculate_statistics()
+                # test.build_equity_curve()
+                # test.calc_max_drawdown()
+                # test.build_daily_profit()
 
                 # создаем объект отчета
-                reporter = ReportGenerator() #test.ohlcv, test.positions)
+                # reporter = ReportGenerator() #test.ohlcv, test.positions)
                 
                 test_report = {}
                 test_report["timeframe"] = timeframe
@@ -293,7 +292,7 @@ class MultiReportGenerator:
                 # test_report["order_execution_chart"] = self.build_order_execution_chart(test)
                 
                 # Все позиции (сериализованный список)
-                test_report["positions"] = reporter.build_report_data()
+                # test_report["positions"] = reporter.build_report_data()
 
                 # Статистика конкретного теста
                 test_report["test_stats"] = {

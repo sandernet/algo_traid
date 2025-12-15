@@ -7,15 +7,15 @@
         <div class="stats-items">
             <div class="stat-item">
                 <strong>Начальный депозит:</strong></br>
-                {{ stats.start_deposit }}
+                <span data-numeric>{{ stats.start_deposit }}</span>
             </div>
             <div class="stat-item">
                 <strong>Минимальное движение цены :</strong></br>
-                {{ stats.minimal_tick_size }}
+                <span data-numeric>{{ stats.minimal_tick_size }}</span>
             </div>
             <div class="stat-item">
                 <strong>Плечо:</strong></br> 
-                {{ stats.leverage }}
+                <span data-numeric>{{ stats.leverage }}</span>
             </div>
         </div> 
     </div> 
@@ -24,31 +24,31 @@
         <div class="stats-items">
             <div class="stat-item">
                 <strong>Total positions:</strong></br>
-                {{ stats.total_positions }}
+                <span data-numeric>{{ stats.total_positions }}</span>
             </div>
             <div class="stat-item">
                 <strong>total_pnl:</strong> </br>
-                {{ "%.2f"|format(stats.total_pnl) }}
+                <span data-numeric>{{ "%.2f"|format(stats.total_pnl) }}</span>
             </div>
             <div class="stat-item">
                 <strong>Wins:</strong></br> 
-                {{ "%.2f"|format(stats.wins) }}
+                <span data-numeric>{{ "%.2f"|format(stats.wins) }}</span>
             </div>
             <div class="stat-item">
                 <strong>Losses:</strong></br> 
-                {{ "%.2f"|format(stats.losses) }}
+                <span data-numeric>{{ "%.2f"|format(stats.losses) }}</span>
             </div>
             <div class="stat-item">
                 <strong>Winrate (%):</strong></br> 
-                {{ "%.2f"|format(stats.winrate) }}
+                <span data-numeric>{{ "%.2f"|format(stats.winrate) }}</span>
             </div>
             <div class="stat-item">
                 <strong>Total win:</strong></br> 
-                {{ "%.2f"|format(stats.total_win) }}
+                <span data-numeric>{{ "%.2f"|format(stats.total_win) }}</span>
             </div>
             <div class="stat-item">
                 <strong>Total loss:</strong></br> 
-                {{ "%.2f"|format(stats.total_loss) }}
+                <span data-numeric>{{ "%.2f"|format(stats.total_loss) }}</span>
             </div>
         </div>
         <div class="button-group">

@@ -182,8 +182,8 @@ class TestManager:
                 
                 for test in self.tests.values():
                     if test.symbol not in reports_structure:
-                        reports_structure[test.symbol] = {}
-                    reports_structure[test.symbol][test.timeframe] = test
+                        reports_structure[test.symbol] = []
+                    reports_structure[test.symbol].append(test)
                 
                 from src.backtester.v2.multi_report_generator import MultiReportGenerator 
                 
@@ -192,7 +192,7 @@ class TestManager:
                 
                 # Передаем период тестирования из конфига
                 report_path = report_gen.generate_html_report(
-                    template_name="report.html", 
+                    template_name="v2/report_all.html", 
                 )
                 logger.info(f"💾 Мульти-отчет сохранен в: {report_path}")
             except Exception as e:
