@@ -30,9 +30,10 @@ class ExecutionEngine:
         - для SHORT: запускается, если низкая цена бара <= цены тейка
     Частичные заполнения не моделируются (полное заполнение).
     """
-    def __init__(self, manager: PositionManager):
+    def __init__(self, manager: PositionManager, on_execution=None):
         
         self.manager = manager
+        self.on_execution = on_execution
 
     def process_bar(self, bar: list[float], bar_index: datetime):
         """
@@ -63,7 +64,7 @@ class ExecutionEngine:
                     if exec_volume <= Decimal("0"):
                         continue
 
-                    # регистрируем исполнение ордера в позиции
+                    # ! регистрируем исполнение ордера в позиции
                     pos.record_execution(order, exec_price, pos.round_to_tick(exec_volume), bar_index)
 
                     # действия после выполнения: если запись заполнена, могут быть ордера в скобках (их может установить пользователь)
@@ -117,7 +118,7 @@ class ExecutionEngine:
         return False
 
     # ------------------------
-    # Получить цену исполнения
+    # ? Получить цену исполнения
     # ------------------------
     def get_execution_price(self, order: Order, bar: list[float]) -> Decimal:
         """
@@ -128,7 +129,8 @@ class ExecutionEngine:
             - LIMIT/ENTRY -> цена ордера (если достигнута)
         Вы можете улучшить метод, моделируя слэп, заполнение при открытии, VWAP и т.д.
         """
-        close = to_decimal(bar[3])
+        
+        close = to_decimal(bar[3]) # * берем цену закрытия бара
         if order.order_type == OrderType.MARKET:
             return close
         if order.order_type in {OrderType.TAKE_PROFIT, OrderType.STOP_LOSS, OrderType.LIMIT, OrderType.ENTRY} and order.price is not None:

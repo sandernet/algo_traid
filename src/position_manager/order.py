@@ -56,6 +56,18 @@ class OrderStatus(Enum):
 class Direction(Enum):
     LONG = "long"
     SHORT = "short"
+    
+# -------------------------
+# Core data structures
+# -------------------------
+@dataclass
+class Execution:
+    price: Decimal
+    volume: Decimal
+    bar_index: Optional[datetime]  # индекс бара исполнения
+    order_id: str
+    realized_pnl: Decimal = Decimal("0")
+
 
 
 @dataclass
@@ -65,7 +77,7 @@ class Order:
     price: Optional[Decimal]  # Нет для рыночных ордеров
     volume: Decimal           # абсолютный объем в нативных единицах (не дробях)
     direction: Direction      #направление: ДЛИННОЕ или КОРОТКОЕ (влияет на интерпретацию стопов)
-    profit: Optional[Decimal] = None  # результат исполнения ордера
+    profit: Optional[Decimal] = Decimal("0")  # результат исполнения ордера
     status: OrderStatus = OrderStatus.ACTIVE
     filled: Decimal = field(default_factory=lambda: Decimal("0"))
     created_bar: Optional[datetime] = None  # optional bar index when created
@@ -115,20 +127,20 @@ class Position:
     Позиция объединяет ордера и исполнения.
     Он НЕ сам принимает решения о выполнении — это делает ExecutionEngine.
     """
-    def __init__(self, symbol: str, direction: Direction, tick_size: Optional[float] = None):
+    def __init__(self, symbol: str, direction: Direction, tick_size: Optional[Decimal] = None):
         self.id = uuid4().hex # уникальный идентификатор позиции
         self.symbol = symbol      # торговый символ / инструмент
         self.direction = direction # направление позицией (long/short)
         self.status = Position_Status.CREATED
         self.orders: List[Order] = []        # все связанные заказы (entry, tp, sl, ...)
-        # self.executions: List[Execution] = []  # все исполнения, связанные с этой позицией
+        self.executions: List[Execution] = []  # все исполнения, связанные с этой позицией
         self.opened_volume: Decimal = Decimal("0") # общий открытый объем
         self.closed_volume: Decimal = Decimal("0") # общий закрытый объем
         self.bar_opened: Optional[datetime] = None  # индекс бара, в котором была открыта позиция
         self.bar_closed: Optional[datetime] = None  # индекс бара, в котором была закрыта позиция
-        self.avg_entry_price: Optional[Decimal] = None # средняя цена входа
-        self.profit: Decimal = Decimal("0")      # накопленная прибыль / убыток по позиции
-        self.tick_size = to_decimal(tick_size) if tick_size is not None else None # размер тика для округления цен
+        self.avg_entry_price: Decimal = Decimal("0") # средняя цена входа
+        self.realized_pnl: Decimal = Decimal("0")      # накопленная прибыль / убыток по позиции
+        self.tick_size = tick_size if tick_size is not None else None # размер тика для округления цен
         self.meta: Dict[str, Any] = {}  # дополнительная информация о позиции  без убытка moved_to_break=true
 
     # ------------------------
@@ -154,7 +166,7 @@ class Position:
     
     # проверка по переводу стопа в безубыточность
     def check_stop_break(self) -> bool:
-        if self.opened_volume >= self.closed_volume and self.profit > Decimal("0"):
+        if self.opened_volume >= self.closed_volume and self.realized_pnl > Decimal("0"):
             checked = False
             for o in self.orders:
                 if o.order_type == OrderType.TAKE_PROFIT and o.meta.get("tp_to_break") and o.status == OrderStatus.FILLED:
@@ -175,22 +187,17 @@ class Position:
         1. Записать исполнение
         2. Обновить состояние позиции
         """
-        # ex = Execution(price=to_decimal(price), volume=volume, bar_index=bar_index, order_id=order.id)
-        # self.executions.append(ex)
-
         # по объему пометить ордер как заполненный (полностью или частично)
         # поменяет статус ордера соответственно
-        
         order.mark_filled(volume, bar_index)
 
-        # update volumes and average price for entries/closings
-        # управление объемами и средней ценой для входов/закрытий
+        # ! управление объемами и средней ценой для входов/закрытий
         if order.order_type == OrderType.ENTRY:
-            prev_total = self.opened_volume * (self.avg_entry_price or Decimal("0"))
+            prev_total = self.opened_volume * self.avg_entry_price
             
             self.opened_volume += to_decimal(volume)
             
-            if self.avg_entry_price is None:
+            if self.avg_entry_price == 0:
                 self.avg_entry_price = to_decimal(price)
             else:
                 # пересчитать среднюю цену входа
@@ -210,7 +217,7 @@ class Position:
                     pnl = (price - self.avg_entry_price) * volume
                 else:
                     pnl = (self.avg_entry_price - price) * volume
-                self.profit += pnl
+                self.realized_pnl += pnl
                 order.profit = pnl
                 logger.info(f"☑️ Ордер {order.id[:6]} [bool cyan] Тип:{order.order_type.value}[/bool cyan] Исполнен. Объем: {order.volume} profit: {order.profit}")
 
@@ -225,12 +232,39 @@ class Position:
         elif self.closed_volume > Decimal("0") and self.closed_volume  < self.opened_volume:
             # закрыта частично
             logger.info(f"[symbol]🟢 Позиция {self.id[:6]} частично закрыта. Статус: {self.status.value}")
+            
+        # записываем исполнение
+        ex = Execution(price=price, volume=volume, bar_index=bar_index, realized_pnl=(order.profit or Decimal("0")), order_id=order.id) 
+        self.executions.append(ex)
 
 
 
     # ------------------------
     # Позиционные утилиты
     # ------------------------
+    
+    # Расчет плавающего PnL
+    def calc_worst_unrealized_pnl(self, high_price: Decimal, low_price: Decimal) -> Decimal:
+        """
+        Расчет плавающего PnL для активной позиции
+        """
+        if self.opened_volume <= Decimal("0") or self.status not in {
+            Position_Status.ACTIVE, Position_Status.CREATED}:
+            return Decimal("0")
+        
+        remaining_volume = self.opened_volume - self.closed_volume
+        
+        if remaining_volume <= Decimal("0"):
+            return Decimal("0")
+        
+        if self.direction == Direction.LONG:
+            # Для лонга: profit = (текущая цена - средняя цена входа) * оставшийся объем
+            return (low_price - self.avg_entry_price) * remaining_volume
+        else:
+            # Для шорта: profit = (средняя цена входа - текущая цена) * оставшийся объем
+            return (self.avg_entry_price - high_price) * remaining_volume
+        
+    
     
     # Устанавливает статус позиции
     def setStatus(self):
@@ -268,16 +302,8 @@ class Position:
     # Оставшийся объем для закрытия
     def remaining_volume(self) -> Decimal:
         return max(Decimal("0"), self.opened_volume - self.closed_volume)
-        
-        
-    # ------------------------
-    # Метод расчета части объема ордера
-    # ------------------------
-    # def part_volume(self, share: Decimal) -> Decimal:
-    #     return (self.opened_volume * share).quantize(Decimal('1.'), rounding=ROUND_HALF_UP)
     
     # Получить активные заказы 
-    
     def get_active_orders(self) -> List[Order]:
         return [o for o in self.orders if o.status == OrderStatus.ACTIVE]
 
@@ -320,7 +346,7 @@ class Position:
 
 
     def __repr__(self):
-        return f"<Position id={self.id[:6]} sym={self.symbol} dir={self.direction.value} status={self.status.value} opened={self.opened_volume} closed={self.closed_volume} avg_entry={self.avg_entry_price} pnl={self.profit}>"
+        return f"<Position id={self.id[:6]} sym={self.symbol} dir={self.direction.value} status={self.status.value} opened={self.opened_volume} closed={self.closed_volume} avg_entry={self.avg_entry_price} pnl={self.realized_pnl}>"
 
 
 # -------------------------
@@ -336,7 +362,7 @@ class PositionManager:
     # ------------------------
     # открытие 
     # ------------------------
-    def open_position(self, symbol: str, direction: Direction, tick_size: Optional[float] = None, open_bar: Optional[datetime] = None) -> Position:
+    def open_position(self, symbol: str, direction: Direction, tick_size: Optional[Decimal] = None, open_bar: Optional[datetime] = None) -> Position:
         pos = Position(symbol=symbol, direction=direction, tick_size=tick_size)
         self.positions[pos.id] = pos
         self.positions[pos.id].bar_opened = open_bar
@@ -421,93 +447,3 @@ def make_order(order_type: OrderType, price: Optional[Decimal], volume: Decimal,
         created_bar=created_bar,
         meta=meta or {}
     )
-
-
-# # -------------------------
-# # Demo / Example usage
-# # -------------------------
-# if __name__ == "__main__":
-#     import random
-    
-
-#     # Simple demo: simulate a small synthetic series of OHLC bars and show position behavior
-#     def generate_bars(n=30, start_price=100.0):
-#         bars = []
-#         p = float(start_price)
-#         now = datetime.now()
-#         for i in range(n):
-#             # random walk
-#             o = p
-#             h = o + abs(random.gauss(0, 1.5))
-#             l = o - abs(random.gauss(0, 1.5))
-#             c = l + random.random() * (h - l)
-#             bars.append({'time': now + timedelta(minutes=i), 'open': o, 'high': h, 'low': l, 'close': c})
-#             p = c
-#         return bars
-
-#     # Setup manager and engine
-#     manager = PositionManager()
-#     # engine = ExecutionEngine(manager)
-
-#     bars = generate_bars(n=60, start_price=100.0)
-
-#     # открытие позиций (long и short)
-#     pos_long = manager.open_position("BTCUSDT", Direction.LONG, tick_size=0.01)
-#     pos_short = manager.open_position("BTCUSDT", Direction.SHORT, tick_size=0.01)
-
-#     # Add entry orders (limit) for both (these are examples; they may or may not be hit)
-#     entry_long = make_order(OrderType.ENTRY, price=99.0, volume=0.5, direction=Direction.LONG, created_dt=datetime.now())
-#     entry_short = make_order(OrderType.ENTRY, price=102.0, volume=0.3, direction=Direction.SHORT, created_dt=datetime.now())
-    
-#     pos_long.add_order(entry_long)
-#     pos_short.add_order(entry_short)
-
-#     # Add stop & tp for the long (if entry filled)
-#     # The strategy would normally add TP/SL after entry is filled; here we add in advance for demo.
-#     tp1_long = make_order(OrderType.TAKE_PROFIT, price=105.0, volume=0.25, direction=Direction.LONG)
-#     tp2_long = make_order(OrderType.TAKE_PROFIT, price=108.0, volume=0.25, direction=Direction.LONG)
-    
-#     sl_long = make_order(OrderType.STOP_LOSS, price=95.0, volume=0.5, direction=Direction.LONG)
-#     pos_long.add_order(tp1_long)
-#     pos_long.add_order(tp2_long)
-#     pos_long.add_order(sl_long)
-
-#     # Add stop & tp for the short
-#     tp_short = make_order(OrderType.TAKE_PROFIT, price=96.0, volume=0.3, direction=Direction.SHORT)
-#     sl_short = make_order(OrderType.STOP_LOSS, price=106.0, volume=0.3, direction=Direction.SHORT)
-#     pos_short.add_order(tp_short)
-#     pos_short.add_order(sl_short)
-
-#     # Process bars
-#     for idx, b in enumerate(bars):
-#         logger.debug(f"Processing bar {idx} o={b['open']:.2f} h={b['high']:.2f} l={b['low']:.2f} c={b['close']:.2f}")
-#         engine.process_bar(b, idx)
-
-#         # Example dynamic logic: if long partial profit at TP1 done, move stop to BE
-#         # (Simplified: check if TP1 was filled by inspecting orders)
-#         active_tps = [o for o in pos_long.orders if o.order_type == OrderType.TAKE_PROFIT and o.price == to_decimal(105.0)]
-#         if active_tps:
-#             tp_o = active_tps[0]
-#             if tp_o.status == OrderStatus.FILLED:
-#                 # move stop to break-even after first TP executed
-#                 pos_long.move_stop_to_break_even()
-#                 # prevent further repeated moves: cancel this tp to avoid double-trigger (demo-only)
-#                 # In real flow you would track via state
-#         # quick stop: if both positions fully closed, break
-#         if pos_long.status in {Position_Status.TAKEN_FULL, Position_Status.STOPPED} and pos_short.status in {Position_Status.TAKEN_FULL, Position_Status.STOPPED}:
-#             # both ended
-#             pass
-
-#     # Print summary
-#     print("=== Summary ===")
-#     for pid, p in manager.positions.items():
-#         print(p)
-#         print("Orders:")
-#         for o in p.orders:
-#             print(f"  {o.order_type.value} id={o.id[:6]} price={o.price} vol={o.volume} status={o.status.value} filled={o.filled}")
-#         print("Executions:")
-#         for e in p.executions:
-#             print(f"  exec {e.order_id[:6]} @ {e.price} x {e.volume} on bar {e.bar_index}")
-#         print()
-
-

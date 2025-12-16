@@ -38,10 +38,24 @@ class Test():
         self.symbol, self.timeframe = coin.get("SYMBOL"), coin.get("TIMEFRAME")
         
         # Результаты теста
-        self.ohlcv = data # данные теста
-        self.positions = {} # список позиций в тесте
+        self.ohlcv = data # данные истории по которым проводится тест
+        self.positions = {} # список позиций в каждой позиции есть ордера 
+        self.equity_curve = []               # equity на каждом баре
+        self.drawdown_curve = []             # просадка на каждом баре
+        # у позиции есть ордера 
+        # входа и выхода, 
+        # направление long и short,
+        # дата и время исполнения,
+        # объем 
+        # цена исполнения
         
         # статистика теста расчитывается после получения результатов тестирования
+        self.balance = self.coin.get("START_DEPOSIT_USDT")  # только закрытые сделки
+        self.equity = self.coin.get("START_DEPOSIT_USDT")   # balance + floating_profit  
+        self.max_drawdown = Decimal("0")
+        
+        self.realized_pnl          = Decimal("0") # общий PnL
+        
         self.total_pnl          = Decimal("0") # общий PnL
         self.total_loss         = Decimal("0") # общий убыток
         self.total_win          = Decimal("0") # общий прибыль
@@ -55,11 +69,11 @@ class Test():
     def calculate_statistics(self):
         
         # TODO: Добавить расчеты статистики
-        self.total_pnl = sum(pos.profit for pos in self.positions.values())
-        self.total_win = sum(pos.profit for pos in self.positions.values() if pos.profit > 0)
-        self.total_loss = sum(pos.profit for pos in self.positions.values() if pos.profit < 0)
-        self.wins = sum(1 for pos in self.positions.values() if pos.profit > 0)
-        self.losses = sum(1 for pos in self.positions.values() if pos.profit < 0)
+        self.total_pnl = sum(pos.realized_pnl for pos in self.positions.values())
+        self.total_win = sum(pos.realized_pnl for pos in self.positions.values() if pos.realized_pnl > 0)
+        self.total_loss = sum(pos.realized_pnl for pos in self.positions.values() if pos.realized_pnl < 0)
+        self.wins = sum(1 for pos in self.positions.values() if pos.realized_pnl > 0)
+        self.losses = sum(1 for pos in self.positions.values() if pos.realized_pnl < 0)
         self.count_positions = len(self.positions)
         self.winrate = (self.wins / self.count_positions * 100) if self.count_positions > 0 else 0
         
@@ -67,40 +81,36 @@ class Test():
         
         # TODO: Добавить расчеты статистики прибыльности
         # ==================================
-        # Добавить вызовы расчетов:
+        # ? Добавить вызовы расчетов:
         # ==================================
 
+
+
     # ====================================================
-    # Запуск бэктеста для одной монеты
+    # ? Запуск бэктеста для одной монеты
     # ====================================================
     def backtest_coin(self, data_df_1m):
-        """
-        Запуск бэктеста с данными, загруженными из локального файла.
-        :param data_df: pd.DataFrame — исторические данные по монете
-        :param data_df_1m: pd.DataFrame — исторические данные по монете на 1 минуту
-        :param coin: dict — конфигурация монеты
-        """
+        # * Запуск бэктеста с данными, загруженными из локального файла.
+        # *:param data_df: pd.DataFrame — исторические данные по монете
+        # *:param data_df_1m: pd.DataFrame — исторические данные по монете на 1 минуту
+        # *:param coin: dict — конфигурация монеты
         
-        
-        
-        # Инициализация стратегии    
+        # ! Инициализация стратегии    
         strategy = ZigZagAndFibo(coin=self.coin)
-        # Создаём модель позиции и менеджер, который управляет этой позицией
         
         manager = PositionManager()
         engine = ExecutionEngine(manager)
         position: Optional[Position] = None
         
         
-        # перебираем все бары начиная с минимального количества
+        
         # Это нужно для того, чтобы индикаторы были заполнены
         arr = self.ohlcv[['open','high','low','close']].copy()
         arr['dt'] = self.ohlcv.index.to_numpy()
         arr = arr.to_numpy()
         
+        # ! перебираем все бары начиная с минимального количества нужного для расчета стратегии
         for i in range(strategy.allowed_min_bars, len(arr)):
-
-            
             current_data    = arr[i-strategy.allowed_min_bars:i] # окно для расчета индикаторов
             current_open    = arr[i][0] # текущий бар открытие
             current_high    = arr[i][1] # текущий бар высота
@@ -143,8 +153,6 @@ class Test():
                     logger.error(f"[{self.symbol}]🔴 Позиция не создана")
                 else:    
                     logger.debug(f"[{self.symbol}]--------------------------------------------------")
-                    
-
 
             #-------------------------------------------------------------
             # Обработка исполнения ордеров на текущем баре
@@ -166,20 +174,77 @@ class Test():
             #-------------------------------------------------------------
             # Алгоритм закрытия позиции
             #-------------------------------------------------------------
-            if position is not None and position.status in {Position_Status.TAKEN_FULL, Position_Status.STOPPED, Position_Status.TAKEN_PART, Position_Status.CANCELED}:
+            if position is not None and position.status in {
+                Position_Status.ACTIVE, 
+                Position_Status.TAKEN_FULL, 
+                Position_Status.STOPPED, 
+                Position_Status.TAKEN_PART, 
+                Position_Status.CANCELED
+                }:
+                
                 # если активных ордеров нет, позиция закрыта
                 manager.cansel_active_orders(position.id, close_bar=current_index)
                 position.bar_closed = current_index
-
-                # executed_positions.append(position)
-                # сбрасываем позицию
-                position: Optional[Position] = None
+                position = None
                 
+            # ============================================================
+            # ! РАСЧЕТ PnL / EQUITY / DRAWDOWN НА БАРЕ
+            # ============================================================
+            # TODO расчет баланса на баре
+            # TODO расчет PnL на баре
+            
+            # ============================================================
+            # РАСЧЕТ PnL / EQUITY / DRAWDOWN НА БАРЕ (ИСПРАВЛЕННЫЙ)
+            # ============================================================
+            current_price = Decimal(str(current_close))
+            
+            # 1. Реализованный PnL за этот бар
+            realized_pnl = self.calculate_realized_pnl_on_bar(
+                manager=manager,
+                current_index=current_index
+            )
+            
+            # 2. Обновляем баланс (только реализованный PnL)
+            self.balance += realized_pnl
+            
+            # 3. Плавающий PnL по всем активным позициям
+            floating_pnl = self.calculate_floating_pnl_on_bar(
+                manager=manager,
+                high_price=Decimal(str(current_high)),
+                low_price=Decimal(str(current_low))
+            )
+            
+            # 4. Equity = баланс + плавающий PnL
+            self.equity = self.balance + floating_pnl
+            
+            # # 7. Сохраняем все метрики
+            # self.equity_curve.append({
+            #     'timestamp': current_index,
+            #     'equity': self.equity,
+            #     'balance': self.balance,
+            #     'floating_pnl': floating_pnl,
+            #     'realized_pnl_delta': realized_pnl,
+                
+            # })
+            
+            # # 8. Сохраняем просадку отдельно
+            # self.drawdown_curve.append(drawdown_stats['drawdown_pct'])
+            
+            # Логирование для отладки (можно уменьшить частоту)
+            logger.info(f"[{current_index.strftime('%d.%m.%Y %H:%M')}] "
+                f"Баланс: {self.balance:.2f}, "
+                f"Эквити: {self.equity:.2f}, ")
+            
+            
+            
+            
         self.positions = manager.positions
         # return manager.positions
 
+
+    
     # создаем позицию по сигналу
-    def create_position(self, signal, manager, coin, current_index) -> Optional[Position]:
+    def create_position(self, signal, manager: PositionManager, coin, current_index) -> Optional[Position]:
         direction = signal['direction']
         symbol = coin.get("SYMBOL")+"/USDT"
         tick_size = Decimal(str(coin.get("MINIMAL_TICK_SIZE")))
@@ -264,3 +329,35 @@ class Test():
             raise
         
         
+    # # ------------------------------------------------------------------------------------
+    # # ? Модуль расчета показателей на баре 
+    # # ------------------------------------------------------------------------------------
+    # Расчет реализованного PnL на баре
+    def calculate_realized_pnl_on_bar(self, manager: PositionManager, current_index) -> Decimal:
+        realized = Decimal("0")
+
+        for pos in manager.positions.values():
+            for exec in pos.executions:
+                if exec.bar_index == current_index:
+                    realized += exec.realized_pnl
+
+        return realized
+    
+    
+    def calculate_floating_pnl_on_bar(
+        self,
+        manager: PositionManager,
+        high_price: Decimal, low_price: Decimal
+    ) -> Decimal:
+        floating = Decimal("0")
+
+        for pos in manager.positions.values():
+            if pos.status == Position_Status.ACTIVE:
+                unrealized = pos.calc_worst_unrealized_pnl(high_price, low_price)
+                floating += unrealized
+        
+        return floating
+
+
+
+

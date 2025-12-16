@@ -61,10 +61,8 @@ class TestManager:
     # 1. Выполнение одного бэктеста
     # ====================================================
     def _execute_single_backtest(self, coin, timeframe) -> Test: # Dict[str, Any]:
-        """
-        Выполняет один бэктест для конкретной монеты и таймфрейма.
-        Возвращает все позиции которые были за указанный период
-        """
+        # * Выполняет один бэктест для конкретной монеты и таймфрейма.
+        # * Возвращает все позиции которые были за указанный период
         
         data_dir = self.settings_test.get("DATA_DIR", "")
         full_datafile = self.settings_test.get("FULL_DATAFILE", "")
@@ -123,7 +121,7 @@ class TestManager:
 
 
     # ====================================================
-    # Точка входа для параллельного бэктеста
+    # ? Точка входа для параллельного бэктеста
     # ====================================================
     def run_parallel_backtest(self, max_workers=4):
         """Основной конвейер для параллельного бэктеста."""
@@ -138,7 +136,7 @@ class TestManager:
         
         # Словарь для структурирования результатов: {"BTC": {"1h": Test_obj, "4h": Test_obj}, ...}
 
-        # Запуск параллельного выполнения
+        # ! Запуск параллельного выполнения
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Маппинг функции выполнения _execute_single_backtest на список аргументов
             # Важно: `executor.map` работает только с одной итерируемой переменной.
@@ -151,7 +149,7 @@ class TestManager:
                 future = executor.submit(self._execute_single_backtest, coin_task, tf_task)
                 future_to_task[future] = (coin_task, tf_task)
             
-            # Обработка результатов по мере их завершения
+            # ! Обработка результатов по мере их завершения
             for future in concurrent.futures.as_completed(future_to_task):
                 coin_task, tf_task = future_to_task[future]
                 try:
@@ -161,7 +159,7 @@ class TestManager:
                     if test_result:
                         self.tests[test_result.id] = test_result # Сохраняем все тесты
 
-                        # TODO Генерация отчета по одной монете
+                        # ! Генерация отчета по одной монете
                         generate_html_report(test_result)
 
                         logger.info(f"[{coin_task.get('SYMBOL')}, {tf_task}] ✅ Результаты получены и агрегированы.")
@@ -171,9 +169,7 @@ class TestManager:
         
         
 
-        # TODO формирование общего отчета по всем монетам
-        # Перенести в модуль генерации отчета
-        
+        # ! формирование общего отчета по всем монетам
         reports_structure = {}
         # Формируем отчет
         if len(self.tests) > 0:

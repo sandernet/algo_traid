@@ -62,7 +62,7 @@ class ReportGenerator:
             "bar_opened": getattr(pos, "bar_opened", None),
             "bar_closed": getattr(pos, "bar_closed", None),
             "avg_entry_price": getattr(pos, "avg_entry_price", None),
-            "profit": getattr(pos, "profit", None),
+            "profit": getattr(pos, "realized_pnl", None),
             "meta": getattr(pos, "meta", None),
             "orders": orders,
         }
