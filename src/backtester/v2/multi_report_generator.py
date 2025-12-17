@@ -1,17 +1,14 @@
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
-import pandas as pd
 from datetime import datetime
 import json
 from decimal import Decimal
 
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from typing import Any, Dict, Tuple, List
+from typing import Any, Dict
 
 from src.backtester.v2.backtester import Test
-from src.position_manager.order import OrderStatus, OrderType
-from src.backtester.v2.report import ReportGenerator, get_export_path
+from src.backtester.v2.report import get_export_path
 
 # Логирование
 # ====================================================

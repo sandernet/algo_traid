@@ -1,8 +1,7 @@
-from src.position_manager.order import Order
-from src.position_manager.order import OrderType, Position_Status
-from src.position_manager.order import to_decimal
-from src.position_manager.order import Direction
-from src.position_manager.order import PositionManager
+from src.trading_engine.core.order import Order
+from src.trading_engine.core.enums import OrderType, Position_Status, Direction
+from src.trading_engine.utils.decimal_utils import to_decimal
+from src.trading_engine.managers.position_manager import PositionManager
 from datetime import datetime
 
 from decimal import Decimal
@@ -30,6 +29,7 @@ class ExecutionEngine:
         - для SHORT: запускается, если низкая цена бара <= цены тейка
     Частичные заполнения не моделируются (полное заполнение).
     """
+    
     def __init__(self, manager: PositionManager, on_execution=None):
         
         self.manager = manager
@@ -59,7 +59,7 @@ class ExecutionEngine:
                     
                     # убедиться, что мы не закрываем больше, чем осталось (для ордеров на выход)
                     if order.order_type in {OrderType.TAKE_PROFIT, OrderType.CLOSE, OrderType.STOP_LOSS}:
-                        exec_volume = min(exec_volume, pos.remaining_volume())
+                        exec_volume = min(exec_volume, pos.remaining_volume)
 
                     if exec_volume <= Decimal("0"):
                         continue
