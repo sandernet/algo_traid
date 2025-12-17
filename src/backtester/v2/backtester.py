@@ -16,7 +16,6 @@ from src.backtester.v2.backtester_coin import Test
 from src.data_fetcher.utils import select_range_backtest
 from src.backtester.v2.report import generate_html_report
 
-
     
 # -------------------------
 # Manager & Executor
@@ -111,8 +110,10 @@ class TestManager:
         test = Test(select_data,  coin, self.settings_test)
 
         test.backtest_coin(select_data_1m)
+    
+        # TODO Перенести этот отчет в отдельную функцию
         # расчет статистики
-        test.calculate_statistics()
+        # test.metrics = MetricsCalculator.calculate_from_positions(test.positions)
         
         # self.tests[test.id] = test
         logger.warning(f"[{symbol}, {timeframe}] ✅ Обработка завершена. Всего позиций: {len(test.positions)}")

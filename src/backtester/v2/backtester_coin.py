@@ -54,36 +54,37 @@ class Test():
         self.balance = self.coin.get("START_DEPOSIT_USDT")  # только закрытые сделки
         self.equity = self.coin.get("START_DEPOSIT_USDT")   # balance + floating_profit  
         self.max_drawdown = Decimal("0")
+        self.metrics = {}
         
-        self.realized_pnl          = Decimal("0") # общий PnL
+        # self.realized_pnl          = Decimal("0") # общий PnL
         
-        self.total_pnl          = Decimal("0") # общий PnL
-        self.total_loss         = Decimal("0") # общий убыток
-        self.total_win          = Decimal("0") # общий прибыль
-        self.wins               = Decimal("0") # общее количество побед
-        self.losses             = Decimal("0") # общее количество проигрышей
-        self.count_positions    = Decimal("0") # общее количество позиций
-        self.winrate            = Decimal("0") # процент побед
+        # self.total_pnl          = Decimal("0") # общий PnL
+        # self.total_loss         = Decimal("0") # общий убыток
+        # self.total_win          = Decimal("0") # общий прибыль
+        # self.wins               = Decimal("0") # общее количество побед
+        # self.losses             = Decimal("0") # общее количество проигрышей
+        # self.count_positions    = Decimal("0") # общее количество позиций
+        # self.winrate            = Decimal("0") # процент побед
         
 
         
-    def calculate_statistics(self):
+    # def calculate_statistics(self):
         
-        # TODO: Добавить расчеты статистики
-        self.total_pnl = sum(pos.realized_pnl for pos in self.positions.values())
-        self.total_win = sum(pos.realized_pnl for pos in self.positions.values() if pos.realized_pnl > 0)
-        self.total_loss = sum(pos.realized_pnl for pos in self.positions.values() if pos.realized_pnl < 0)
-        self.wins = sum(1 for pos in self.positions.values() if pos.realized_pnl > 0)
-        self.losses = sum(1 for pos in self.positions.values() if pos.realized_pnl < 0)
-        self.count_positions = len(self.positions)
-        self.winrate = (self.wins / self.count_positions * 100) if self.count_positions > 0 else 0
+    #     # TODO: Добавить расчеты статистики
+    #     self.total_pnl = sum(pos.realized_pnl for pos in self.positions.values())
+    #     self.total_win = sum(pos.realized_pnl for pos in self.positions.values() if pos.realized_pnl > 0)
+    #     self.total_loss = sum(pos.realized_pnl for pos in self.positions.values() if pos.realized_pnl < 0)
+    #     self.wins = sum(1 for pos in self.positions.values() if pos.realized_pnl > 0)
+    #     self.losses = sum(1 for pos in self.positions.values() if pos.realized_pnl < 0)
+    #     self.count_positions = len(self.positions)
+    #     self.winrate = (self.wins / self.count_positions * 100) if self.count_positions > 0 else 0
         
         # Максимальная просадка
         
-        # TODO: Добавить расчеты статистики прибыльности
-        # ==================================
-        # ? Добавить вызовы расчетов:
-        # ==================================
+    #     # TODO: Добавить расчеты статистики прибыльности
+    #     # ==================================
+    #     # ? Добавить вызовы расчетов:
+    #     # ==================================
 
 
 
@@ -123,14 +124,14 @@ class Test():
             logger.debug(f"[{current_index.strftime("%d.%m.%Y %H:%M")}] [yellow]- open: {current_open}, high: {current_high}, low: {current_low}, close: {current_close}[/yellow]")    
             
             #-------------------------------------------------------------
-            # Алгоритм входа в позицию и создание позиции
+            #  * Запуск расчета стратегии
             #-------------------------------------------------------------
-            # рассчитываем индикаторы стратегии ищем точку входа
+            # ! рассчитываем индикаторы стратегии ищем точку входа
             signal = strategy.find_entry_point(current_data)
             
+            # TODO Перенести в торговую логику
             #-------------------------------------------------------------
-            # проверяем если появился противоположный сигнал
-            # закрываем позицию
+            # ! появился противоположный сигнал закрываем позицию
             #-------------------------------------------------------------
             if position is not None and signal != {}:
                 if position.direction != signal['direction']:
@@ -143,6 +144,7 @@ class Test():
                     # создаем закрывающий маркет ордер по текущей рыночной цене
                     manager.close_position_at_market(position.id, Decimal(str(current_open)), close_bar=current_index)
 
+            # TODO Перенести в торговую логику
             #-------------------------------------------------------------
             # Если нет открытой позиции, и есть сигнал на вход
             #-------------------------------------------------------------
@@ -155,8 +157,11 @@ class Test():
                 else:    
                     logger.debug(f"[{self.symbol}]--------------------------------------------------")
 
+            
+            
             #-------------------------------------------------------------
-            # Обработка исполнения ордеров на текущем баре
+            # ! Обработка исполнения ордеров на текущем баре
+            # TODO Перебрать все позиции по текущему symbol 
             #-------------------------------------------------------------
             if position is not None: # если есть position   
                 # перебираем текущий бар по минутным данным для более точного исполнения стопов и тейков
@@ -173,7 +178,7 @@ class Test():
                 self.process_orders(position=position, engine=engine,  current_range_1m=arr_1m)        
                         
             #-------------------------------------------------------------
-            # Алгоритм закрытия позиции
+            # ! Алгоритм закрытия позиции
             #-------------------------------------------------------------
             if position is not None and position.status in {
                 Position_Status.ACTIVE, 
