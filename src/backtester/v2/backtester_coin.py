@@ -18,7 +18,7 @@ from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
 from src.trading_engine.managers.position_manager import PositionManager, Position
 from src.trading_engine.orders.order_factory import  make_order
 from src.trading_engine.core.enums import OrderType, Position_Status
-from src.backtester.v2.execution_engine import ExecutionEngine
+from src.backtester.v3.engine.execution_engine import ExecutionEngine
 from src.risk_manager.risk_manager import RiskManager
 
 from src.data_fetcher.utils import select_range, shift_timestamp

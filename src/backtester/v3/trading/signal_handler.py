@@ -2,6 +2,10 @@
 # src/backtester/trading/signal_handler.py
 from src.trading_engine.core.enums import Position_Status
 
+# Обработчик сигналов стратегии.
+# Отвечает за открытие, закрытие и изменение позиций
+# в зависимости от полученных сигналов. Работает совместно
+# с PositionBuilder для создания новых позиций.
 class SignalHandler:
     def __init__(self, manager, builder, logger):
         self.manager = manager

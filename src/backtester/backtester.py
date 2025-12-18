@@ -12,9 +12,9 @@ logger = get_logger(__name__)
 from src.config.config import config
 # Подключение модуля с загрузчиком данных
 from src.data_fetcher.data_fetcher import DataFetcher
-from src.backtester.v2.backtester_coin import Test
+# from src.backtester.v2.backtester_coin import Test
 from src.data_fetcher.utils import select_range_backtest
-from src.backtester.v2.report import generate_html_report
+# from src.backtester.v2.report import generate_html_report
 
     
 # -------------------------
@@ -35,31 +35,16 @@ class TestManager:
             # Параметры бэктеста
             self.settings_test = config.get_section("BACKTEST_SETTINGS")
             self.settings_strategy = config.get_section("STRATEGY_SETTINGS")
-            
-            # self.template_dir = config.get_setting("BACKTEST_SETTINGS", "TEMPLATE_DIRECTORY")
-            # self.timeframe_list = config.get_setting("BACKTEST_SETTINGS", "TIMEFRAME_LIST")
-            # self.data_dir = config.get_setting("BACKTEST_SETTINGS", "DATA_DIR")
-            # self.full_datafile = config.get_setting("BACKTEST_SETTINGS", "FULL_DATAFILE")
-            # self.start_date = config.get_setting("BACKTEST_SETTINGS", "START_DATE")
-            # self.end_date = config.get_setting("BACKTEST_SETTINGS", "END_DATE")
-            
-            # минимальное количество баров для расчета стратегии
-            # self.minimal_count_bars = config.get_setting("STRATEGY_SETTINGS", "MINIMUM_BARS_FOR_STRATEGY_CALCULATION")
-            
-            
+                        
             logger.info(f"Загружено {len(self.coins_list)} монет из конфигурации.")
         except Exception as e:
             logger.error(f"Ошибка при получении настроек биржи: {e}")
-        
-        self.tests: Dict[str, Test] = {}
-
-        
 
             
     # ====================================================
-    # 1. Выполнение одного бэктеста
+    # ? 1. Выполнение одного теста бэктеста
     # ====================================================
-    def _execute_single_backtest(self, coin, timeframe) -> Test: # Dict[str, Any]:
+    def _execute_single_backtest(self, coin, timeframe): # Dict[str, Any]:
         # * Выполняет один бэктест для конкретной монеты и таймфрейма.
         # * Возвращает все позиции которые были за указанный период
         
@@ -105,19 +90,32 @@ class TestManager:
             logger.error(f"[{symbol}, {timeframe}] Нет достаточного объема данных для выбранного периода.")
             raise ValueError("Нет достаточного объема данных для выбранного периода.")
 
+        # 3. Инициализация и запуск бэктеста
+        from src.backtester.v3.runner import run_backtest
+        from src.backtester.v3.engine.execution_engine import ExecutionEngine
         
-        # Основной расчет по свечам на выходе получаем массив позиций с ордерами
-        test = Test(select_data,  coin, self.settings_test)
+        from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
+        from src.trading_engine.managers.position_manager import PositionManager
+        
+        # инициализация стратегии
+        strategy = ZigZagAndFibo(coin)
+        # инициализация менеджера позиций
+        manager = PositionManager()
+        # инициализация движка исполнения
+        engine = ExecutionEngine(manager)
+        
+        run_backtest(
+            data = select_data,  #  исторические данные для бэктеста
+            data_1m = select_data_1m, #  исторические данные 1м для бэктеста
+            coin = coin, # информация о монете (из конфига)
+            strategy = strategy, # стратегия
+            manager = manager, # менеджер позиций
+            engine = engine, # движок исполнения
+            logger = logger # логгер
+        )
+        
+        logger.warning(f"[{symbol}, {timeframe}] ✅ Обработка завершена.")
 
-        test.backtest_coin(select_data_1m)
-    
-        # TODO Перенести этот отчет в отдельную функцию
-        # расчет статистики
-        # test.metrics = MetricsCalculator.calculate_from_positions(test.positions)
-        
-        # self.tests[test.id] = test
-        logger.warning(f"[{symbol}, {timeframe}] ✅ Обработка завершена. Всего позиций: {len(test.positions)}")
-        return test
 
 
 
@@ -155,45 +153,46 @@ class TestManager:
                 coin_task, tf_task = future_to_task[future]
                 try:
                     # выполняем задачу тест
-                    test_result = future.result()
-                    # получили результат структура тест
-                    if test_result:
-                        self.tests[test_result.id] = test_result # Сохраняем все тесты
+                    # test_result = future.result()
+                    future.result()
+                    # # получили результат структура тест
+                    # if test_result:
+                    #     self.tests[test_result.id] = test_result # Сохраняем все тесты
 
-                        # ! Генерация отчета по одной монете
-                        generate_html_report(test_result)
+                    #     # ! Генерация отчета по одной монете
+                    #     generate_html_report(test_result)
 
-                        logger.info(f"[{coin_task.get('SYMBOL')}, {tf_task}] ✅ Результаты получены и агрегированы.")
+                    logger.info(f"[{coin_task.get('SYMBOL')}, {tf_task}] ✅ Результаты получены и агрегированы.")
                         
                 except Exception as exc:
                     logger.error(f"[{coin_task}, {tf_task}] ❌ Задача вызвала исключение: {exc}")
         
         
 
-        # ! формирование общего отчета по всем монетам
-        reports_structure = {}
-        # Формируем отчет
-        if len(self.tests) > 0:
-            logger.info(f"📊 Генерация отчета... всего тестов {len(self.tests)}")
-            try:
+        # # ! формирование общего отчета по всем монетам
+        # reports_structure = {}
+        # # Формируем отчет
+        # if len(self.tests) > 0:
+        #     logger.info(f"📊 Генерация отчета... всего тестов {len(self.tests)}")
+        #     try:
                 
-                for test in self.tests.values():
-                    if test.symbol not in reports_structure:
-                        reports_structure[test.symbol] = []
-                    reports_structure[test.symbol].append(test)
+        #         for test in self.tests.values():
+        #             if test.symbol not in reports_structure:
+        #                 reports_structure[test.symbol] = []
+        #             reports_structure[test.symbol].append(test)
                 
-                from src.backtester.v2.multi_report_generator import MultiReportGenerator 
+        #         from src.backtester.v2.multi_report_generator import MultiReportGenerator 
                 
-                # Создаем экземпляр
-                report_gen = MultiReportGenerator(reports_structure)
+        #         # Создаем экземпляр
+        #         report_gen = MultiReportGenerator(reports_structure)
                 
-                # Передаем период тестирования из конфига
-                report_path = report_gen.generate_html_report(
-                    template_name="v2/report_all.html", 
-                )
-                logger.info(f"💾 Мульти-отчет сохранен в: {report_path}")
-            except Exception as e:
-                logger.error(f"Ошибка при генерации мульти-отчета: {e}")
+        #         # Передаем период тестирования из конфига
+        #         report_path = report_gen.generate_html_report(
+        #             template_name="v2/report_all.html", 
+        #         )
+        #         logger.info(f"💾 Мульти-отчет сохранен в: {report_path}")
+        #     except Exception as e:
+        #         logger.error(f"Ошибка при генерации мульти-отчета: {e}")
                 
                 
         logger.info("============================================================================")

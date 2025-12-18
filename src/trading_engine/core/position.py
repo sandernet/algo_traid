@@ -48,7 +48,7 @@ class Position:
     # Order management
     # ------------------------
     def add_order(self, order: Order):
-        logger.info(f"[{self.symbol}] Позиция {self.id[:6]}: ордер {order.id[:6]} {order.order_type} /price = {order.price} /volume = {order.volume} /status = {order.status}")
+        logger.debug(f"[{self.symbol}] Позиция {self.id[:6]}: ордер {order.id[:6]} {order.order_type} /price = {order.price} /volume = {order.volume} /status = {order.status}")
         self.orders.append(order)
 
     # Отмена ордера по ID
@@ -56,14 +56,14 @@ class Position:
         for o in self.orders:
             if o.id == order_id and o.status == OrderStatus.ACTIVE:
                 o.status = OrderStatus.CANCELLED
-                logger.info(f"Order {order_id} cancelled")
+                logger.debug(f"Order {order_id} cancelled")
 
     # Отмена ордера по типу
     def cancel_orders_by_type(self, otype: OrderType):
         for o in self.orders:
             if o.order_type == otype and o.status == OrderStatus.ACTIVE:
                 o.status = OrderStatus.CANCELLED
-                logger.info(f"Order {o.id} of type {otype} cancelled")
+                logger.debug(f"Order {o.id} of type {otype} cancelled")
     
     # проверка по переводу стопа в безубыточность
     def check_stop_break(self) -> bool:

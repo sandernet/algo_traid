@@ -70,7 +70,7 @@ def main():
         logger.info("Запуск бэктестера...")
         max_workers = config.get_setting("BACKTEST_SETTINGS", "MAX_WORKERS")
         
-        from src.backtester.v2.backtester import TestManager
+        from src.backtester.backtester import TestManager
         test_manager = TestManager()
         test_manager.run_parallel_backtest(max_workers=max_workers)
         

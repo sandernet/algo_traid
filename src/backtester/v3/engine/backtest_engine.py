@@ -4,8 +4,17 @@
 from decimal import Decimal
 from src.data_fetcher.utils import select_range, shift_timestamp
 
+# Engine выполнения бэктеста по барам.
+# Отвечает за обход баров, вызов стратегии, обработку сигналов,
+# запуск исполняющего цикла по минутным барам и учет PnL в портфеле.
 class BacktestEngine:
     def __init__(self, strategy, manager, execution_loop, signal_handler, portfolio, logger):
+        # strategy: объект стратегии с методом find_entry_point и параметром allowed_min_bars
+        # manager: менеджер позиций, содержит словарь positions
+        # execution_loop: объект, который симулирует исполнение ордеров по 1m барам
+        # signal_handler: обработчик сигналов, возвращает/обновляет позицию
+        # portfolio: учетная логика портфеля (расчёт floating, on_bar и т.д.)
+        # logger: объект логирования
         self.strategy = strategy
         self.manager = manager
         self.execution_loop = execution_loop
@@ -13,6 +22,9 @@ class BacktestEngine:
         self.portfolio = portfolio
         self.logger = logger
 
+    # ===================================================
+    # ? Запуск бэктеста
+    # ===================================================
     def run(self, ohlcv, ohlcv_1m, timeframe):
         position = None
 
@@ -20,14 +32,18 @@ class BacktestEngine:
         arr['dt'] = ohlcv.index.to_numpy()
         arr = arr.to_numpy()
 
+        # ! Итерация по барам торгового таймфрейма
         for i in range(self.strategy.allowed_min_bars, len(arr)):
             bar = arr[i]
             bar_time = bar[4]
 
+            # ! Поиск сигнала запуск стратегии
             signal = self.strategy.find_entry_point(arr[i-self.strategy.allowed_min_bars:i])
-
+            
+            # ! Обработка сигнала и получение/обновление позиции
             position = self.signal_handler.handle(signal, position, bar_time)
 
+            # ! Запуск исполнения по минутным барам, если есть открытая позиция
             if position:
                 start = bar_time
                 end = shift_timestamp(bar_time, 1, timeframe, +1)
@@ -38,17 +54,18 @@ class BacktestEngine:
 
                 self.execution_loop.run(arr_1m)
 
+            # ! Учет PnL в портфеле по окончании бара
             realized = sum(
                 e.realized_pnl
                 for p in self.manager.positions.values()
                 for e in p.executions
                 if e.bar_index == bar_time
             )
-
+            # ! расчет floating  
             floating = self.portfolio.calculate_floating(
                 self.manager,
                 Decimal(str(bar[1])),
                 Decimal(str(bar[2]))
             )
-
+            # ! обновление портфеля по бару
             self.portfolio.on_bar(bar_time, realized, floating)

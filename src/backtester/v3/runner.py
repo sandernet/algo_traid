@@ -1,11 +1,13 @@
 # src/backtester/runner.py
-from src.backtester.engine.backtest_engine import BacktestEngine
-from src.backtester.engine.execution_loop import ExecutionLoop
-from src.backtester.trading.position_builder import PositionBuilder
-from src.backtester.trading.signal_handler import SignalHandler
-from src.backtester.portfolio.portfolio import Portfolio
-from src.backtester.portfolio.metrics import MetricsCalculator
+from src.backtester.v3.engine.backtest_engine import BacktestEngine
+from src.backtester.v3.engine.execution_loop import ExecutionLoop
+from src.backtester.v3.trading.position_builder import PositionBuilder
+from src.backtester.v3.trading.signal_handler import SignalHandler
+from src.backtester.v3.portfolio.portfolio import Portfolio
+from src.backtester.v3.portfolio.metrics import MetricsCalculator
 
+
+# Запуск бэктеста
 def run_backtest(data, data_1m, coin, strategy, manager, engine, logger):
     portfolio = Portfolio(coin["START_DEPOSIT_USDT"])
     builder = PositionBuilder(manager, coin)
