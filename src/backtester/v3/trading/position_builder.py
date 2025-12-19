@@ -30,27 +30,50 @@ class PositionBuilder:
         position.add_order(
             make_order(OrderType.ENTRY, entry_price, volume, direction, bar)
         )
-
+        sum_tp_volume: Decimal = Decimal('0')
+        
         for tp in signal.get("take_profits", []):
+            tp_volume = position.round_to_tick(volume*Decimal(str(tp["volume"])))
+            tp_price = position.round_to_tick(Decimal(str(tp["price"])))
+            
+            if tp.get('tp_to_break', False):
+                meta={"tp_to_break": True}
+            else:
+                meta={}
+                
             position.add_order(
                 make_order(
                     OrderType.TAKE_PROFIT,
-                    position.round_to_tick(Decimal(tp["price"])),
-                    position.round_to_tick(volume * Decimal(tp["volume"])),
+                    tp_price,
+                    tp_volume,
                     direction,
-                    bar
+                    bar,
+                    meta=meta
                 )
             )
+            sum_tp_volume += tp_volume
+            
+        if sum_tp_volume != volume:
+            volume_diff = volume - sum_tp_volume
+            position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему TP
 
+        sum_sl_volume: Decimal = Decimal('0')
         for sl in signal.get("sl", []):
+            sl_volume = position.round_to_tick(volume*Decimal(str(sl["volume"])))
+            sl_price = position.round_to_tick(Decimal(str(sl["price"])))
+            
             position.add_order(
                 make_order(
                     OrderType.STOP_LOSS,
-                    position.round_to_tick(Decimal(sl["price"])),
-                    position.round_to_tick(volume * Decimal(sl["volume"])),
+                    sl_price,
+                    sl_volume,
                     direction,
                     bar
                 )
             )
+            sum_sl_volume += sl_volume
+        if sum_sl_volume != volume:
+            volume_diff = volume - sum_sl_volume
+            position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему SL
 
         return position

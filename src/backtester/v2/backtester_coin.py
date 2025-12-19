@@ -316,6 +316,7 @@ class Test():
                     volume_diff = volume - sum_sl_volume
                     logger.debug(f"⚠️ Внимание: сумма объемов Stop Loss ({sum_sl_volume}) меньше общего объема позиции ({volume}). Добавляем недостающий объем {volume_diff} к последнему SL.")
                     position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему TP
+            
             return position
 
 

@@ -177,7 +177,7 @@ class TestManager:
             for future in concurrent.futures.as_completed(futures):
                 future.result()  # ошибки уже залогированы
 
-        # ! -------- 7. Summary report --------
+        # ! -------- Summary report --------
         SummaryReportGenerator(
             template_dir=self.settings_test.get("TEMPLATE_DIRECTORY", "")
         ).generate(

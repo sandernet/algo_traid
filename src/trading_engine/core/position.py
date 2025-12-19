@@ -137,6 +137,7 @@ class Position:
             # закрыт весь объем позиции
             # Меняет Статус на закрывающий. Может быть TAKEN_FULL, STOPPED, TAKEN_PART
             self.setStatus()
+            self.bar_closed = bar_index
 
 
         elif self.closed_volume > Decimal("0") and self.closed_volume  < self.opened_volume:
