@@ -26,6 +26,7 @@ def run_backtest(data, data_1m, coin, strategy, manager, engine, logger):
     bt.run(data, data_1m, coin["TIMEFRAME"])
 
     return {
+        "test_id": manager.id,
         "positions": manager.positions,
         "portfolio": portfolio,
         "metrics": MetricsCalculator.from_positions(manager.positions)

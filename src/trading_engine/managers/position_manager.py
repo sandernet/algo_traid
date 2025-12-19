@@ -1,5 +1,6 @@
+from uuid import uuid4
 from decimal import Decimal
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict
 from datetime import datetime
 from uuid import uuid4
 
@@ -22,6 +23,7 @@ class PositionManager:
     """
     def __init__(self):
         self.positions: Dict[str, Position] = {}
+        self.id = uuid4().hex
     # ------------------------
     # открытие 
     # ------------------------
