@@ -41,7 +41,7 @@ class BacktestEngine:
             signal = self.strategy.find_entry_point(arr[i-self.strategy.allowed_min_bars:i])
             
             # ! Обработка сигнала и получение/обновление позиции
-            position = self.signal_handler.handle(signal, position, bar_time)
+            position = self.signal_handler.handle(signal, position, bar)
 
             # ! Запуск исполнения по минутным барам, если есть открытая позиция
             if position:

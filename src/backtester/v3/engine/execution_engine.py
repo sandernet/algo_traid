@@ -30,9 +30,9 @@ class ExecutionEngine:
     Частичные заполнения не моделируются (полное заполнение).
     """
     
-    def __init__(self, manager: PositionManager, on_execution=None):
+    def __init__(self, position_manager: PositionManager, on_execution=None):
         
-        self.manager = manager
+        self.position_manager = position_manager
         self.on_execution = on_execution
 
     def process_bar(self, bar: list[float], bar_index: datetime):
@@ -41,7 +41,7 @@ class ExecutionEngine:
         bar_index: integer index of the bar
         """
         # перебераем все позиции и их активные ордера
-        for pos in list(self.manager.positions.values()):
+        for pos in list(self.position_manager.positions.values()):
             # из позиции получаем активные ордера
             active_orders = pos.get_active_orders()
             if not active_orders:

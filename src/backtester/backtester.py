@@ -102,9 +102,9 @@ class TestManager:
             # инициализация стратегии
             strategy = ZigZagAndFibo(coin)
             # инициализация менеджера позиций
-            manager = PositionManager()
+            position_manager = PositionManager()
             # инициализация движка исполнения
-            engine = ExecutionEngine(manager)
+            engine = ExecutionEngine(position_manager)
             
             # ! -------- 4. Backtest --------
             result = run_backtest(
@@ -112,7 +112,7 @@ class TestManager:
                     data_1m = data_1m, #  исторические данные 1м для бэктеста
                     coin = coin, # информация о монете (из конфига)
                     strategy = strategy, # стратегия
-                    manager = manager, # менеджер позиций
+                    position_manager = position_manager, # менеджер позиций
                     engine = engine, # движок исполнения
                     logger = logger # логгер
                 )
