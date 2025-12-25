@@ -8,7 +8,7 @@ from src.backtester.v3.portfolio.metrics import MetricsCalculator
 
 
 # Запуск бэктеста
-def run_backtest(data, data_1m, coin, strategy, position_manager, engine, logger):
+def run_backtest(data, data_1m, coin, strategy, hadging, position_manager, engine, logger):
     """
     Запускает бэктест. Возвращает результаты бэктеста.
     :param data: исторические данные для бэктеста (DataFrame)
@@ -27,6 +27,7 @@ def run_backtest(data, data_1m, coin, strategy, position_manager, engine, logger
 
     bt = BacktestEngine(
         strategy,
+        hadging,
         position_manager,
         exec_loop,
         signal_handler,

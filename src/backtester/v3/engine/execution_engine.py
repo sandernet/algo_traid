@@ -32,8 +32,8 @@ class ExecutionEngine:
     
     def __init__(self, position_manager: PositionManager, on_execution=None):
         
-        self.position_manager = position_manager
-        self.on_execution = on_execution
+        self.position_manager = position_manager # менеджер позиций
+        self.on_execution = on_execution # коллбек после исполнения ордера (если нужен)
 
     def process_bar(self, bar: list[float], bar_index: datetime):
         """

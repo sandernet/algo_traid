@@ -28,7 +28,7 @@ class ZigZagAndFibo:
         self.timeframe = coin.get("TIMEFRAME")
         self.allowed_min_bars = config.get_setting("STRATEGY_SETTINGS", "MINIMUM_BARS_FOR_STRATEGY_CALCULATION")
         self.coin = coin
-        self.ALLOWED_Z2_OFFSET = 1
+        self.ALLOWED_Z2_OFFSET = config.get_setting("STRATEGY_SETTINGS", "Z2_INDEX_OFFSET")
 
     # Ищем точку входа по стратегии
     def find_entry_point(self, data) -> dict:
@@ -53,10 +53,11 @@ class ZigZagAndFibo:
         entry_price = data_df["close"].iloc[-1] # цена входа
         current_index = data_df.index[-1] # текущий бар
         
+        
         direction = None
         
                     
-            # 2) z2_index должен быть текущим баром или не более чем на ALLOWED_Z2_OFFSET баров раньше
+        # 2) z2_index должен быть текущим баром или не более чем на ALLOWED_Z2_OFFSET баров раньше
         allowed_shifted = shift_timestamp(current_index, self.ALLOWED_Z2_OFFSET, self.timeframe, direction=-1)
         if not (z2_index == current_index or z2_index == allowed_shifted):
             logger.debug(f"Пропускаем сигнал: z2_index={z2_index} не в допустимом окне (текущий={current_index})")

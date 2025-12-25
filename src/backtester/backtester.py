@@ -98,6 +98,7 @@ class TestManager:
             from src.backtester.v3.engine.execution_engine import ExecutionEngine
             from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
             from src.trading_engine.managers.position_manager import PositionManager
+            from src.logical.hedging.als.als_engine import ALSEngine
 
             # инициализация стратегии
             strategy = ZigZagAndFibo(coin)
@@ -105,6 +106,8 @@ class TestManager:
             position_manager = PositionManager()
             # инициализация движка исполнения
             engine = ExecutionEngine(position_manager)
+            # инициализация модуля хеджирования
+            hadging = ALSEngine(config.get_section("ALS_SETTINGS"), logger), # хеджирование
             
             # ! -------- 4. Backtest --------
             result = run_backtest(
@@ -112,6 +115,7 @@ class TestManager:
                     data_1m = data_1m, #  исторические данные 1м для бэктеста
                     coin = coin, # информация о монете (из конфига)
                     strategy = strategy, # стратегия
+                    hadging = hadging, # хеджирование
                     position_manager = position_manager, # менеджер позиций
                     engine = engine, # движок исполнения
                     logger = logger # логгер

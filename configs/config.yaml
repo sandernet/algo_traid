@@ -82,6 +82,7 @@ EXCHANGE_SETTINGS:
 # ======================================================================
 STRATEGY_SETTINGS:
   MINIMUM_BARS_FOR_STRATEGY_CALCULATION: 100
+  Z2_INDEX_OFFSET: 3
   # MINIMAL_BARS_COUNT: 100 # Минимальное количество баров для расчета индикаторов
   # Параметр отклонения ZigZag
   ZIGZAG_DEPTH: 12
@@ -141,7 +142,7 @@ BACKTEST_SETTINGS:
   TEMPLATE_DIRECTORY: templates/
   FULL_DATAFILE: False # Если True, то бэктест будет использовать полный исторический диапазон
   # начальная ДАТА для бэктеста
-  START_DATE: "2025-10-01"
+  START_DATE: "2025-05-01"
   # конечная ДАТА для бэктеста    
   END_DATE: "2025-12-31"
   MAX_WORKERS: 16
