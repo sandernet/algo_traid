@@ -57,13 +57,20 @@ class BacktestEngine:
                 self.execution_loop.run(arr_1m)
 
             # ! Учет PnL в портфеле по окончании бара
-            realized = sum(
-                e.realized_pnl
+            # realized = sum(
+            #     e.realized_pnl
                 
-                for p in self.manager.positions.values()
-                    for e in p.executions
-                        if e.bar_index == bar_time
-            )
+            #     for p in self.manager.positions.values()
+            #     for e in p.executions
+            #     if e.bar_index == bar_time
+            # )
+            realized = Decimal("0")
+            for p in self.manager.positions.values():
+                for e in p.executions:
+                    if e.bar_index == bar_time:
+                        realized += e.realized_pnl
+            self.logger.debug(f"Realized PnL on bar {bar_time}: {realized}")
+            
             # ! расчет floating  
             floating = self.portfolio.calculate_floating(
                 self.manager,
