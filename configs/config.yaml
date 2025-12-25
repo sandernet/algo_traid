@@ -82,6 +82,7 @@ EXCHANGE_SETTINGS:
 # ======================================================================
 STRATEGY_SETTINGS:
   MINIMUM_BARS_FOR_STRATEGY_CALCULATION: 100
+  Z2_INDEX_OFFSET: 3
   # MINIMAL_BARS_COUNT: 100 # Минимальное количество баров для расчета индикаторов
   # Параметр отклонения ZigZag
   ZIGZAG_DEPTH: 12
@@ -130,6 +131,16 @@ RISK_SETTINGS:
   MAX_POSITIONS: 3
 
 # ======================================================================
+# СЕКЦИЯ ХЕДЖИРОВАНИЯ (ALS_SETTINGS)
+# ======================================================================
+ALS_SETTINGS:
+  ENABLED: true
+  HEDGING_RATIO: 0.5
+  SIGNAL_THRESHOLD: 0.7
+  MAX_HEDGING_POSITIONS: 2
+
+
+# ======================================================================
 # СЕКЦИЯ ТЕСТИРОВАНИЯ/РАБОТЫ (BACKTEST_SETTINGS)
 # ======================================================================
 BACKTEST_SETTINGS:
@@ -141,7 +152,11 @@ BACKTEST_SETTINGS:
   TEMPLATE_DIRECTORY: templates/
   FULL_DATAFILE: False # Если True, то бэктест будет использовать полный исторический диапазон
   # начальная ДАТА для бэктеста
+<<<<<<< HEAD
   START_DATE: "2025-03-01"
+=======
+  START_DATE: "2025-05-01"
+>>>>>>> 52c3bfdf36347ecd65f5f68e54e9d128aac90aed
   # конечная ДАТА для бэктеста    
   END_DATE: "2025-12-31"
   MAX_WORKERS: 16
@@ -151,7 +166,7 @@ BACKTEST_SETTINGS:
 # ======================================================================
 LOGGING_SETTINGS:
   # Уровень логирования: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  LEVEL: INFO
+  LEVEL: DEBUG
   # Директория для хранения логов
   LOG_DIR: LOGS
   # Имя основного файла логов

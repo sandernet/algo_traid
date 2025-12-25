@@ -3,12 +3,13 @@
 # src/backtester/engine/backtest_engine.py
 from decimal import Decimal
 from src.data_fetcher.utils import select_range, shift_timestamp
+from src.logical.hedging.als.als_engine import ALSEngine
 
 # Engine выполнения бэктеста по барам.
 # Отвечает за обход баров, вызов стратегии, обработку сигналов,
 # запуск исполняющего цикла по минутным барам и учет PnL в портфеле.
 class BacktestEngine:
-    def __init__(self, strategy, manager, execution_loop, signal_handler, portfolio, logger):
+    def __init__(self, strategy, hadging: ALSEngine, manager, execution_loop, signal_handler, portfolio, logger):
         # strategy: объект стратегии с методом find_entry_point и параметром allowed_min_bars
         # manager: менеджер позиций, содержит словарь positions
         # execution_loop: объект, который симулирует исполнение ордеров по 1m барам
@@ -16,6 +17,7 @@ class BacktestEngine:
         # portfolio: учетная логика портфеля (расчёт floating, on_bar и т.д.)
         # logger: объект логирования
         self.strategy = strategy
+        self.hadging = hadging
         self.manager = manager
         self.execution_loop = execution_loop
         self.signal_handler = signal_handler
@@ -39,9 +41,9 @@ class BacktestEngine:
 
             # ! Поиск сигнала запуск стратегии
             signal = self.strategy.find_entry_point(arr[i-self.strategy.allowed_min_bars:i])
-            
+
             # ! Обработка сигнала и получение/обновление позиции
-            position = self.signal_handler.handle(signal, position, bar_time)
+            position = self.signal_handler.handle(signal, position, bar)
 
             # ! Запуск исполнения по минутным барам, если есть открытая позиция
             if position:
@@ -55,12 +57,20 @@ class BacktestEngine:
                 self.execution_loop.run(arr_1m)
 
             # ! Учет PnL в портфеле по окончании бара
-            realized = sum(
-                e.realized_pnl
-                for p in self.manager.positions.values()
-                for e in p.executions
-                if e.bar_index == bar_time
-            )
+            # realized = sum(
+            #     e.realized_pnl
+                
+            #     for p in self.manager.positions.values()
+            #     for e in p.executions
+            #     if e.bar_index == bar_time
+            # )
+            realized = Decimal("0")
+            for p in self.manager.positions.values():
+                for e in p.executions:
+                    if e.bar_index == bar_time:
+                        realized += e.realized_pnl
+            self.logger.debug(f"Realized PnL on bar {bar_time}: {realized}")
+            
             # ! расчет floating  
             floating = self.portfolio.calculate_floating(
                 self.manager,
