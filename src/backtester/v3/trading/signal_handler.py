@@ -2,7 +2,8 @@
 # src/backtester/trading/signal_handler.py
 # from src.trading_engine.core.enums import Position_Status
 from src.trading_engine.signals.signal import Signal
-from typing import Optional
+from src.trading_engine.core.enums import SignalType
+# from typing import Optional
 
 # Обработчик сигналов стратегии.
 # Отвечает за открытие, закрытие и изменение позиций
@@ -17,9 +18,11 @@ class SignalHandler:
     # ==================================================
     # ? Обработка сигнала и получение/обновление позиции
     # ==================================================
-    def handle(self, signal: Optional[Signal], position, bar):
+    # TODO: добавить передачу всех позиции в обработчик сигнала
+    
+    def handle(self, signal: Signal, position, bar):
         # ! Поиск сигнала запуск стратегии
-        if not signal:
+        if signal.signal_type == SignalType.NO_SIGNAL:
             return position
 
         # ! Обработка сигнала и получение/обновление позиции

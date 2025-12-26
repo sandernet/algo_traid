@@ -26,7 +26,7 @@ class OrderStatus(Enum):
     CANCELLED = "cancelled"
     PARTIAL = "partial"
 
-
+# направление позиции
 class Direction(Enum):
     LONG = "long"
     SHORT = "short"
@@ -34,7 +34,7 @@ class Direction(Enum):
     
 
 # ==========================
-# Signal Enums
+# Signal Перечисления
 # ==========================
 class SignalType(Enum):
     ENTRY = "entry"
@@ -43,6 +43,7 @@ class SignalType(Enum):
     HEDGE_CLOSE = "hedge_close"
     UPDATE         = "update" # изменить позицию (SL, TP)    
     CANCEL = "cancel" # закрыть позицию  по рынку
+    NO_SIGNAL = "no_signal" # отсутствие сигнала
 
 
 class SignalSource(Enum):

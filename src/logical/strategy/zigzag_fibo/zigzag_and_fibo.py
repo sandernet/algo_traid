@@ -64,7 +64,7 @@ class ZigZagAndFibo:
         allowed_shifted = shift_timestamp(current_index, self.ALLOWED_Z2_OFFSET, self.timeframe, direction=-1)
         if not (z2_index == current_index or z2_index == allowed_shifted):
             logger.debug(f"Пропускаем сигнал: z2_index={z2_index} не в допустимом окне (текущий={current_index})")
-            return         
+            return Signal.no_signal()
                             
         # # Проверяем индекс бара zigzag он должен совпадать с свечей расчета
         # if index_bar != z2_index or not z2_index != current_index:

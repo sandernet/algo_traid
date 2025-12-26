@@ -20,6 +20,7 @@ class Signal:
         volume: Optional[Decimal] = None,
         take_profits: Optional[List[Dict[str, Any]]] = None,
         stop_losses: Optional[List[Dict[str, Any]]] = None,
+        bar_index=None,
         source: SignalSource = SignalSource.STRATEGY,
         metadata: Optional[Dict[str, Any]] = None,
         timestamp: Optional[datetime] = None,
@@ -31,7 +32,7 @@ class Signal:
 
         self.take_profits = take_profits or []
         self.stop_losses = stop_losses or []
-
+        self.bar_index = bar_index
         self.source = source
         self.metadata = metadata or {}
         self.timestamp = timestamp or datetime.utcnow()
@@ -40,6 +41,18 @@ class Signal:
     # Factory methods (очень важно!)
     # ==========================
 
+    # Возврат объекта сигнала без сигнала
+    @classmethod
+    def no_signal(cls, bar_index=None):
+        """
+        Пустой сигнал — стратегия ничего не делает
+        """
+        return cls(
+            signal_type=SignalType.NO_SIGNAL,
+            bar_index=bar_index,
+        )
+
+    # Создание объекта сигнала на вход в позицию
     @classmethod
     def entry(
         cls,
@@ -94,6 +107,8 @@ class Signal:
     # ==========================
     # Utility
     # ==========================
+    def is_no_signal(self) -> bool:
+        return self.signal_type == SignalType.NO_SIGNAL
 
     def is_entry(self) -> bool:
         return self.signal_type == SignalType.ENTRY

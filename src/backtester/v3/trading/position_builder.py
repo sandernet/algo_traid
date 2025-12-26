@@ -7,6 +7,10 @@ from src.trading_engine.core.enums import OrderType
 from src.risk_manager.risk_manager import RiskManager
 from src.trading_engine.signals.signal import Signal
 
+# ==========================
+# ? Класс PositionBuilder отвечает за создание новых позиций
+# ? на основе полученных торговых сигналов.
+# ==========================
 class PositionBuilder:
     def __init__(self, manager, coin):
         self.manager = manager
