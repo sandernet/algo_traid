@@ -30,3 +30,22 @@ class OrderStatus(Enum):
 class Direction(Enum):
     LONG = "long"
     SHORT = "short"
+    
+    
+
+# ==========================
+# Signal Enums
+# ==========================
+class SignalType(Enum):
+    ENTRY = "entry"
+    EXIT = "exit"
+    HEDGE_OPEN = "hedge_open"
+    HEDGE_CLOSE = "hedge_close"
+    UPDATE         = "update" # изменить позицию (SL, TP)    
+    CANCEL = "cancel" # закрыть позицию  по рынку
+
+
+class SignalSource(Enum):
+    STRATEGY = "strategy"
+    ALS = "als"
+    MANUAL = "manual"

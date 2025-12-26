@@ -42,6 +42,7 @@ class BacktestEngine:
             # ! Поиск сигнала запуск стратегии
             signal = self.strategy.find_entry_point(arr[i-self.strategy.allowed_min_bars:i])
 
+
             # ! Обработка сигнала и получение/обновление позиции
             position = self.signal_handler.handle(signal, position, bar)
 
@@ -69,7 +70,7 @@ class BacktestEngine:
                 for e in p.executions:
                     if e.bar_index == bar_time:
                         realized += e.realized_pnl
-            self.logger.debug(f"Realized PnL on bar {bar_time}: {realized}")
+            self.logger.debug(f"Осуществленный PnL на баре {bar_time}: {realized}")
             
             # ! расчет floating  
             floating = self.portfolio.calculate_floating(

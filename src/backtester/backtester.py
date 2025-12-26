@@ -106,7 +106,7 @@ class TestManager:
             position_manager = PositionManager()
             # инициализация движка исполнения
             engine = ExecutionEngine(position_manager)
-            # инициализация модуля хеджирования
+            # инициализация модуля хеджирования (если нужен)
             hadging = ALSEngine(config.get_section("ALS_SETTINGS"), logger), # хеджирование
             
             # ! -------- 4. Backtest --------

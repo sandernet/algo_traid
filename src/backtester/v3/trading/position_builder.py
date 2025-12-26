@@ -5,14 +5,21 @@ from decimal import Decimal
 from src.trading_engine.orders.order_factory import make_order
 from src.trading_engine.core.enums import OrderType
 from src.risk_manager.risk_manager import RiskManager
+from src.trading_engine.signals.signal import Signal
 
 class PositionBuilder:
     def __init__(self, manager, coin):
         self.manager = manager
         self.coin = coin
 
-    def build(self, signal, bar):
-        direction = signal["direction"]
+    def build(self, signal: Signal, bar):
+        if not signal:
+            raise ValueError("Необходимо указать сигнал")   
+    
+        direction = signal.direction
+        if direction is None:
+            raise ValueError("Необходимо указать направление в сигнале")
+
         symbol = self.coin["SYMBOL"] + "/USDT"
         tick_size = Decimal(str(self.coin["MINIMAL_TICK_SIZE"]))
 
@@ -23,7 +30,7 @@ class PositionBuilder:
             open_bar=bar
         )
 
-        entry_price = position.round_to_tick(Decimal(signal["price"]))
+        entry_price = position.round_to_tick(signal.price)
         rm = RiskManager(self.coin)
         volume = rm.calculate_position_size(entry_price)
 
@@ -32,7 +39,7 @@ class PositionBuilder:
         )
         sum_tp_volume: Decimal = Decimal('0')
         
-        for tp in signal.get("take_profits", []):
+        for tp in signal.take_profits:
             tp_volume = position.round_to_tick(volume*Decimal(str(tp["volume"])))
             tp_price = position.round_to_tick(Decimal(str(tp["price"])))
             
@@ -58,7 +65,7 @@ class PositionBuilder:
             position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему TP
 
         sum_sl_volume: Decimal = Decimal('0')
-        for sl in signal.get("sl", []):
+        for sl in signal.stop_losses:
             sl_volume = position.round_to_tick(volume*Decimal(str(sl["volume"])))
             sl_price = position.round_to_tick(Decimal(str(sl["price"])))
             

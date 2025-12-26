@@ -37,7 +37,7 @@ class PositionManager:
     # ------------------------
     # закрытие по ID
     # ------------------------
-    def cansel_active_orders(self, position_id: str, close_bar: Optional[datetime] = None):
+    def cancel_active_orders(self, position_id: str, close_bar: Optional[datetime] = None):
         pos = self.positions.get(position_id)
         if not pos:
             return

@@ -1,6 +1,8 @@
 
 import pandas as pd
 from pandas import Timedelta, DateOffset
+from typing import Optional
+
 # Логирование
 # ====================================================
 from src.utils.logger import get_logger
@@ -14,6 +16,7 @@ from src.logical.indicators.fibonacci import fibonacci_levels
 from src.logical.indicators.zigzag import ZigZag
 # класс позиции
 from src.trading_engine.core.enums import  Direction  # статусы
+from src.trading_engine.signals.signal import Signal
 
 # ALLOWED_Z2_OFFSET = 1
 
@@ -31,7 +34,7 @@ class ZigZagAndFibo:
         self.ALLOWED_Z2_OFFSET = config.get_setting("STRATEGY_SETTINGS", "Z2_INDEX_OFFSET")
 
     # Ищем точку входа по стратегии
-    def find_entry_point(self, data) -> dict:
+    def find_entry_point(self, data) -> Optional[Signal]:
         """
         Запуск стратегии ZigZag и уровней Фибоначчи на переданных данных.
         Определяем есть ли сигнал и если есть создаем позицию
@@ -44,7 +47,7 @@ class ZigZagAndFibo:
         # Проверка корректности результата
         if zigzag is None or fiboLev is None:
             logger.error(f"Стратегия не вернула корректные результаты.")
-            return {} 
+            return
 
         logger.debug(f"ZigZag / z1 =: {zigzag["z1"]}, z2 =: {zigzag["z2"]}, z2_index: {zigzag['z2_index'].strftime("%d.%m.%Y %H:%M")} direction: {zigzag['direction']}")        
         
@@ -61,8 +64,7 @@ class ZigZagAndFibo:
         allowed_shifted = shift_timestamp(current_index, self.ALLOWED_Z2_OFFSET, self.timeframe, direction=-1)
         if not (z2_index == current_index or z2_index == allowed_shifted):
             logger.debug(f"Пропускаем сигнал: z2_index={z2_index} не в допустимом окне (текущий={current_index})")
-            return {}
-        
+            return         
                             
         # # Проверяем индекс бара zigzag он должен совпадать с свечей расчета
         # if index_bar != z2_index or not z2_index != current_index:
@@ -79,7 +81,7 @@ class ZigZagAndFibo:
             else :
                 logger.debug(f"Цена входа {entry_price} [bold red] > [/bold red] {fiboLev[78.6]['level_price']}")
                 logger.debug(f"Пропускаем сигнал на LONG")
-                return {}
+                return
 
         if direction_zigzag == 1: #индикатор zigzag показывает что нужно входить в long
             logger.debug(f"Индикатор zigzag показывает что нужно входить в long {direction_zigzag}")
@@ -90,12 +92,12 @@ class ZigZagAndFibo:
             else :
                 logger.debug(f"Цена входа {entry_price} [bold red] < [/bold red] {fiboLev[78.6]['level_price']}")
                 logger.debug(f"Пропускаем сигнал на SHORT")
-                return {}
+                return
             
                     
         if direction is None:
             logger.debug(f"Нет сигнала на вход в позицию")
-            return {}
+            return
         # Создание сделки
         tps= []
         sls=[]
@@ -110,13 +112,13 @@ class ZigZagAndFibo:
             if value.get('sl') is True:
                 sls.append(info)
         
-        signal = {
-            "price": entry_price,
-            "direction": direction,
-            "take_profits": tps,
-            "sl": sls,
-            "z2_index": z2_index
-            }
+        signal = Signal.entry(
+            direction=direction,
+            entry_price=entry_price,
+            take_profits=tps,
+            stop_losses=sls,
+            metadata = {"z2_index":z2_index}
+        )
         return signal
 
 # ------------------------------------------

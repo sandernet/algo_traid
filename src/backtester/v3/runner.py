@@ -20,9 +20,13 @@ def run_backtest(data, data_1m, coin, strategy, hadging, position_manager, engin
     :param logger: объект логирования (из конфига) (Logger)
     :return: результаты бэктеста (dict)
     """
+    # хранит информацию о PnL, балансе и т.д.
     portfolio = Portfolio(coin["START_DEPOSIT_USDT"])
+    # инициализация билдера позиций
     builder = PositionBuilder(position_manager, coin)
+    # исполнение сигналов стратегии
     signal_handler = SignalHandler(position_manager, builder, logger)
+    # исполнение ордеров по минутным барам
     exec_loop = ExecutionLoop(engine)
 
     bt = BacktestEngine(

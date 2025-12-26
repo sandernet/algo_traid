@@ -152,11 +152,7 @@ BACKTEST_SETTINGS:
   TEMPLATE_DIRECTORY: templates/
   FULL_DATAFILE: False # Если True, то бэктест будет использовать полный исторический диапазон
   # начальная ДАТА для бэктеста
-<<<<<<< HEAD
-  START_DATE: "2025-03-01"
-=======
   START_DATE: "2025-05-01"
->>>>>>> 52c3bfdf36347ecd65f5f68e54e9d128aac90aed
   # конечная ДАТА для бэктеста    
   END_DATE: "2025-12-31"
   MAX_WORKERS: 16
