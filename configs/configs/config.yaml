@@ -61,9 +61,8 @@ COINS:
     LEVERAGE: 5  # Плечо
     # Размер ордера (в usdt )
     VOLUME_SIZE  : 1000
-  
 
-  
+
 # ======================================================================
 # СЕКЦИЯ БИРЖИ (EXCHANGE_SETTINGS)
 # ======================================================================
@@ -82,6 +81,7 @@ EXCHANGE_SETTINGS:
 # ======================================================================
 STRATEGY_SETTINGS:
   MINIMUM_BARS_FOR_STRATEGY_CALCULATION: 100
+  Z2_INDEX_OFFSET: 3
   # MINIMAL_BARS_COUNT: 100 # Минимальное количество баров для расчета индикаторов
   # Параметр отклонения ZigZag
   ZIGZAG_DEPTH: 12
@@ -130,28 +130,38 @@ RISK_SETTINGS:
   MAX_POSITIONS: 3
 
 # ======================================================================
+# СЕКЦИЯ ХЕДЖИРОВАНИЯ (ALS_SETTINGS)
+# ======================================================================
+ALS_SETTINGS:
+  ENABLED: true
+  HEDGING_RATIO: 0.5
+  SIGNAL_THRESHOLD: 0.7
+  MAX_HEDGING_POSITIONS: 2
+
+
+# ======================================================================
 # СЕКЦИЯ ТЕСТИРОВАНИЯ/РАБОТЫ (BACKTEST_SETTINGS)
 # ======================================================================
 BACKTEST_SETTINGS:
   # Директория для хранения исторических данных
-  TIMEFRAME_LIST: ["30","60", "4h", "D"]
-  # TIMEFRAME_LIST: ["4h", "D"]
+  TIMEFRAME_LIST: ["15","30","60", "4h", "D"]
+  # TIMEFRAME_LIST: ["D"]
   DATA_DIR: DATA_OHLCV/
   REPORT_DIRECTORY: REPORTS/
-  TEMPLATE_DIRECTORY: templates/
-  FULL_DATAFILE: True # Если True, то бэктест будет использовать полный исторический диапазон
+  TEMPLATE_DIRECTORY: TEMPLATES/
+  FULL_DATAFILE: False # Если True, то бэктест будет использовать полный исторический диапазон
   # начальная ДАТА для бэктеста
-  START_DATE: "2025-07-01"
+  START_DATE: "2025-01-01"
   # конечная ДАТА для бэктеста    
   END_DATE: "2025-12-31"
-  MAX_WORKERS: 8
+  MAX_WORKERS: 16
 
 # ======================================================================
 # СЕКЦИЯ ЛОГИРОВАНИЯ (LOGGING_SETTINGS)
 # ======================================================================
 LOGGING_SETTINGS:
   # Уровень логирования: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  LEVEL: WARNING
+  LEVEL: INFO
   # Директория для хранения логов
   LOG_DIR: LOGS
   # Имя основного файла логов

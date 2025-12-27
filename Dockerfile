@@ -1,7 +1,11 @@
 # Используем официальный образ Python как базовый
 FROM python:3.13-slim as builder
 WORKDIR /install
-RUN apt-get update && apt-get install -y build-essential
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip wheel --no-deps --wheel-dir /wheels -r requirements.txt
@@ -11,19 +15,26 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 # Устанавливаем рабочую директорию внутри контейнера
-WORKDIR /app
+WORKDIR /srs
+
+# Устанавливаем git (нужен для клонирования)
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /wheels /wheels
 COPY requirements.txt .
 RUN pip install --no-deps --no-index --find-links=/wheels -r requirements.txt
 
-# Создаём необходимые директории
-RUN mkdir -p DATA_OHLCV LOGS configs REPORTS
+WORKDIR /app
+# Клонируем репозиторий
+RUN git clone https://github.com/sandernet/algo_traid.git .
 
-# Копируем само приложение
-COPY . .
+# Создаём необходимые директории
+RUN mkdir -p DATA_OHLCV LOGS REPORTS
 
 # Указываем тома, чтобы данные можно было монтировать извне
-VOLUME ["/app/DATA_OHLCV", "/app/LOGS", "/app/configs, /app/REPORTS", "/app/templates"]
+VOLUME ["/app/DATA_OHLCV", "/app/LOGS", "/app/REPORTS", "/app/configs"]
 
 # Команда запуска
 CMD ["python", "app.py"]
