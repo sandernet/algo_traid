@@ -1,40 +1,60 @@
 
 import pandas as pd
 from pandas import Timedelta, DateOffset
-from typing import Optional
+from typing import List
 
-# Логирование
+# ====================================================
+# Логирование и конфигурация
 # ====================================================
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
 from src.config.config import config
-
-
-# индикатор фибоначчи
+# ====================================================
+# Индикаторы
+# ====================================================
 from src.logical.indicators.fibonacci import fibonacci_levels
-# индикатор zigzag
 from src.logical.indicators.zigzag import ZigZag
-# класс позиции
-from src.trading_engine.core.enums import  Direction, SignalSource  # статусы
+# ====================================================
+# Торговые сущности
+# ====================================================
+from src.trading_engine.core.enums import  Direction, SignalSource, PositionType  # статусы
+from src.trading_engine.core.position import Position
 from src.trading_engine.signals.signal import Signal
-
-# ALLOWED_Z2_OFFSET = 1
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Класс стратегии
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 class ZigZagAndFibo:
     def __init__(self, coin):
-        # self.symbol = coin["symbol"] # название монеты
+        
+        self.coin = coin
         self.symbol = coin.get("SYMBOL")+"/USDT"
         # tick_size = coin.get("MINIMAL_TICK_SIZE")
         self.timeframe = coin.get("TIMEFRAME")
         self.allowed_min_bars = config.get_setting("STRATEGY_SETTINGS", "MINIMUM_BARS_FOR_STRATEGY_CALCULATION")
-        self.coin = coin
         self.ALLOWED_Z2_OFFSET = config.get_setting("STRATEGY_SETTINGS", "Z2_INDEX_OFFSET")
+        
+        
+    # ? Запуск стратегии на выходе Signal
+    # TODO: возможно нужно передавать позиции или менеджер позиций
+    def run_strategy(self, data, positions: List[Position]) -> Signal:
+        if len(positions) > 0:
+            logger.debug(f"Есть открытые позиции, стратегия ZigZag и Фибоначчи проверяет наличие хеджирующей позиции.")
+            # проверить есть хеджирующая позиция и если есть не входить в позицию
+            
+            for position in positions:
+                if position.type == PositionType.HEDGE:
+                    logger.debug(f"Есть хеджирующая позиция {position.direction} {position.symbol}, стратегия не будет входить в позицию.")
+                    # Обрабатываем наличие хеджирующей позиции
+                    # TODO: возможно нужно добавить логику выхода из хеджирующей позиции
+                    # пока ставим нет сигнала
+                    return Signal.no_signal()
+            
+        
+        return self.find_entry_point(data)
 
     # Ищем точку входа по стратегии
-    def find_entry_point(self, data) -> Optional[Signal]:
+    def find_entry_point(self, data) -> Signal:
         """
         Запуск стратегии ZigZag и уровней Фибоначчи на переданных данных.
         Определяем есть ли сигнал и если есть создаем позицию
@@ -47,7 +67,7 @@ class ZigZagAndFibo:
         # Проверка корректности результата
         if zigzag is None or fiboLev is None:
             logger.error(f"Стратегия не вернула корректные результаты.")
-            return
+            return Signal.no_signal()
 
         logger.debug(f"ZigZag / z1 =: {zigzag["z1"]}, z2 =: {zigzag["z2"]}, z2_index: {zigzag['z2_index'].strftime("%d.%m.%Y %H:%M")} direction: {zigzag['direction']}")        
         

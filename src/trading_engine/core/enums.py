@@ -8,6 +8,10 @@ class Position_Status(Enum):
     CANCELED = "cancelled"      #финальный статус, когда позиция была отменена (профит может быть как положительный так и отрицательный)
     NONE = "none"               #начальный статус, когда позиция не создана
     CREATED = "created"         #начальный статус, когда позиция создана
+    
+class PositionType(Enum):
+    MAIN = "main"               # Основная позиция
+    HEDGE = "hedge"             # хеджирующая позиция
 
 
 class OrderType(Enum):

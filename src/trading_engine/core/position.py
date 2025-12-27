@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 # Core enums
 from src.trading_engine.core.execution import Execution
-from src.trading_engine.core.enums import Direction, OrderType, Position_Status, OrderStatus, SignalSource
+from src.trading_engine.core.enums import Direction, OrderType, Position_Status, OrderStatus, SignalSource, PositionType
 from src.trading_engine.orders.order_factory import Order
 from src.trading_engine.utils.decimal_utils import to_decimal
 
@@ -26,6 +26,7 @@ class Position:
     def __init__(self, symbol: str, direction: Direction, tick_size: Optional[Decimal], source: SignalSource):
         self.id = uuid4().hex # уникальный идентификатор позиции
         self.source = source # источник позиции
+        self.type = PositionType.MAIN # тип позиции (основная/хеджирующая)
         self.symbol = symbol # торговый символ / инструмент
         self.direction = direction # направление позицией (long/short)
         self.status = Position_Status.CREATED
@@ -58,6 +59,11 @@ class Position:
             if o.id == order_id and o.status == OrderStatus.ACTIVE:
                 o.status = OrderStatus.CANCELLED
                 logger.debug(f"[{self.symbol}] Order {order_id} cancelled")
+    
+    # Установка типа позиции
+    def setPositionType(self, ptype: PositionType):
+        self.type = ptype
+        logger.debug(f"[{self.symbol}] Позиция {self.id[:6]} установлена как тип {ptype.value}")
 
     # Отмена ордера по типу
     def cancel_orders_by_type(self, otype: OrderType):
