@@ -15,7 +15,7 @@ from src.logical.indicators.fibonacci import fibonacci_levels
 # индикатор zigzag
 from src.logical.indicators.zigzag import ZigZag
 # класс позиции
-from src.trading_engine.core.enums import  Direction  # статусы
+from src.trading_engine.core.enums import  Direction, SignalSource  # статусы
 from src.trading_engine.signals.signal import Signal
 
 # ALLOWED_Z2_OFFSET = 1
@@ -81,7 +81,7 @@ class ZigZagAndFibo:
             else :
                 logger.debug(f"Цена входа {entry_price} [bold red] > [/bold red] {fiboLev[78.6]['level_price']}")
                 logger.debug(f"Пропускаем сигнал на LONG")
-                return
+                return Signal.no_signal()
 
         if direction_zigzag == 1: #индикатор zigzag показывает что нужно входить в long
             logger.debug(f"Индикатор zigzag показывает что нужно входить в long {direction_zigzag}")
@@ -92,12 +92,12 @@ class ZigZagAndFibo:
             else :
                 logger.debug(f"Цена входа {entry_price} [bold red] < [/bold red] {fiboLev[78.6]['level_price']}")
                 logger.debug(f"Пропускаем сигнал на SHORT")
-                return
+                return Signal.no_signal()
             
                     
         if direction is None:
             logger.debug(f"Нет сигнала на вход в позицию")
-            return
+            return Signal.no_signal()
         # Создание сделки
         tps= []
         sls=[]
@@ -113,6 +113,7 @@ class ZigZagAndFibo:
                 sls.append(info)
         
         signal = Signal.entry(
+            source=SignalSource.STRATEGY,
             direction=direction,
             entry_price=entry_price,
             take_profits=tps,

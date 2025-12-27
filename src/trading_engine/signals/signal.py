@@ -57,11 +57,12 @@ class Signal:
     def entry(
         cls,
         *,
+        
         direction: Direction,
         entry_price: Decimal,
         take_profits: list,
         stop_losses: list,
-        source: SignalSource = SignalSource.STRATEGY,
+        source: SignalSource,
         metadata: dict = {},
     ):
         return cls(
@@ -80,7 +81,7 @@ class Signal:
         *,
         direction: Direction,
         volume: Decimal,
-        source: SignalSource = SignalSource.ALS,
+        source: SignalSource,
         metadata: dict = {},
     ):
         return cls(
@@ -95,7 +96,7 @@ class Signal:
     def exit(
         cls,
         *,
-        source: SignalSource = SignalSource.STRATEGY,
+        source: SignalSource,
         metadata: dict = {},
     ):
         return cls(

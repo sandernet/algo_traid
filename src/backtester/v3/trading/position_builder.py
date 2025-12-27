@@ -6,6 +6,7 @@ from src.trading_engine.orders.order_factory import make_order
 from src.trading_engine.core.enums import OrderType
 from src.risk_manager.risk_manager import RiskManager
 from src.trading_engine.signals.signal import Signal
+from src.trading_engine.core.position import Position
 
 # ==========================
 # ? Класс PositionBuilder отвечает за создание новых позиций
@@ -16,7 +17,7 @@ class PositionBuilder:
         self.manager = manager
         self.coin = coin
 
-    def build(self, signal: Signal, bar):
+    def build(self, signal: Signal, bar) -> Position:
         if not signal:
             raise ValueError("Необходимо указать сигнал")   
     
@@ -29,6 +30,7 @@ class PositionBuilder:
 
         position = self.manager.open_position(
             symbol=symbol,
+            source=signal.source,
             direction=direction,
             tick_size=tick_size,
             open_bar=bar

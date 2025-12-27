@@ -3,7 +3,7 @@
 # from src.trading_engine.core.enums import Position_Status
 from src.trading_engine.signals.signal import Signal
 from src.trading_engine.core.enums import SignalType
-# from typing import Optional
+from typing import Dict
 
 # Обработчик сигналов стратегии.
 # Отвечает за открытие, закрытие и изменение позиций
@@ -20,29 +20,121 @@ class SignalHandler:
     # ==================================================
     # TODO: добавить передачу всех позиции в обработчик сигнала
     
-    def handle(self, signal: Signal, position, bar):
-        # ! Поиск сигнала запуск стратегии
-        if signal.signal_type == SignalType.NO_SIGNAL:
-            return position
-
-        # ! Обработка сигнала и получение/обновление позиции
-        # ! Если поступил сигнал на противоположное направление — закрываем позицию
-        if position and position.direction != signal.direction:
-            self.manager.cancel_active_orders(position.id, bar)
-            self.manager.close_position_at_market(position.id, signal.price, bar)
-            self.logger.debug("Противоположный сигнал — закрытие позиции")
-            return None
+    def handle(self, signal: Signal, positions: Dict[str, object], bar) -> Dict[str, object]:
+        # !--- 1. NO SIGNAL ---
+        if signal.is_no_signal():
+            self.logger.debug(f"Обработка сигнала: {signal.signal_type}, Позиции: {list(positions.keys())}")
+            return positions
         
-        # ! Если нет открытой позиции — открываем новую
-        if position is None:
-            self.logger.debug("Открытие новой позиции")
-            return self.builder.build(signal, bar)
+        self.logger.debug(f"Обработка сигнала: {signal.signal_type}, Позиции: {list(positions.keys())}")
+        # !--- 2. ENTRY ---
+        if signal.signal_type == SignalType.ENTRY:
+            return self._handle_entry(signal, positions, bar)
 
-        # ! Если поступил сигнал в том же направлении — обновляем позицию
-        if position.direction == signal.direction:
-            self.logger.debug("Обновление позиции")
-            # Обновление логики позиции можно реализовать здесь
-            # Например, добавление новых ордеров или изменение стопов
-            # В данном примере просто возвращаем существующую позицию
+        # !--- 3. EXIT ---
+        if signal.signal_type == SignalType.EXIT:
+            return self._handle_exit(signal, positions, bar)
 
-        return position
+        # !--- 4. HEDGE OPEN ---
+        if signal.signal_type == SignalType.HEDGE_OPEN:
+            return self._handle_hedge_open(signal, positions, bar)
+
+        # !--- 5. HEDGE CLOSE ---
+        if signal.signal_type == SignalType.HEDGE_CLOSE:
+            return self._handle_hedge_close(signal, positions, bar)
+
+        self.logger.warning(f"Неизвестный тип сигнала: {signal.signal_type}")
+        return positions
+
+    # ============================
+    # ? ENTRY — открытие основной позиции
+    # ==================================================
+    def _handle_entry(self, signal: Signal, positions, bar):
+
+        # Проверка: уже есть позиция такого же направления?
+        for pos in positions.values():
+            if pos.direction == signal.direction and pos.source == signal.source:
+                self.logger.debug("ENTRY пропущен — позиция уже существует")
+                return positions
+
+        self.logger.info("ENTRY: открытие новой позиции")
+
+        position = self.builder.build(signal, bar)
+
+        if position:
+            positions[position.id] = position
+
+        return positions
+
+    # ==================================================
+    # ? EXIT — закрытие всех позиций источника
+    # ==================================================
+    def _handle_exit(self, signal: Signal, positions, bar):
+        self.logger.info("EXIT: закрытие позиций")
+        for pos_id, pos in list(positions.items()):
+            if signal.source and pos.source != signal.source:
+                continue
+            # ! Отмена активных ордеров и закрытие позиции по рынку
+            self.manager.cancel_active_orders(pos.id, bar)
+            self.manager.close_position_at_market(
+                pos.id,
+                pos.last_price,
+                bar,
+            )
+            del positions[pos_id]
+        return positions
+    
+    # ==================================================
+    # ?HEDGE OPEN — открытие хедж позиции
+    # ==================================================
+    def _handle_hedge_open(self, signal: Signal, positions, bar):
+
+        # Проверяем, есть ли уже хедж в этом направлении
+        for pos in positions.values():
+            if pos.direction == signal.direction and pos.is_hedge:
+                self.logger.debug("HEDGE уже существует")
+                return positions
+
+        self.logger.info("HEDGE_OPEN: открытие хедж позиции")
+
+        if signal.direction is None or signal.price is None:
+            self.logger.error("HEDGE_OPEN пропущен — отсутствует направление или цена")
+            return positions
+        
+        hedge_signal = Signal.entry(
+            
+            direction=signal.direction,
+            entry_price=signal.price,
+            take_profits=[],
+            stop_losses=[],
+            source=signal.source,
+            metadata={**signal.metadata, "is_hedge": True},
+        )
+
+        position = self.builder.build(hedge_signal, bar)
+
+        if position:
+            position.is_hedge = True
+            positions[position.id] = position
+
+        return positions
+    
+    # ==================================================
+    # ? HEDGE CLOSE — закрытие всех хедж позиций
+    # ==================================================
+    def _handle_hedge_close(self, signal: Signal, positions, bar):
+
+        self.logger.info("HEDGE_CLOSE")
+
+        for pos_id, pos in list(positions.items()):
+            if pos.is_hedge:
+                self.manager.cansel_active_orders(pos.id, bar)
+                self.manager.close_position_at_market(
+                    pos.id,
+                    pos.last_price,
+                    bar,
+                )
+                del positions[pos_id]
+
+        return positions
+

@@ -107,7 +107,7 @@ class TestManager:
             # инициализация движка исполнения
             engine = ExecutionEngine(position_manager)
             # инициализация модуля хеджирования (если нужен)
-            hadging = ALSEngine(config.get_section("ALS_SETTINGS"), logger), # хеджирование
+            
             
             # ! -------- 4. Backtest --------
             result = run_backtest(
@@ -115,7 +115,6 @@ class TestManager:
                     data_1m = data_1m, #  исторические данные 1м для бэктеста
                     coin = coin, # информация о монете (из конфига)
                     strategy = strategy, # стратегия
-                    hadging = hadging, # хеджирование
                     position_manager = position_manager, # менеджер позиций
                     engine = engine, # движок исполнения
                     logger = logger # логгер

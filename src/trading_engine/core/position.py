@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 # Core enums
 from src.trading_engine.core.execution import Execution
-from src.trading_engine.core.enums import Direction, OrderType, Position_Status, OrderStatus
+from src.trading_engine.core.enums import Direction, OrderType, Position_Status, OrderStatus, SignalSource
 from src.trading_engine.orders.order_factory import Order
 from src.trading_engine.utils.decimal_utils import to_decimal
 
@@ -23,9 +23,10 @@ class Position:
     Позиция объединяет ордера и исполнения.
     Он НЕ сам принимает решения о выполнении — это делает ExecutionEngine.
     """
-    def __init__(self, symbol: str, direction: Direction, tick_size: Optional[Decimal]):
+    def __init__(self, symbol: str, direction: Direction, tick_size: Optional[Decimal], source: SignalSource):
         self.id = uuid4().hex # уникальный идентификатор позиции
-        self.symbol = symbol      # торговый символ / инструмент
+        self.source = source # источник позиции
+        self.symbol = symbol # торговый символ / инструмент
         self.direction = direction # направление позицией (long/short)
         self.status = Position_Status.CREATED
         self.orders: List[Order] = []        # все связанные заказы (entry, tp, sl, ...)
@@ -56,14 +57,14 @@ class Position:
         for o in self.orders:
             if o.id == order_id and o.status == OrderStatus.ACTIVE:
                 o.status = OrderStatus.CANCELLED
-                logger.debug(f"Order {order_id} cancelled")
+                logger.debug(f"[{self.symbol}] Order {order_id} cancelled")
 
     # Отмена ордера по типу
     def cancel_orders_by_type(self, otype: OrderType):
         for o in self.orders:
             if o.order_type == otype and o.status == OrderStatus.ACTIVE:
                 o.status = OrderStatus.CANCELLED
-                logger.debug(f"Order {o.id} of type {otype} cancelled")
+                logger.debug(f"[{self.symbol}] Order {o.id} of type {otype} cancelled")
     
     # проверка по переводу стопа в безубыточность
     def check_stop_break(self) -> bool:
@@ -106,7 +107,7 @@ class Position:
 
             # mark active if at least some opened
             self.status = Position_Status.ACTIVE
-            logger.info(f"☑️ Ордер {order.id[:6]} Тип: {order.order_type.value} Исполнен.  Объем: {order.volume}, Средняя цена входа: {self.avg_entry_price}")  
+            logger.info(f"[{self.symbol}] ☑️ Ордер {order.id[:6]} Тип: {order.order_type.value} Исполнен.  Объем: {order.volume}, Средняя цена входа: {self.avg_entry_price}")  
 
         # если это закрывающий ордер (TP/SL/CLOSE)
         elif order.order_type in {OrderType.TAKE_PROFIT, OrderType.CLOSE, OrderType.STOP_LOSS}:
@@ -132,7 +133,6 @@ class Position:
                 logger.info(f"☑️ Ордер {order.id[:6]} [bool cyan] Тип:{order.order_type.value}[/bool cyan] Исполнен. Объем: {order.volume} profit: {order.profit}")
 
         # обновить статус позиции
-
         if  self.opened_volume > Decimal("0") and self.closed_volume >=  self.opened_volume:
             # закрыт весь объем позиции
             # Меняет Статус на закрывающий. Может быть TAKEN_FULL, STOPPED, TAKEN_PART
@@ -148,12 +148,10 @@ class Position:
         ex = Execution(price=price, volume=volume, bar_index=bar_index, realized_pnl=(order.profit or Decimal("0")), order_id=order.id) 
         self.executions.append(ex)
 
-
-
     # ------------------------
     # Позиционные утилиты
     # ------------------------
-    
+
     # Расчет плавающего PnL
     def calc_worst_unrealized_pnl(self, high_price: Decimal, low_price: Decimal) -> Decimal:
         """
