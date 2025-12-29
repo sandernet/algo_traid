@@ -61,7 +61,7 @@ def main():
     # Отладка стратегии 
     if args.debug:
         logger.info("Запуск отладки стратегии...")
-        from src.logical.debugger.debugger import debugger_strategy
+        from src.debugger.debugger import debugger_strategy
         debugger_strategy()
         logger.info("Отладка стратегии завершена.")
     

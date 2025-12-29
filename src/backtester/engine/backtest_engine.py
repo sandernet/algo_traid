@@ -40,7 +40,6 @@ class BacktestEngine:
 
             # ! запуск стратегии, генерирует сигнал
             # передаем нужное число баров на заданном таймфрейме.
-            
             signal = self.strategy.find_entry_point(arr[i-self.strategy.allowed_min_bars:i])
 
             # ! Обработка сигнала и Создание / обновление позиции ордеров через SignalHandler
