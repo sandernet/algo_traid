@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List, Optional, Dict, Any
 from decimal import Decimal
 from src.trading_engine.core.enums import SignalType, SignalSource, Direction
@@ -35,7 +35,7 @@ class Signal:
         self.bar_index = bar_index
         self.source = source
         self.metadata = metadata or {}
-        self.timestamp = timestamp or datetime.utcnow()
+        self.timestamp = timestamp or datetime.now(UTC)
 
     # ==========================
     # Factory methods (очень важно!)

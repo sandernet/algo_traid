@@ -2,7 +2,9 @@
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from src.backtester.reports.serializers import serialize_positions
+from src.trading_engine.core.position import Position
 from src.utils.logger import get_logger
+from typing import Dict
 
 logger = get_logger(__name__)
 
@@ -19,22 +21,26 @@ class TestReportGenerator:
     def generate(
         self,
         *,
-        result: dict,
-        coin: dict,
+        symbol: str,
         timeframe: str,
-        output_path: Path
+        coin: dict,
+        test_id: str,
+        metrics=dict,
+        portfolio=dict,
+        positions,
+        output_path: Path,
     ):
         template = self.env.get_template("v2/report_coin.html")
 
         html = template.render(
-            symbol=coin["SYMBOL"],
+            symbol=symbol,
             timeframe=timeframe,
             coin=coin,
-            test_id=result["test_id"],
-            metrics=result["metrics"],
-            portfolio=result["portfolio"],
+            test_id=test_id,
+            metrics=metrics,
+            portfolio=portfolio,
             settings=self.settings_test,
-            positions=serialize_positions(result["positions"]),
+            positions=serialize_positions(positions),
         )
 
         output_path.write_text(html, encoding="utf-8")

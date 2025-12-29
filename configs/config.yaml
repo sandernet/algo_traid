@@ -51,16 +51,16 @@ COINS:
     # Размер ордера (в usdt )
     VOLUME_SIZE  : 1000 
 
-  # - SYMBOL: CFX
-  #   TIMEFRAME: "4h"
-  #   MIN_TIMEFRAME: "1" # Для проверки ордеров на исполнение. если не нужно осатавлять, пустая строка ""
-  #   MARKET_TYPE: "linear" # spot, linear, inverse
-  #   AUTO_TRADING: true
-  #   START_DEPOSIT_USDT: 1000
-  #   MINIMAL_TICK_SIZE: 0.00001 # Минимальный размер шага цены
-  #   LEVERAGE: 5  # Плечо
-  #   # Размер ордера (в usdt )
-  #   VOLUME_SIZE  : 1000
+  - SYMBOL: CFX
+    TIMEFRAME: "4h"
+    MIN_TIMEFRAME: "1" # Для проверки ордеров на исполнение. если не нужно осатавлять, пустая строка ""
+    MARKET_TYPE: "linear" # spot, linear, inverse
+    AUTO_TRADING: true
+    START_DEPOSIT_USDT: 1000
+    MINIMAL_TICK_SIZE: 0.00001 # Минимальный размер шага цены
+    LEVERAGE: 5  # Плечо
+    # Размер ордера (в usdt )
+    VOLUME_SIZE  : 1000
   
 
   
@@ -146,13 +146,13 @@ ALS_SETTINGS:
 BACKTEST_SETTINGS:
   # Директория для хранения исторических данных
   # TIMEFRAME_LIST: ["30","60", "4h", "D"]
-  TIMEFRAME_LIST: ["D"]
+  TIMEFRAME_LIST: ["4h", "D"]
   DATA_DIR: DATA_OHLCV/
   REPORT_DIRECTORY: REPORTS/
   TEMPLATE_DIRECTORY: templates/
   FULL_DATAFILE: False # Если True, то бэктест будет использовать полный исторический диапазон
   # начальная ДАТА для бэктеста
-  START_DATE: "2025-05-01"
+  START_DATE: "2025-10-01"
   # конечная ДАТА для бэктеста    
   END_DATE: "2025-12-31"
   MAX_WORKERS: 16
@@ -162,7 +162,7 @@ BACKTEST_SETTINGS:
 # ======================================================================
 LOGGING_SETTINGS:
   # Уровень логирования: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  LEVEL: DEBUG
+  LEVEL: INFO
   # Директория для хранения логов
   LOG_DIR: LOGS
   # Имя основного файла логов

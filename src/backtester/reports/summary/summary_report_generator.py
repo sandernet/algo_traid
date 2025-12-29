@@ -7,19 +7,21 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 class SummaryReportGenerator:
-    def __init__(self, template_dir: str):
+    def __init__(self, template_dir: str, settings_test: dict):
         self.env = Environment(
             loader=FileSystemLoader(template_dir),
             autoescape=True,
             trim_blocks=True,
             lstrip_blocks=True,
         )
+        self.settings_test = settings_test
 
     def generate(self, summary_data: dict, output_path: Path):
         template = self.env.get_template("v2/report_summary.html")
 
         html = template.render(
             coins=summary_data,
+            settings=self.settings_test,
             generated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         )
 

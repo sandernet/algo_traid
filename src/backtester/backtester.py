@@ -129,18 +129,26 @@ class TestManager:
                 template_dir=self.settings_test.get("TEMPLATE_DIRECTORY", ""),
                 settings_test=self.settings_test,
             ).generate(
-                result=result,
-                coin=coin,
+                
+                symbol=coin["SYMBOL"],
                 timeframe=timeframe,
+                coin=coin,
+                test_id=result["test_id"],
+                metrics=result["metrics"],
+                portfolio=result["portfolio"],
+                positions=result["positions"],
                 output_path=test_report_path,
             )
 
             # ! -------- 6. Collect summary (THREAD SAFE) --------
             with self.collector_lock:
                 self.collector.add(
-                    coin=coin["SYMBOL"],
+                    symbol=coin["SYMBOL"],
+                    coin=coin,
                     timeframe=timeframe,
+                    test_id=result["test_id"],
                     metrics=result["metrics"],
+                    portfolio=result["portfolio"],
                     report_path=str(test_report_path),
                 )
             
@@ -179,7 +187,8 @@ class TestManager:
 
         # ! -------- Summary report --------
         SummaryReportGenerator(
-            template_dir=self.settings_test.get("TEMPLATE_DIRECTORY", "")
+            template_dir=self.settings_test.get("TEMPLATE_DIRECTORY", ""),
+            settings_test=self.settings_test,
         ).generate(
             summary_data=self.collector.data,
             output_path=build_summary_report_path(),
