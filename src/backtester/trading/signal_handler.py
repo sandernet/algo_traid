@@ -26,7 +26,7 @@ class SignalHandler:
             self.logger.debug(f"Обработка сигнала: {signal.signal_type}, Позиции: {list(positions.keys())}")
             return positions
         
-        self.logger.debug(f"Обработка сигнала: {signal.signal_type}, Позиции: {list(positions.keys())}")
+        # self.logger.debug(f"Обработка сигнала: {signal.signal_type}, Позиции: {list(positions.keys())}")
         # !--- 2. ENTRY ---
         if signal.signal_type == SignalType.ENTRY:
             return self._handle_entry(signal, positions, bar)

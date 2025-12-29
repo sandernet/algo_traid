@@ -33,7 +33,7 @@ class PositionBuilder:
             source=signal.source,
             direction=direction,
             tick_size=tick_size,
-            open_bar=bar
+            open_bar=bar[4] # время открытия бара
         )
 
         entry_price = position.round_to_tick(signal.price)
@@ -41,7 +41,7 @@ class PositionBuilder:
         volume = rm.calculate_position_size(entry_price)
 
         position.add_order(
-            make_order(OrderType.ENTRY, entry_price, volume, direction, bar)
+            make_order(OrderType.ENTRY, entry_price, volume, direction, bar[4])
         )
         sum_tp_volume: Decimal = Decimal('0')
         
@@ -60,7 +60,7 @@ class PositionBuilder:
                     tp_price,
                     tp_volume,
                     direction,
-                    bar,
+                    bar[4],
                     meta=meta
                 )
             )
@@ -81,7 +81,7 @@ class PositionBuilder:
                     sl_price,
                     sl_volume,
                     direction,
-                    bar
+                    created_bar=bar[4]
                 )
             )
             sum_sl_volume += sl_volume

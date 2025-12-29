@@ -94,8 +94,8 @@ class TestManager:
 
             # !-------- 3. Инициализация --------
             # импортируем здесь чтобы избежать циклических импортов
-            from src.backtester.v3.runner import run_backtest
-            from src.backtester.v3.engine.execution_engine import ExecutionEngine
+            from src.backtester.runner import run_backtest
+            from src.backtester.engine.execution_engine import ExecutionEngine
             from src.logical.strategy.zigzag_fibo.zigzag_and_fibo import ZigZagAndFibo
             from src.trading_engine.managers.position_manager import PositionManager
             from src.logical.hedging.als.als_engine import ALSEngine
@@ -148,9 +148,6 @@ class TestManager:
         
         except Exception as e:
             logger.exception(f"[{symbol}, {timeframe}] ❌ FAILED: {e}")
-
-
-
 
     # ====================================================
     # ? Точка входа для параллельного бэктеста
