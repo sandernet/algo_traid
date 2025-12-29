@@ -34,13 +34,14 @@ class ZigZagAndFibo:
         self.allowed_min_bars = config.get_setting("STRATEGY_SETTINGS", "MINIMUM_BARS_FOR_STRATEGY_CALCULATION")
         self.ALLOWED_Z2_OFFSET = config.get_setting("STRATEGY_SETTINGS", "Z2_INDEX_OFFSET")
         
-        
+    # ===================================================
     # ? Запуск стратегии на выходе Signal
-    # TODO: возможно нужно передавать позиции или менеджер позиций
+    # ? params: data - массив исторических данных
+    # ?         positions - список открытых позиций
+    # ===================================================
     def run_strategy(self, data, positions: List[Position]) -> Signal:
         if len(positions) > 0:
-            logger.debug(f"Есть открытые позиции, стратегия ZigZag и Фибоначчи проверяет наличие хеджирующей позиции.")
-            # проверить есть хеджирующая позиция и если есть не входить в позицию
+            logger.debug(f"Есть открытые позиции, по стратегии ZigZag и Фибоначчи ")
             
             for position in positions:
                 if position.type == PositionType.HEDGE:
@@ -49,9 +50,11 @@ class ZigZagAndFibo:
                     # TODO: возможно нужно добавить логику выхода из хеджирующей позиции
                     # пока ставим нет сигнала
                     return Signal.no_signal()
-            
-        
-        return self.find_entry_point(data)
+            logger.debug(f"Есть открытые позиции, стратегия ZigZag и Фибоначчи не будет искать точку входа.")
+            return Signal.no_signal()
+        else:
+            logger.debug(f"Открытых позиций нет, стратегия ZigZag и Фибоначчи может искать точку входа.")
+            return self.find_entry_point(data)
 
     # Ищем точку входа по стратегии
     def find_entry_point(self, data) -> Signal:
@@ -75,8 +78,7 @@ class ZigZagAndFibo:
         z2_index = zigzag["z2_index"] # индекс ближайшей точки z2 
         entry_price = data_df["close"].iloc[-1] # цена входа
         current_index = data_df.index[-1] # текущий бар
-        
-        
+
         direction = None
         
                     
@@ -86,12 +88,6 @@ class ZigZagAndFibo:
             logger.debug(f"Пропускаем сигнал: z2_index={z2_index} не в допустимом окне (текущий={current_index})")
             return Signal.no_signal()
                             
-        # # Проверяем индекс бара zigzag он должен совпадать с свечей расчета
-        # if index_bar != z2_index or not z2_index != current_index:
-        #     logger.info(f"z2_index {z2_index} бара расчета образовался раньше текущего бара {index_bar}")
-        #     return {}
-        
-        # logger.info(f"index_bar {index_bar} == z2_index {z2_index}")
         
         if direction_zigzag == -1: #индикатор zigzag показывает что нужно входить в long
             # проверяем цену входа в позицию с первым тейком 1 уровня фибоначчи цена входа должна быть меньше уровня 1
