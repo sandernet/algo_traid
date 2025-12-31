@@ -19,7 +19,7 @@ from src.logical.indicators.zigzag import ZigZag
 # ====================================================
 from src.trading_engine.core.enums import  Direction, SignalSource, PositionType  # статусы
 from src.trading_engine.core.position import Position
-from src.trading_engine.signals.signal import Signal
+from src.trading_engine.core.signal import Signal
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Класс стратегии

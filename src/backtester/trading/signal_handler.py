@@ -1,7 +1,7 @@
 # реакция на сигналы
 # src/backtester/trading/signal_handler.py
 # from src.trading_engine.core.enums import Position_Status
-from src.trading_engine.signals.signal import Signal
+from src.trading_engine.core.signal import Signal
 from src.trading_engine.core.enums import SignalType
 from typing import Dict
 

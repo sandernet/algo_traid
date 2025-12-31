@@ -1,5 +1,5 @@
 from src.backtester.trading.signal_handler import SignalHandler
-from src.trading_engine.signals.signal import Signal
+from src.trading_engine.core.signal import Signal
 
 
 def test_no_signal_does_nothing(mock_builder, mock_manager, mock_logger):

@@ -1,5 +1,5 @@
 from src.backtester.trading.signal_handler import SignalHandler
-from src.trading_engine.signals.signal import Signal
+from src.trading_engine.core.signal import Signal
 from src.trading_engine.core.enums import Direction, SignalSource
 from decimal import Decimal
 
