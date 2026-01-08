@@ -15,13 +15,13 @@ class PositionType(Enum):
 
 
 class OrderType(Enum):
-    ENTRY = "entry"     # вход в позицию
-    TAKE_PROFIT = "tp"  # тейк-профит
-    STOP_LOSS = "sl"    # стоп-лосс
-    CLOSE = "close"     # закрытие позиции
-    TRAILING_STOP = "trailing_stop" # трейлинг-стоп
-    LIMIT = "limit"   # лимитный ордер
-    MARKET = "market"  # рыночный ордер
+    ENTRY           = "entry"     # вход в позицию
+    TAKE_PROFIT     = "tp"  # тейк-профит
+    STOP_LOSS       = "sl"    # стоп-лосс
+    CLOSE           = "close"     # закрытие позиции
+    TRAILING_STOP   = "trailing_stop" # трейлинг-стоп
+    LIMIT           = "limit"   # лимитный ордер
+    MARKET          = "market"  # рыночный ордер
 
 
 class OrderStatus(Enum):
