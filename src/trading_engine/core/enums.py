@@ -41,8 +41,10 @@ class Direction(Enum):
 # Signal Перечисления
 # ==========================
 class SignalType(Enum):
-    ENTRY = "entry"
-    EXIT = "exit"
+    ENTRY = "entry" # сигнал на Открытие позиции Может содержать параметры SL, TP
+    EXIT = "exit"   # сигнал на Закрытие позиции по рынку, 
+                    # С отменой всех ордеров (В параметрах либо ID позиции, либо 
+                    # источник позиции тогда будут закрыты все позиции этого источника включая хеджи)
     HEDGE_OPEN = "hedge_open"
     HEDGE_CLOSE = "hedge_close"
     UPDATE         = "update" # изменить позицию (SL, TP)    
