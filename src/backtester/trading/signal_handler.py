@@ -3,6 +3,7 @@
 # from src.trading_engine.core.enums import Position_Status
 from src.trading_engine.core.signal import Signal
 from src.trading_engine.core.enums import SignalType
+from src.trading_engine.core.position import Position
 from typing import Dict
 
 # Обработчик сигналов стратегии.
@@ -20,7 +21,7 @@ class SignalHandler:
     # ==================================================
     # TODO: добавить передачу всех позиции в обработчик сигнала
     
-    def handle(self, signal: Signal, positions: Dict[str, object], bar) -> Dict[str, object]:
+    def handle(self, signal: Signal, positions: Dict[str, Position], bar) -> Dict[str, Position]:
         # !--- 1. NO SIGNAL ---
         if signal.is_no_signal():
             self.logger.debug(f"Обработка сигнала: {signal.signal_type}, Позиции: {list(positions.keys())}")
@@ -49,13 +50,7 @@ class SignalHandler:
     # ============================
     # ? ENTRY — открытие основной позиции
     # ==================================================
-    def _handle_entry(self, signal: Signal, positions, bar):
-
-        # Проверка: уже есть позиция такого же направления?
-        for pos in positions.values():
-            if pos.direction == signal.direction and pos.source == signal.source:
-                self.logger.debug("ENTRY пропущен — позиция уже существует")
-                return positions
+    def _handle_entry(self, signal: Signal, positions: Dict[str, Position], bar):
 
         self.logger.info("ENTRY: открытие новой позиции")
 
@@ -69,7 +64,7 @@ class SignalHandler:
     # ==================================================
     # ? EXIT — закрытие всех позиций источника
     # ==================================================
-    def _handle_exit(self, signal: Signal, positions, bar):
+    def _handle_exit(self, signal: Signal, positions: Dict[str, Position], bar):
         self.logger.info("EXIT: закрытие позиций")
         for pos_id, pos in list(positions.items()):
             if signal.source and pos.source != signal.source:
@@ -87,13 +82,7 @@ class SignalHandler:
     # ==================================================
     # ?HEDGE OPEN — открытие хедж позиции
     # ==================================================
-    def _handle_hedge_open(self, signal: Signal, positions, bar):
-
-        # Проверяем, есть ли уже хедж в этом направлении
-        for pos in positions.values():
-            if pos.direction == signal.direction and pos.is_hedge:
-                self.logger.debug("HEDGE уже существует")
-                return positions
+    def _handle_hedge_open(self, signal: Signal, positions: Dict[str, Position], bar):
 
         self.logger.info("HEDGE_OPEN: открытие хедж позиции")
 
@@ -122,19 +111,20 @@ class SignalHandler:
     # ==================================================
     # ? HEDGE CLOSE — закрытие всех хедж позиций
     # ==================================================
-    def _handle_hedge_close(self, signal: Signal, positions, bar):
+    def _handle_hedge_close(self, signal: Signal, positions: Dict[str, Position], bar):
 
-        self.logger.info("HEDGE_CLOSE")
+        self.logger.info("HEDGE_CLOSE " + signal.source + " закрытие всех хедж позиций")
 
         for pos_id, pos in list(positions.items()):
+            if signal.source and pos.source != signal.source:
+                continue
             if pos.is_hedge:
-                self.manager.cansel_active_orders(pos.id, bar)
+                self.manager.cancel_active_orders(pos.id, bar)
                 self.manager.close_position_at_market(
                     pos.id,
                     pos.last_price,
                     bar,
-                )
+                )   
                 del positions[pos_id]
 
         return positions
-
