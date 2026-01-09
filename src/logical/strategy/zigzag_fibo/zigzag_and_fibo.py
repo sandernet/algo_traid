@@ -33,6 +33,7 @@ class ZigZagAndFibo:
         self.timeframe = coin.get("TIMEFRAME")
         self.allowed_min_bars = config.get_setting("STRATEGY_SETTINGS", "MINIMUM_BARS_FOR_STRATEGY_CALCULATION")
         self.ALLOWED_Z2_OFFSET = config.get_setting("STRATEGY_SETTINGS", "Z2_INDEX_OFFSET")
+        self.source = config.get_setting("STRATEGY_SETTINGS", "STRATEGY_NAME")
         
     # ===================================================
     # ? Запуск стратегии на выходе Signal
@@ -86,7 +87,7 @@ class ZigZagAndFibo:
         allowed_shifted = shift_timestamp(current_index, self.ALLOWED_Z2_OFFSET, self.timeframe, direction=-1)
         if not (z2_index == current_index or z2_index == allowed_shifted):
             logger.debug(f"Пропускаем сигнал: z2_index={z2_index} не в допустимом окне (текущий={current_index})")
-            return Signal.no_signal()
+            return Signal.no_signal(source=self.source)
                             
         
         if direction_zigzag == -1: #индикатор zigzag показывает что нужно входить в long
@@ -97,7 +98,7 @@ class ZigZagAndFibo:
             else :
                 logger.debug(f"Цена входа {entry_price} [bold red] > [/bold red] {fiboLev[78.6]['level_price']}")
                 logger.debug(f"Пропускаем сигнал на LONG")
-                return Signal.no_signal()
+                return Signal.no_signal(source=self.source)
 
         if direction_zigzag == 1: #индикатор zigzag показывает что нужно входить в long
             logger.debug(f"Индикатор zigzag показывает что нужно входить в long {direction_zigzag}")
@@ -108,12 +109,12 @@ class ZigZagAndFibo:
             else :
                 logger.debug(f"Цена входа {entry_price} [bold red] < [/bold red] {fiboLev[78.6]['level_price']}")
                 logger.debug(f"Пропускаем сигнал на SHORT")
-                return Signal.no_signal()
+                return Signal.no_signal(source=self.source)
             
                     
         if direction is None:
             logger.debug(f"Нет сигнала на вход в позицию")
-            return Signal.no_signal()
+            return Signal.no_signal(source=self.source)
         # Создание сделки
         tps= []
         sls=[]
@@ -129,7 +130,7 @@ class ZigZagAndFibo:
                 sls.append(info)
         
         signal = Signal.entry(
-            source=SignalSource.STRATEGY,
+            source=self.source,
             direction=direction,
             entry_price=entry_price,
             take_profits=tps,

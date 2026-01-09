@@ -21,7 +21,7 @@ class Signal:
         take_profits: Optional[List[Dict[str, Any]]] = None,
         stop_losses: Optional[List[Dict[str, Any]]] = None,
         bar_index=None,
-        source: SignalSource = SignalSource.STRATEGY,
+        source: str,
         metadata: Optional[Dict[str, Any]] = None,
         timestamp: Optional[datetime] = None,
     ):
@@ -43,12 +43,13 @@ class Signal:
 
     # Возврат объекта сигнала без сигнала
     @classmethod
-    def no_signal(cls, bar_index=None):
+    def no_signal(cls, source: str, bar_index=None ):
         """
         Пустой сигнал — стратегия ничего не делает
         """
         return cls(
             signal_type=SignalType.NO_SIGNAL,
+            source=source,
             bar_index=bar_index,
         )
 
@@ -62,7 +63,7 @@ class Signal:
         entry_price: Decimal,
         take_profits: list,
         stop_losses: list,
-        source: SignalSource,
+        source: str,
         metadata: dict = {},
     ):
         return cls(
@@ -81,7 +82,7 @@ class Signal:
         *,
         direction: Direction,
         volume: Decimal,
-        source: SignalSource,
+        source: str,
         metadata: dict = {},
     ):
         return cls(
@@ -96,7 +97,7 @@ class Signal:
     def exit(
         cls,
         *,
-        source: SignalSource,
+        source: str,
         metadata: dict = {},
     ):
         return cls(
@@ -128,7 +129,7 @@ class Signal:
             "volume": str(self.volume) if self.volume else None,
             "take_profits": self.take_profits,
             "stop_losses": self.stop_losses,
-            "source": self.source.value,
+            "source": self.source,
             "metadata": self.metadata,
             "timestamp": self.timestamp.isoformat(),
         }
