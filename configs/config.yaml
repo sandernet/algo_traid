@@ -190,4 +190,4 @@ TELEGRAM_SETTINGS:
 SCHEDULER_SETTINGS:
   # Включить/выключить планировщик
   ENABLED: true
-  TIMEZONE: "Asia/Irkutsk"
+  TIMEZONE: "UTC"
