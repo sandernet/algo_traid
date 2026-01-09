@@ -70,8 +70,8 @@ COINS:
 EXCHANGE_SETTINGS: 
 # Используемая биржа (например, binance, bybit, kucoin)
   EXCHANGE_ID: bybit
-  API_KEY: "MgrXLxN6GPT3j7Bqu2"
-  API_SECRET: "vB2j0v4zQU8oafG5eVCh7Nem1pKu8iUqde6b"
+  API_KEY: ""
+  API_SECRET: ""
   CATEGORY: "linear"
   LIMIT: 1000
   TESTNET: false
@@ -163,7 +163,7 @@ BACKTEST_SETTINGS:
 # ======================================================================
 LOGGING_SETTINGS:
   # Уровень логирования: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  LEVEL: DEBUG
+  LEVEL: INFO
   # Директория для хранения логов
   LOG_DIR: LOGS
   # Имя основного файла логов
