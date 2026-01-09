@@ -15,13 +15,13 @@ class PositionType(Enum):
 
 
 class OrderType(Enum):
-    ENTRY = "entry"     # вход в позицию
-    TAKE_PROFIT = "tp"  # тейк-профит
-    STOP_LOSS = "sl"    # стоп-лосс
-    CLOSE = "close"     # закрытие позиции
-    TRAILING_STOP = "trailing_stop" # трейлинг-стоп
-    LIMIT = "limit"   # лимитный ордер
-    MARKET = "market"  # рыночный ордер
+    ENTRY           = "entry"     # вход в позицию
+    TAKE_PROFIT     = "tp"  # тейк-профит
+    STOP_LOSS       = "sl"    # стоп-лосс
+    CLOSE           = "close"     # закрытие позиции
+    TRAILING_STOP   = "trailing_stop" # трейлинг-стоп
+    LIMIT           = "limit"   # лимитный ордер
+    MARKET          = "market"  # рыночный ордер
 
 
 class OrderStatus(Enum):
@@ -41,8 +41,10 @@ class Direction(Enum):
 # Signal Перечисления
 # ==========================
 class SignalType(Enum):
-    ENTRY = "entry"
-    EXIT = "exit"
+    ENTRY = "entry" # сигнал на Открытие позиции Может содержать параметры SL, TP
+    EXIT = "exit"   # сигнал на Закрытие позиции по рынку, 
+                    # С отменой всех ордеров (В параметрах либо ID позиции, либо 
+                    # источник позиции тогда будут закрыты все позиции этого источника включая хеджи)
     HEDGE_OPEN = "hedge_open"
     HEDGE_CLOSE = "hedge_close"
     UPDATE         = "update" # изменить позицию (SL, TP)    
