@@ -135,4 +135,4 @@ class Signal:
         }
 
     def __repr__(self):
-        return f"<Signal {self.signal_type.value} {self.direction} src={self.source.value}>"
+        return f"<Signal {self.signal_type.value} {self.direction} src={self.source}>"

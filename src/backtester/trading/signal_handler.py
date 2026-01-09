@@ -66,7 +66,7 @@ class SignalHandler:
     # ==================================================
     def _handle_exit(self, signal: Signal, positions: Dict[str, Position], bar):
         self.logger.info("EXIT: закрытие позиций")
-        for pos_id, pos in list[tuple[str, Position]](positions.items()):
+        for pos_id, pos in list(positions.items()):
             if signal.source and pos.source != signal.source:
                 continue
             # ! Отмена активных ордеров и закрытие позиции по рынку
@@ -115,7 +115,7 @@ class SignalHandler:
 
         self.logger.info("HEDGE_CLOSE " + signal.source + " закрытие всех хедж позиций")
 
-        for pos_id, pos in list[tuple[str, Position]](positions.items()):
+        for pos_id, pos in list(positions.items()):
             if signal.source and pos.source != signal.source:
                 continue
             if pos.is_hedge:

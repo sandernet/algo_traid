@@ -50,9 +50,9 @@ class ZigZagAndFibo:
                     # Обрабатываем наличие хеджирующей позиции
                     # TODO: возможно нужно добавить логику выхода из хеджирующей позиции
                     # пока ставим нет сигнала
-                    return Signal.no_signal()
+                    return Signal.no_signal(source=self.source)
             logger.debug(f"Есть открытые позиции, стратегия ZigZag и Фибоначчи не будет искать точку входа.")
-            return Signal.no_signal()
+            return Signal.no_signal(source=self.source)
         else:
             logger.debug(f"Открытых позиций нет, стратегия ZigZag и Фибоначчи может искать точку входа.")
             return self.find_entry_point(data)
@@ -71,7 +71,7 @@ class ZigZagAndFibo:
         # Проверка корректности результата
         if zigzag is None or fiboLev is None:
             logger.error(f"Стратегия не вернула корректные результаты.")
-            return Signal.no_signal()
+            return Signal.no_signal(source=self.source)
 
         logger.debug(f"ZigZag / z1 =: {zigzag["z1"]}, z2 =: {zigzag["z2"]}, z2_index: {zigzag['z2_index'].strftime("%d.%m.%Y %H:%M")} direction: {zigzag['direction']}")        
         
