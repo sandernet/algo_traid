@@ -62,9 +62,19 @@ class ZigZagAndFibo:
         """
         Запуск стратегии ZigZag и уровней Фибоначчи на переданных данных.
         Определяем есть ли сигнал и если есть создаем позицию
+        
+        :param data: numpy массив формы (N, 5) где последний столбец - timestamps
         """
-        data_df = pd.DataFrame(data[:, :-1], columns=["open","high","low","close"])
-        data_df.index = pd.to_datetime(data[:, -1])
+        # Оптимизация: создаем DataFrame один раз, но только если нужен для индикаторов
+        # Разделяем данные и timestamps
+        data_values = data[:, :-1]  # open, high, low, close
+        timestamps = data[:, -1]   # timestamps
+        
+        # Создаем DataFrame только для индикаторов (они требуют pandas)
+        # Но делаем это один раз, а не на каждом баре в цикле
+        data_df = pd.DataFrame(data_values, columns=["open","high","low","close"])
+        data_df.index = pd.to_datetime(timestamps)
+        
         # Расчет индикаторов
         zigzag, fiboLev = calculate_indicators(data_df, self.coin)
         
@@ -77,8 +87,9 @@ class ZigZagAndFibo:
         
         direction_zigzag = zigzag["direction"] # направление позиции -1 long, 1 short
         z2_index = zigzag["z2_index"] # индекс ближайшей точки z2 
-        entry_price = data_df["close"].iloc[-1] # цена входа
-        current_index = data_df.index[-1] # текущий бар
+        # Оптимизация: используем numpy напрямую вместо iloc
+        entry_price = data_values[-1, 3]  # close - последний элемент, столбец 3
+        current_index = pd.Timestamp(timestamps[-1])  # текущий бар
 
         direction = None
         

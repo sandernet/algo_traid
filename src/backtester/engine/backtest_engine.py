@@ -1,9 +1,12 @@
 # цикл по барам
 
 # src/backtester/engine/backtest_engine.py
+import numpy as np
+import pandas as pd
 from decimal import Decimal
-from src.data_fetcher.utils import select_range, shift_timestamp
+from src.data_fetcher.utils import shift_timestamp
 from src.logical.hedging.als.als_engine import ALSEngine
+from src.backtester.engine.fast_1m_selector import Fast1mBarSelector
 
 # Engine выполнения бэктеста по барам.
 # Отвечает за обход баров, вызов стратегии, обработку сигналов,
@@ -29,14 +32,26 @@ class BacktestEngine:
     def run(self, ohlcv, ohlcv_1m, timeframe):
         positions = {}
 
-        arr = ohlcv[['open','high','low','close']].copy()
-        arr['dt'] = ohlcv.index.to_numpy()
-        arr = arr.to_numpy()
+        # Оптимизация: конвертируем в numpy один раз без лишних копий
+        # Используем view где возможно, чтобы избежать копирования данных
+        data_cols = ohlcv[['open','high','low','close']].values  # numpy массив напрямую
+        timestamps = ohlcv.index.values  # numpy массив timestamps (datetime64[ns])
+        
+        # Создаем массив с object dtype для последнего столбца, чтобы хранить timestamps
+        # Это позволяет объединить float данные с datetime объектами
+        n_bars = len(data_cols)
+        arr = np.empty((n_bars, 5), dtype=object)
+        arr[:, :4] = data_cols  # open, high, low, close
+        arr[:, 4] = pd.to_datetime(timestamps)  # timestamps как pd.Timestamp объекты
+
+        # ! Инициализация оптимизированного селектора 1m баров
+        # Это делается один раз вместо вызова select_range на каждом баре
+        fast_selector = Fast1mBarSelector(ohlcv_1m)
 
         # ! Итерация по барам торгового таймфрейма
         for i in range(self.strategy.allowed_min_bars, len(arr)):
             bar = arr[i]
-            bar_time = bar[4]
+            bar_time = bar[4]  # pd.Timestamp объект из массива
 
             # ! запуск стратегии, генерирует сигнал
             # передаем нужное число баров на заданном таймфрейме.
@@ -49,14 +64,11 @@ class BacktestEngine:
             # ! Запуск исполнения по минутным барам, если есть открытые позиции
             # Позиций может быть несколько, основная и хеджирующие
             if len(positions) > 0:
-                start = bar_time
-                end = shift_timestamp(bar_time, 1, timeframe, +1)
-                bars_1m = select_range(ohlcv_1m, start, end)
-                arr_1m = bars_1m[['open', 'high', 'low', 'close']].assign(
-                    dt=bars_1m.index.to_numpy()
-                ).to_numpy()
-
-                self.execution_loop.run(arr_1m)
+                # Используем оптимизированный селектор вместо select_range
+                arr_1m = fast_selector.get_bars_for_htf_bar(bar_time, timeframe)
+                
+                if arr_1m is not None and len(arr_1m) > 0:
+                    self.execution_loop.run(arr_1m)
 
             # ! Учет PnL в портфеле по окончании бара
             realized = Decimal("0")

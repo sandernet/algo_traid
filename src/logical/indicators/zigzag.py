@@ -37,8 +37,14 @@ class ZigZag:
         """
         Вычисляет ZigZag индикатор и добавляет его в DataFrame.
         hr = ta.barssince(not (_high[-ta.highestbars(depth)] - _high > deviation*syminfo.mintick)[1])
+        
+        Оптимизация: работаем с исходным DataFrame, создаем копию только если нужно
+        сохранить исходные данные (но в бэктесте это не требуется).
         """
-        df = df_data.copy()
+        # Оптимизация: не копируем DataFrame, работаем напрямую
+        # В бэктесте df_data создается специально для этого расчета, копия не нужна
+        df = df_data
+        
         # Расчёт
         df['hr'] = self._calc_hr(df, self.depth, self.deviation, self.mintick)
         df['lr'] = self._calc_lr(df, self.depth, self.deviation, self.mintick)
