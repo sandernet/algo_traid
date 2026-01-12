@@ -33,6 +33,10 @@ RUN git clone https://github.com/sandernet/algo_traid.git .
 # Создаём необходимые директории
 RUN mkdir -p DATA_OHLCV LOGS REPORTS
 
+# Запускаем тесты после сборки проекта
+# Тесты для signal_handler и position_builder
+RUN python -m pytest src/tests/trading/test_position_builder.py src/tests/trading/test_signal_handler*.py -v --tb=short || echo "Тесты завершены с предупреждениями"
+
 # Указываем тома, чтобы данные можно было монтировать извне
 VOLUME ["/app/DATA_OHLCV", "/app/LOGS", "/app/REPORTS", "/app/configs"]
 

@@ -1,4 +1,7 @@
-from tests.mocks.mock_position import MockPosition
+try:
+    from src.tests.mocks.mock_position import MockPosition
+except ImportError:
+    from tests.mocks.mock_position import MockPosition
 
 class MockPositionBuilder:
     def build(self, signal, bar):

@@ -49,13 +49,20 @@
             "justMyCode": true
         },
         {
-            "name": "App help",
+            "name": "Run All Tests",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/app.py",
-            "args": ["--help"],
+            "module": "pytest",
+            "args": [
+                "src/tests",
+                "-v"
+            ],
             "console": "integratedTerminal",
-            "justMyCode": true
-        }
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "cwd": "${workspaceFolder}"
+        },
     ]
 }

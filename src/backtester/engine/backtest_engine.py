@@ -4,8 +4,8 @@
 import numpy as np
 import pandas as pd
 from decimal import Decimal
-from src.data_fetcher.utils import shift_timestamp
-from src.logical.hedging.als.als_engine import ALSEngine
+# from src.data_fetcher.utils import shift_timestamp
+# from src.logical.hedging.als.als_engine import ALSEngine
 from src.backtester.engine.fast_1m_selector import Fast1mBarSelector
 
 # Engine выполнения бэктеста по барам.

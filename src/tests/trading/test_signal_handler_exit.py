@@ -1,7 +1,10 @@
 from src.backtester.trading.signal_handler import SignalHandler
 from src.trading_engine.core.signal import Signal
 from src.trading_engine.core.enums import SignalSource
-from tests.mocks.mock_position import MockPosition
+try:
+    from src.tests.mocks.mock_position import MockPosition
+except ImportError:
+    from tests.mocks.mock_position import MockPosition
 from hypothesis import given
 
 @given(

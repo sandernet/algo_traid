@@ -50,9 +50,3 @@ class SignalType(Enum):
     UPDATE         = "update" # изменить позицию (SL, TP)    
     CANCEL = "cancel" # закрыть позицию  по рынку
     NO_SIGNAL = "no_signal" # отсутствие сигнала
-
-
-class SignalSource(Enum):
-    STRATEGY = "strategy"
-    ALS = "als"
-    MANUAL = "manual"

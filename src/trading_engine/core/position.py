@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 # Core enums
 from src.trading_engine.core.execution import Execution
-from src.trading_engine.core.enums import Direction, OrderType, Position_Status, OrderStatus, SignalSource, PositionType
+from src.trading_engine.core.enums import Direction, OrderType, Position_Status, OrderStatus, PositionType
 from src.trading_engine.orders.order_factory import Order
 from src.trading_engine.utils.decimal_utils import to_decimal
 
@@ -23,7 +23,7 @@ class Position:
     Позиция объединяет ордера и исполнения.
     Он НЕ сам принимает решения о выполнении — это делает ExecutionEngine.
     """
-    def __init__(self, symbol: str, direction: Direction, tick_size: Optional[Decimal], source: SignalSource):
+    def __init__(self, symbol: str, direction: Direction, tick_size: Optional[Decimal], source: str):
         self.id = uuid4().hex # уникальный идентификатор позиции
         self.source = source # источник позиции
         self.type = PositionType.MAIN # тип позиции (основная/хеджирующая)

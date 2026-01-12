@@ -1,7 +1,7 @@
 from datetime import datetime, UTC
 from typing import List, Optional, Dict, Any
 from decimal import Decimal
-from src.trading_engine.core.enums import SignalType, SignalSource, Direction
+from src.trading_engine.core.enums import SignalType, Direction
 
 
 
