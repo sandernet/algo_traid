@@ -83,6 +83,6 @@ class BacktestEngine:
                 Decimal(str(bar[1])),
                 Decimal(str(bar[2]))
             )
-            self.logger.debug(f"Осуществленный PnL на баре {bar_time}: {realized}, Плавающий PnL: {floating}")
+            # self.logger.debug(f"Осуществленный PnL на баре {bar_time}: {realized}, Плавающий PnL: {floating}")
             # ! обновление портфеля по бару
             self.portfolio.on_bar(bar_time, realized, floating)
