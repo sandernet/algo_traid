@@ -72,7 +72,7 @@ class PositionManager:
             # Создаем закрывающий маркет ордер для закрытия всей позиции
             market_order = Order(
                 id=uuid4().hex,
-                order_type=OrderType.CLOSE,
+                type=OrderType.CLOSE,
                 price=current_price,
                 volume=remaining_vol,
                 direction=pos.direction,

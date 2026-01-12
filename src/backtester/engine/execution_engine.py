@@ -58,7 +58,7 @@ class ExecutionEngine:
                     exec_volume = order.remaining()
                     
                     # убедиться, что мы не закрываем больше, чем осталось (для ордеров на выход)
-                    if order.order_type in {OrderType.TAKE_PROFIT, OrderType.CLOSE, OrderType.STOP_LOSS}:
+                    if order.type in {OrderType.TAKE_PROFIT, OrderType.CLOSE, OrderType.STOP_LOSS}:
                         exec_volume = min(exec_volume, pos.remaining_volume)
 
                     if exec_volume <= Decimal("0"):
@@ -92,24 +92,24 @@ class ExecutionEngine:
         close = to_decimal(bar[3])
 
         # MARKET
-        if order.order_type in {OrderType.MARKET, OrderType.CLOSE}:
+        if order.type in {OrderType.MARKET, OrderType.CLOSE}:
             return True
 
         # проверка ЛИМИТ и Вход
-        if order.order_type in {OrderType.LIMIT, OrderType.ENTRY} and order.price is not None:
+        if order.type in {OrderType.LIMIT, OrderType.ENTRY} and order.price is not None:
             # A limit buy executes when price <= limit (we assume liquidity, so check if limit within bar)
             # For simplicity: if the bar's range touches the limit -> execute
             return (low <= order.price <= high)
 
         # STOP_LOSS
-        if order.order_type == OrderType.STOP_LOSS and order.price is not None:
+        if order.type == OrderType.STOP_LOSS and order.price is not None:
             if order.direction == Direction.LONG:
                 return low <= order.price
             else:
                 return high >= order.price
 
         # TAKE_PROFIT
-        if order.order_type == OrderType.TAKE_PROFIT and order.price is not None:
+        if order.type == OrderType.TAKE_PROFIT and order.price is not None:
             if order.direction == Direction.LONG:
                 return high >= order.price
             else:
@@ -131,8 +131,8 @@ class ExecutionEngine:
         """
         
         close = to_decimal(bar[3]) # * берем цену закрытия бара
-        if order.order_type == OrderType.MARKET:
+        if order.type == OrderType.MARKET:
             return close
-        if order.order_type in {OrderType.TAKE_PROFIT, OrderType.STOP_LOSS, OrderType.LIMIT, OrderType.ENTRY} and order.price is not None:
+        if order.type in {OrderType.TAKE_PROFIT, OrderType.STOP_LOSS, OrderType.LIMIT, OrderType.ENTRY} and order.price is not None:
             return order.price
         return close

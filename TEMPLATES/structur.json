@@ -15,7 +15,7 @@
             "orders": [
                 {
                     "id": 101,
-                    "order_type": "MARKET",
+                    "type": "MARKET",
                     "status": "FILLED",
                     "price": 42000.0,
                     "volume": 0.5,
@@ -28,7 +28,7 @@
                 },
                 {
                     "id": 102,
-                    "order_type": "MARKET",
+                    "type": "MARKET",
                     "status": "FILLED",
                     "price": 42700.0,
                     "volume": 0.5,
@@ -57,7 +57,7 @@
             "orders": [
                 {
                     "id": 201,
-                    "order_type": "MARKET",
+                    "type": "MARKET",
                     "status": "FILLED",
                     "price": 43000.0,
                     "volume": 1.0,
@@ -70,7 +70,7 @@
                 },
                 {
                     "id": 202,
-                    "order_type": "MARKET",
+                    "type": "MARKET",
                     "status": "FILLED",
                     "price": 43120.0,
                     "volume": 1.0,

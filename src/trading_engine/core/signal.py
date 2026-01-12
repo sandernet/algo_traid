@@ -21,6 +21,7 @@ class Signal:
         take_profits: Optional[List[Dict[str, Any]]] = None,
         stop_losses: Optional[List[Dict[str, Any]]] = None,
         bar_index=None,
+        bar=[],
         source: str,
         metadata: Optional[Dict[str, Any]] = None,
         timestamp: Optional[datetime] = None,
@@ -33,6 +34,7 @@ class Signal:
         self.take_profits = take_profits or []
         self.stop_losses = stop_losses or []
         self.bar_index = bar_index
+        self.bar = bar
         self.source = source
         self.metadata = metadata or {}
         self.timestamp = timestamp or datetime.now(UTC)

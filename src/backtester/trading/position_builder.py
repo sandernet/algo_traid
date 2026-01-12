@@ -68,7 +68,9 @@ class PositionBuilder:
             
         if sum_tp_volume != volume:
             volume_diff = volume - sum_tp_volume
-            position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему TP
+            if position.orders[-1].type == OrderType.TAKE_PROFIT:
+                position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему TP
+
 
         sum_sl_volume: Decimal = Decimal('0')
         for sl in signal.stop_losses:
@@ -87,6 +89,8 @@ class PositionBuilder:
             sum_sl_volume += sl_volume
         if sum_sl_volume != volume:
             volume_diff = volume - sum_sl_volume
-            position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему SL
+            if position.orders[-1].type == OrderType.STOP_LOSS:
+                position.orders[-1].volume += volume_diff  # добавляем недостающий объем к последнему SL
+
 
         return position

@@ -50,7 +50,7 @@ class Position:
     # Order management
     # ------------------------
     def add_order(self, order: Order):
-        logger.debug(f"[{self.symbol}] Позиция {self.id[:6]}: ордер {order.id[:6]} {order.order_type} /price = {order.price} /volume = {order.volume} /status = {order.status}")
+        logger.debug(f"[{self.symbol}] Позиция {self.id[:6]}: ордер {order.id[:6]} {order.type} /price = {order.price} /volume = {order.volume} /status = {order.status}")
         self.orders.append(order)
 
     # Отмена ордера по ID
@@ -68,7 +68,7 @@ class Position:
     # Отмена ордера по типу
     def cancel_orders_by_type(self, otype: OrderType):
         for o in self.orders:
-            if o.order_type == otype and o.status == OrderStatus.ACTIVE:
+            if o.type == otype and o.status == OrderStatus.ACTIVE:
                 o.status = OrderStatus.CANCELLED
                 logger.debug(f"[{self.symbol}] Order {o.id} of type {otype} cancelled")
     
@@ -77,13 +77,16 @@ class Position:
         if self.opened_volume >= self.closed_volume and self.realized_pnl > Decimal("0"):
             checked = False
             for o in self.orders:
-                if o.order_type == OrderType.TAKE_PROFIT and o.meta.get("tp_to_break") and o.status == OrderStatus.FILLED:
+                if o.type == OrderType.TAKE_PROFIT and o.meta.get("tp_to_break") and o.status == OrderStatus.FILLED:
                     checked = True
                     continue
                 
-                if checked and o.order_type == OrderType.STOP_LOSS and not o.meta.get("moved_to_break") and o.status == OrderStatus.ACTIVE:
+                if checked and o.type == OrderType.STOP_LOSS and not o.meta.get("moved_to_break") and o.status == OrderStatus.ACTIVE:
                     return True
         return False
+    
+    def is_hedge(self) -> bool:
+        return self.type == PositionType.HEDGE
     
 
     # ------------------------
@@ -100,7 +103,7 @@ class Position:
         order.mark_filled(volume, bar_index)
 
         # ! управление объемами и средней ценой для входов/закрытий
-        if order.order_type == OrderType.ENTRY:
+        if order.type == OrderType.ENTRY:
             prev_total = self.opened_volume * self.avg_entry_price
             
             self.opened_volume += to_decimal(volume)
@@ -113,10 +116,10 @@ class Position:
 
             # mark active if at least some opened
             self.status = Position_Status.ACTIVE
-            logger.info(f"[{self.symbol}] ☑️ Ордер {order.id[:6]} Тип: {order.order_type.value} Исполнен.  Объем: {order.volume}, Средняя цена входа: {self.avg_entry_price}")  
+            logger.info(f"[{self.symbol}] ☑️ Ордер {order.id[:6]} Тип: {order.type.value} Исполнен.  Объем: {order.volume}, Средняя цена входа: {self.avg_entry_price}")  
 
         # если это закрывающий ордер (TP/SL/CLOSE)
-        elif order.order_type in {OrderType.TAKE_PROFIT, OrderType.CLOSE, OrderType.STOP_LOSS}:
+        elif order.type in {OrderType.TAKE_PROFIT, OrderType.CLOSE, OrderType.STOP_LOSS}:
             # обновить закрытый объем
             self.closed_volume += to_decimal(volume)
             # рассчитать PnL для закрытого объема
@@ -129,14 +132,14 @@ class Position:
                 order.profit = pnl
                 
                 if order.status in (OrderStatus.FILLED, OrderStatus.PARTIAL):
-                    if order.order_type == OrderType.TAKE_PROFIT:
+                    if order.type == OrderType.TAKE_PROFIT:
                         self.filled_tp_volume += volume
-                    elif order.order_type == OrderType.STOP_LOSS:
+                    elif order.type == OrderType.STOP_LOSS:
                         self.filled_sl_volume += volume
-                    elif order.order_type == OrderType.CLOSE:
+                    elif order.type == OrderType.CLOSE:
                         self.filled_close_volume += volume
                         
-                logger.info(f"☑️ Ордер {order.id[:6]} [bool cyan] Тип:{order.order_type.value}[/bool cyan] Исполнен. Объем: {order.volume} profit: {order.profit}")
+                logger.info(f"☑️ Ордер {order.id[:6]} [bool cyan] Тип:{order.type.value}[/bool cyan] Исполнен. Объем: {order.volume} profit: {order.profit}")
 
         # обновить статус позиции
         if  self.opened_volume > Decimal("0") and self.closed_volume >=  self.opened_volume:
@@ -214,9 +217,9 @@ class Position:
     # Получить ордера по типу только активные
     def get_orders_by_type(self, otype: OrderType, active_only: bool = True) -> List[Order]:
         if active_only:
-            return [o for o in self.orders if o.order_type == otype and o.status == OrderStatus.ACTIVE]
+            return [o for o in self.orders if o.type == otype and o.status == OrderStatus.ACTIVE]
         else:
-            return [o for o in self.orders if o.order_type == otype]
+            return [o for o in self.orders if o.type == otype]
 
     # Округление цены до размера тика
     def round_to_tick(self, price: Decimal) -> Decimal:
@@ -237,7 +240,7 @@ class Position:
         self.cancel_orders_by_type(OrderType.STOP_LOSS)
         new_stop = Order(
             id=uuid4().hex,
-            order_type=OrderType.STOP_LOSS,
+            type=OrderType.STOP_LOSS,
             price=self.round_to_tick(be_price),
             volume=self.remaining_volume,
             direction=self.direction,

@@ -74,7 +74,7 @@ class TestPositionBuilder:
         assert position.direction == Direction.LONG
         assert position.source == "strategy"
         assert len(position.orders) == 1
-        assert position.orders[0].order_type == OrderType.ENTRY
+        assert position.orders[0].type == OrderType.ENTRY
         assert position.orders[0].price == Decimal("100")
         assert position.orders[0].direction == Direction.LONG
     
@@ -99,7 +99,7 @@ class TestPositionBuilder:
         
         # Должен быть 1 ENTRY + 2 TP = 3 ордера
         assert len(position.orders) == 3
-        tp_orders = [o for o in position.orders if o.order_type == OrderType.TAKE_PROFIT]
+        tp_orders = [o for o in position.orders if o.type == OrderType.TAKE_PROFIT]
         assert len(tp_orders) == 2
         assert tp_orders[0].price == Decimal("110")
         assert tp_orders[1].price == Decimal("120")
@@ -124,7 +124,7 @@ class TestPositionBuilder:
         
         # Должен быть 1 ENTRY + 1 SL = 2 ордера
         assert len(position.orders) == 2
-        sl_orders = [o for o in position.orders if o.order_type == OrderType.STOP_LOSS]
+        sl_orders = [o for o in position.orders if o.type == OrderType.STOP_LOSS]
         assert len(sl_orders) == 1
         assert sl_orders[0].price == Decimal("90")
     
@@ -150,9 +150,9 @@ class TestPositionBuilder:
         
         # Должен быть 1 ENTRY + 1 TP + 1 SL = 3 ордера
         assert len(position.orders) == 3
-        assert any(o.order_type == OrderType.ENTRY for o in position.orders)
-        assert any(o.order_type == OrderType.TAKE_PROFIT for o in position.orders)
-        assert any(o.order_type == OrderType.STOP_LOSS for o in position.orders)
+        assert any(o.type == OrderType.ENTRY for o in position.orders)
+        assert any(o.type == OrderType.TAKE_PROFIT for o in position.orders)
+        assert any(o.type == OrderType.STOP_LOSS for o in position.orders)
     
     def test_build_handles_tp_to_break_metadata(
         self, mock_position_manager, mock_coin, mock_bar
@@ -172,7 +172,7 @@ class TestPositionBuilder:
         
         position = builder.build(signal, mock_bar)
         
-        tp_orders = [o for o in position.orders if o.order_type == OrderType.TAKE_PROFIT]
+        tp_orders = [o for o in position.orders if o.type == OrderType.TAKE_PROFIT]
         assert len(tp_orders) == 1
         assert tp_orders[0].meta.get("tp_to_break") is True
     
@@ -187,8 +187,8 @@ class TestPositionBuilder:
             direction=Direction.LONG,
             entry_price=Decimal("100"),
             take_profits=[
-                {"price": "110", "volume": "0.3"},
-                {"price": "120", "volume": "0.3"},
+                {"price": "110", "volume": 0.5},
+                {"price": "120", "volume": 0.5},
             ],
             stop_losses=[],
         )
@@ -196,10 +196,10 @@ class TestPositionBuilder:
         position = builder.build(signal, mock_bar)
         
         # Объем должен быть скорректирован так, чтобы сумма TP = общему объему
-        entry_order = next(o for o in position.orders if o.order_type == OrderType.ENTRY)
+        entry_order = next(o for o in position.orders if o.type == OrderType.ENTRY)
         total_volume = entry_order.volume
         
-        tp_orders = [o for o in position.orders if o.order_type == OrderType.TAKE_PROFIT]
+        tp_orders = [o for o in position.orders if o.type == OrderType.TAKE_PROFIT]
         sum_tp_volume = sum(o.volume for o in tp_orders)
         
         # Сумма объемов TP должна равняться общему объему (с учетом округления)
@@ -223,10 +223,10 @@ class TestPositionBuilder:
         
         position = builder.build(signal, mock_bar)
         
-        entry_order = next(o for o in position.orders if o.order_type == OrderType.ENTRY)
+        entry_order = next(o for o in position.orders if o.type == OrderType.ENTRY)
         total_volume = entry_order.volume
         
-        sl_orders = [o for o in position.orders if o.order_type == OrderType.STOP_LOSS]
+        sl_orders = [o for o in position.orders if o.type == OrderType.STOP_LOSS]
         sum_sl_volume = sum(o.volume for o in sl_orders)
         
         # Сумма объемов SL должна равняться общему объему (с учетом округления)
@@ -276,7 +276,7 @@ class TestPositionBuilder:
         
         position = builder.build(signal, mock_bar)
         
-        entry_order = next(o for o in position.orders if o.order_type == OrderType.ENTRY)
+        entry_order = next(o for o in position.orders if o.type == OrderType.ENTRY)
         # Проверяем, что цена округлена до 0.01
         assert entry_order.price == Decimal("100.12")
     
@@ -297,7 +297,7 @@ class TestPositionBuilder:
         position = builder.build(signal, mock_bar)
         
         assert position.direction == Direction.SHORT
-        entry_order = next(o for o in position.orders if o.order_type == OrderType.ENTRY)
+        entry_order = next(o for o in position.orders if o.type == OrderType.ENTRY)
         assert entry_order.direction == Direction.SHORT
     
     @patch('src.backtester.trading.position_builder.RiskManager')
@@ -327,7 +327,7 @@ class TestPositionBuilder:
         assert call_args == Decimal("100")  # Округленная цена входа
         
         # Проверяем, что объем из RiskManager использован
-        entry_order = next(o for o in position.orders if o.order_type == OrderType.ENTRY)
+        entry_order = next(o for o in position.orders if o.type == OrderType.ENTRY)
         assert entry_order.volume == Decimal("1.5")
     
     def test_build_sets_open_bar_correctly(

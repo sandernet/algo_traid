@@ -12,7 +12,7 @@ from src.trading_engine.core.order import Order
 def make_order(order_type: OrderType, price: Optional[Decimal], volume: Decimal, direction: Direction, created_bar: Optional[datetime] = None, meta: Optional[Dict[str, Any]] = None) -> Order:
     """
     Создать ордер на основе параметров.
-    
+
     :param order_type: тип ордера (MARKET, TAKE_PROFIT, STOP_LOSS, LIMIT, ENTRY)
     :param price: цена ордера (если достигнута)
     :param volume: объем ордера
@@ -23,7 +23,7 @@ def make_order(order_type: OrderType, price: Optional[Decimal], volume: Decimal,
     """
     return Order(
         id=uuid4().hex,
-        order_type=order_type,
+        type=order_type,
         price=price if price is not None else None,
         volume=volume,
         direction=direction,

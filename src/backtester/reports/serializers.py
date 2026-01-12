@@ -7,7 +7,7 @@ def serialize_meta(meta):
 def serialize_order(order):
     return {
         "id": order.id,
-        "order_type": order.order_type.name,
+        "order_type": order.type.name,
         "status": order.status.name,
         "price": float(order.price),
         "volume": float(order.volume),

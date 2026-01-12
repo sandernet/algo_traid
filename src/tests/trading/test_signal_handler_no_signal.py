@@ -8,6 +8,6 @@ def test_no_signal_does_nothing(mock_builder, mock_manager, mock_logger):
     positions = {}
     bar = [0, 0, 0, 100]
 
-    result = handler.handle(Signal.no_signal(), positions, bar)
+    result = handler.handle(Signal.no_signal("STRATEGY"), positions, bar)
 
     assert result == {}

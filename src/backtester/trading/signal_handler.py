@@ -69,11 +69,12 @@ class SignalHandler:
         for pos_id, pos in list(positions.items()):
             if signal.source and pos.source != signal.source:
                 continue
+            
             # ! Отмена активных ордеров и закрытие позиции по рынку
             self.manager.cancel_active_orders(pos.id, bar)
             self.manager.close_position_at_market(
                 pos.id,
-                pos.last_price,
+                bar[3], # цена закрытия бара
                 bar,
             )
             del positions[pos_id]
@@ -122,7 +123,7 @@ class SignalHandler:
                 self.manager.cancel_active_orders(pos.id, bar)
                 self.manager.close_position_at_market(
                     pos.id,
-                    pos.last_price,
+                    bar[3], # цена закрытия
                     bar,
                 )   
                 del positions[pos_id]

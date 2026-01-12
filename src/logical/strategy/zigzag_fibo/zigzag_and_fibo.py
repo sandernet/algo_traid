@@ -17,7 +17,7 @@ from src.logical.indicators.zigzag import ZigZag
 # ====================================================
 # Торговые сущности
 # ====================================================
-from src.trading_engine.core.enums import  Direction, SignalSource, PositionType  # статусы
+from src.trading_engine.core.enums import  Direction, PositionType  # статусы
 from src.trading_engine.core.position import Position
 from src.trading_engine.core.signal import Signal
 

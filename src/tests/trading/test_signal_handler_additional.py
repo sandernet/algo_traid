@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 from src.backtester.trading.signal_handler import SignalHandler
 from src.trading_engine.core.signal import Signal
-from src.trading_engine.core.enums import Direction, SignalSource, SignalType
+from src.trading_engine.core.enums import Direction, SignalType
 try:
     from src.tests.mocks.mock_position import MockPosition
 except ImportError:
@@ -26,7 +26,7 @@ class TestSignalHandlerAdditional:
         
         signal = Signal(
             signal_type=SignalType.HEDGE_OPEN,
-            source=SignalSource.ALS,
+            source="ALS",
             direction=None,
             price=Decimal("100"),
         )
@@ -49,7 +49,7 @@ class TestSignalHandlerAdditional:
         
         signal = Signal(
             signal_type=SignalType.HEDGE_OPEN,
-            source=SignalSource.ALS,
+            source="ALS",
             direction=Direction.SHORT,
             price=None,
         )
@@ -72,13 +72,13 @@ class TestSignalHandlerAdditional:
         # Создаем позиции с разными источниками
         pos1 = MockPosition(
             direction=Direction.LONG,
-            source=SignalSource.STRATEGY,
+            source="STRATEGY",
             is_hedge=False,
             price=Decimal("100")
         )
         pos2 = MockPosition(
             direction=Direction.LONG,
-            source=SignalSource.ALS,
+            source="ALS",
             is_hedge=False,
             price=Decimal("100")
         )
@@ -86,7 +86,7 @@ class TestSignalHandlerAdditional:
         positions = {pos1.id: pos1, pos2.id: pos2}
         
         # Закрываем только позиции STRATEGY
-        signal = Signal.exit(source=SignalSource.STRATEGY)
+        signal = Signal.exit(source="STRATEGY")
         bar = [0, 0, 0, 100]
         
         result = handler.handle(signal, positions, bar)
@@ -105,13 +105,13 @@ class TestSignalHandlerAdditional:
         
         pos1 = MockPosition(
             direction=Direction.LONG,
-            source=SignalSource.STRATEGY,
+            source="STRATEGY",
             is_hedge=False,
             price=Decimal("100")
         )
         pos2 = MockPosition(
             direction=Direction.LONG,
-            source=SignalSource.ALS,
+            source="ALS",
             is_hedge=False,
             price=Decimal("100")
         )
@@ -121,7 +121,7 @@ class TestSignalHandlerAdditional:
         # Создаем сигнал EXIT без source (source будет None или пустая строка)
         signal = Signal(
             signal_type=SignalType.EXIT,
-            source=None,
+            source="STRATEGY",
         )
         bar = [0, 0, 0, 100]
         
@@ -141,19 +141,19 @@ class TestSignalHandlerAdditional:
         # Создаем хедж-позиции с разными источниками
         hedge1 = MockPosition(
             direction=Direction.SHORT,
-            source=SignalSource.ALS,
+            source="ALS",
             is_hedge=True,
             price=Decimal("100")
         )
         hedge2 = MockPosition(
             direction=Direction.SHORT,
-            source=SignalSource.STRATEGY,
+            source="STRATEGY",
             is_hedge=True,
             price=Decimal("100")
         )
         main_pos = MockPosition(
             direction=Direction.LONG,
-            source=SignalSource.ALS,
+            source="ALS",
             is_hedge=False,
             price=Decimal("100")
         )
@@ -163,7 +163,7 @@ class TestSignalHandlerAdditional:
         # Закрываем только хедж-позиции ALS
         signal = Signal(
             signal_type=SignalType.HEDGE_CLOSE,
-            source=SignalSource.ALS,
+            source="ALS",
         )
         bar = [0, 0, 0, 100]
         
@@ -186,13 +186,13 @@ class TestSignalHandlerAdditional:
         
         hedge = MockPosition(
             direction=Direction.SHORT,
-            source=SignalSource.ALS,
+            source="ALS",
             is_hedge=True,
             price=Decimal("100")
         )
         main_pos = MockPosition(
             direction=Direction.LONG,
-            source=SignalSource.ALS,
+            source="ALS",
             is_hedge=False,
             price=Decimal("100")
         )
@@ -201,7 +201,7 @@ class TestSignalHandlerAdditional:
         
         signal = Signal(
             signal_type=SignalType.HEDGE_CLOSE,
-            source=SignalSource.ALS,
+            source="ALS",
         )
         bar = [0, 0, 0, 100]
         
@@ -223,7 +223,7 @@ class TestSignalHandlerAdditional:
         # Создаем сигнал с неизвестным типом (например, UPDATE)
         signal = Signal(
             signal_type=SignalType.UPDATE,
-            source=SignalSource.STRATEGY,
+            source="STRATEGY",
         )
         
         positions = {}
@@ -243,10 +243,10 @@ class TestSignalHandlerAdditional:
         handler = SignalHandler(mock_manager, mock_builder, mock_logger)
         
         # Настраиваем builder для возврата None
-        mock_builder.build.return_value = None
+        mock_builder.build.return_value = None  # ← правильно
         
         signal = Signal.entry(
-            source=SignalSource.STRATEGY,
+            source="STRATEGY",
             direction=Direction.LONG,
             entry_price=Decimal("100"),
             take_profits=[],
@@ -271,14 +271,14 @@ class TestSignalHandlerAdditional:
         # Создаем мок-позицию, которая будет возвращена builder
         mock_position = MockPosition(
             direction=Direction.SHORT,
-            source=SignalSource.ALS,
+            source="ALS",
             is_hedge=False,
             price=Decimal("100")
         )
         mock_builder.build.return_value = mock_position
         
         signal = Signal.hedge_open(
-            source=SignalSource.ALS,
+            source="ALS",
             direction=Direction.SHORT,
             volume=Decimal("1"),
         )

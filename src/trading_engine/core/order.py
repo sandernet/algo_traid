@@ -13,7 +13,7 @@ from src.trading_engine.core.enums import Direction, OrderType, OrderStatus
 @dataclass
 class Order:
     id: str
-    order_type: OrderType
+    type: OrderType
     price: Optional[Decimal]  # Нет для рыночных ордеров
     volume: Decimal           # абсолютный объем в нативных единицах (не дробях)
     direction: Direction      #направление: ДЛИННОЕ или КОРОТКОЕ (влияет на интерпретацию стопов)
@@ -47,7 +47,7 @@ class Order:
     
     # Расчет профита
     def calculate_profit(self, current_price: Decimal):
-        if self.order_type in {OrderType.TAKE_PROFIT, OrderType.STOP_LOSS, OrderType.CLOSE} and self.price and self.volume:
+        if self.type in {OrderType.TAKE_PROFIT, OrderType.STOP_LOSS, OrderType.CLOSE} and self.price and self.volume:
             if self.direction == Direction.LONG:
                 self.profit = (current_price - self.price) * self.volume
             else:

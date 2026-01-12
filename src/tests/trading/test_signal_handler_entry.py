@@ -1,6 +1,6 @@
 from src.backtester.trading.signal_handler import SignalHandler
 from src.trading_engine.core.signal import Signal
-from src.trading_engine.core.enums import Direction, SignalSource
+from src.trading_engine.core.enums import Direction
 from decimal import Decimal
 
 
@@ -12,7 +12,7 @@ def test_entry_opens_position(
     handler = SignalHandler(mock_manager, mock_builder, mock_logger)
 
     signal = Signal.entry(
-        source=SignalSource.STRATEGY,
+        source="STRATEGY",
         direction=Direction.LONG,
         entry_price=Decimal("100"),  # 100,
         take_profits=[],

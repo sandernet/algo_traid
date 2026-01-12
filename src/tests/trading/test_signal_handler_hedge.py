@@ -1,6 +1,6 @@
 from src.backtester.trading.signal_handler import SignalHandler
 from src.trading_engine.core.signal import Signal
-from src.trading_engine.core.enums import Direction, SignalSource, SignalType
+from src.trading_engine.core.enums import Direction, SignalType
 try:
     from src.tests.mocks.mock_position import MockPosition
 except ImportError:
@@ -18,7 +18,7 @@ def test_hedge_open(
     positions = {}
 
     signal = Signal.hedge_open(
-        source=SignalSource.ALS,
+        source="ALS",
         direction=Direction.SHORT,
         volume=Decimal("1"),
     )
@@ -40,13 +40,13 @@ def test_hedge_close(
 ):
     handler = SignalHandler(mock_manager, mock_builder, mock_logger)
 
-    hedge = MockPosition(direction=Direction.SHORT, source=SignalSource.ALS, is_hedge=True)
+    hedge = MockPosition(direction=Direction.SHORT, source="ALS", is_hedge=True)
     positions = {hedge.id: hedge}
     
 
     signal = Signal(
         signal_type=SignalType.HEDGE_CLOSE,
-        source=SignalSource.ALS,
+        source="ALS",
     )
 
     bar = [0, 0, 0, 100]
