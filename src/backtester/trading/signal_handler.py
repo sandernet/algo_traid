@@ -32,15 +32,19 @@ class SignalHandler:
         if signal.signal_type == SignalType.ENTRY:
             return self._handle_entry(signal, positions, bar)
 
-        # !--- 3. EXIT ---
-        if signal.signal_type == SignalType.EXIT:
-            return self._handle_exit(signal, positions, bar)
+        # !--- 3. CLOSE ---
+        if signal.signal_type == SignalType.CLOSE:
+            return self._handle_close(signal, positions, bar)
+        
+        # !--- 4. CLOSE_ALL ---
+        if signal.signal_type == SignalType.CLOSE_ALL:
+            return self._handle_close_ALL(signal, positions, bar)
 
-        # !--- 4. HEDGE OPEN ---
-        if signal.signal_type == SignalType.HEDGE_OPEN:
+        # !--- 5. HEDGE ENTRY ---
+        if signal.signal_type == SignalType.HEDGE_ENTRY:
             return self._handle_hedge_open(signal, positions, bar)
 
-        # !--- 5. HEDGE CLOSE ---
+        # !--- 6. HEDGE CLOSE ---
         if signal.signal_type == SignalType.HEDGE_CLOSE:
             return self._handle_hedge_close(signal, positions, bar)
 
@@ -62,10 +66,10 @@ class SignalHandler:
         return positions
 
     # ==================================================
-    # ? EXIT — закрытие всех позиций источника
+    # ? CLOSE — закрытие позиции по id рыночная операция
     # ==================================================
-    def _handle_exit(self, signal: Signal, positions: Dict[str, Position], bar):
-        self.logger.info("EXIT: закрытие позиций")
+    def _handle_close(self, signal: Signal, positions: Dict[str, Position], bar):
+        self.logger.info("EXIT: закрытие позиции по id рыночная операция")
         for pos_id, pos in list(positions.items()):
             if signal.source and pos.source != signal.source:
                 continue
@@ -81,24 +85,48 @@ class SignalHandler:
         return positions
     
     # ==================================================
+    # ? CLOSE_ALL — закрытие позиции по id рыночная операция
+    # ==================================================
+    def _handle_close_ALL(self, signal: Signal, positions: Dict[str, Position], bar):
+        self.logger.info("EXIT: закрытие всех позиций по монете")
+        for pos_id, pos in list(positions.items()):
+            # ! Отмена активных ордеров и закрытие позиции по рынку
+            self.manager.cancel_active_orders(pos.id, bar)
+            self.manager.close_position_at_market(
+                pos.id,
+                bar[3], # цена закрытия бара
+                bar,
+            )
+            del positions[pos_id]
+        return positions
+    
+    # ==================================================
     # ?HEDGE OPEN — открытие хедж позиции
     # ==================================================
     def _handle_hedge_open(self, signal: Signal, positions: Dict[str, Position], bar):
 
-        self.logger.info("HEDGE_OPEN: открытие хедж позиции")
+        self.logger.info("HEDGE_OPEN " + signal.source + " открытие хедж позиции")
 
-        if signal.direction is None or signal.price is None:
-            self.logger.error("HEDGE_OPEN пропущен — отсутствует направление или цена")
+        if signal.direction is None:
+            self.logger.error("HEDGE_OPEN пропущен — отсутствует направление")
             return positions
+        if signal.volume is None:
+            self.logger.error("HEDGE_OPEN пропущен — отсутствует объем")
+            return positions
+        if signal.price is None:
+            self.logger.WARNING("HEDGE_OPEN В Signal — отсутствует цена. Берем цену закрытия бара: " + str(bar[3]))
+            signal.price = bar[3]
+        
         
         hedge_signal = Signal.entry(
             
             direction=signal.direction,
             entry_price=signal.price,
+            volume=signal.volume,
             take_profits=[],
             stop_losses=[],
             source=signal.source,
-            metadata={**signal.metadata, "is_hedge": True},
+            metadata=signal.metadata,
         )
 
         position = self.builder.build(hedge_signal, bar)

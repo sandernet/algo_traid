@@ -33,7 +33,8 @@ class PositionBuilder:
             source=signal.source,
             direction=direction,
             tick_size=tick_size,
-            open_bar=bar[4] # время открытия бара
+            open_bar=bar[4], # время открытия бара
+            meta=signal.metadata
         )
 
         entry_price = position.round_to_tick(signal.price)

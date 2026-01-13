@@ -15,6 +15,7 @@ def test_entry_opens_position(
         source="STRATEGY",
         direction=Direction.LONG,
         entry_price=Decimal("100"),  # 100,
+        volume=Decimal("10"),
         take_profits=[],
         stop_losses=[],
     )

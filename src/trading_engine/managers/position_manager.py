@@ -1,6 +1,6 @@
 from uuid import uuid4
 from decimal import Decimal
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 from uuid import uuid4
 
@@ -9,7 +9,7 @@ from uuid import uuid4
 from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
-from src.trading_engine.core.enums import Direction, OrderType, OrderStatus, SignalSource
+from src.trading_engine.core.enums import Direction, OrderType, OrderStatus
 from src.trading_engine.core.position import Position
 from src.trading_engine.orders.order_factory import Order
 
@@ -29,13 +29,20 @@ class PositionManager:
     # ------------------------
     def open_position(self, 
                     symbol: str, 
-                    source: SignalSource, 
+                    source: str, 
                     direction: Direction, 
                     tick_size: Optional[Decimal], 
-                    open_bar: Optional[datetime]
+                    open_bar: Optional[datetime],
+                    meta: Dict[str, Any]
                 ) -> Position:
 
-        pos = Position(symbol=symbol, direction=direction, tick_size=tick_size, source=source)
+        pos = Position(
+            symbol=symbol, 
+            direction=direction, 
+            tick_size=tick_size, 
+            source=source,
+            meta=meta
+            )
         self.positions[pos.id] = pos
         self.positions[pos.id].bar_opened = open_bar
         logger.debug(f"[{symbol}] 📚 Создана новая позиция  {direction.value} id: {pos.id} ")

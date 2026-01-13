@@ -23,7 +23,7 @@ class Signal:
         bar_index=None,
         bar=[],
         source: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, Any]] = {},
         timestamp: Optional[datetime] = None,
     ):
         self.signal_type = signal_type
@@ -33,8 +33,8 @@ class Signal:
 
         self.take_profits = take_profits or []
         self.stop_losses = stop_losses or []
-        self.bar_index = bar_index
-        self.bar = bar
+        # self.bar_index = bar_index
+        # self.bar = bar
         self.source = source
         self.metadata = metadata or {}
         self.timestamp = timestamp or datetime.now(UTC)
@@ -60,9 +60,9 @@ class Signal:
     def entry(
         cls,
         *,
-        
         direction: Direction,
         entry_price: Decimal,
+        volume: Decimal,
         take_profits: list,
         stop_losses: list,
         source: str,
@@ -72,40 +72,63 @@ class Signal:
             signal_type=SignalType.ENTRY,
             direction=direction,
             price=entry_price,
+            volume=volume,
+            take_profits=take_profits,
+            stop_losses=stop_losses,
+            source=source,
+            metadata=metadata,
+        )
+        
+    # Создание объекта сигнала на вход в позицию
+    @classmethod
+    def hadge_entry(
+        cls,
+        *,
+        direction: Direction,
+        entry_price: Decimal,
+        volume: Decimal,
+        take_profits: list,
+        stop_losses: list,
+        source: str,
+        metadata: dict = {},
+    ):
+        return cls(
+            signal_type=SignalType.HEDGE_ENTRY,
+            direction=direction,
+            price=entry_price,
+            volume=volume,
             take_profits=take_profits,
             stop_losses=stop_losses,
             source=source,
             metadata=metadata,
         )
 
+    # Создание объекта сигнала на выход из позиции
     @classmethod
-    def hedge_open(
+    def close(
         cls,
         *,
-        direction: Direction,
-        volume: Decimal,
         source: str,
         metadata: dict = {},
     ):
         return cls(
-            signal_type=SignalType.HEDGE_OPEN,
-            direction=direction,
-            volume=volume,
+            signal_type=SignalType.CLOSE,
             source=source,
             metadata=metadata,
         )
-
+        
+    # Создание объекта сигнала на выход из всех позиций
     @classmethod
-    def exit(
+    def close_all(
         cls,
         *,
         source: str,
         metadata: dict = {},
     ):
         return cls(
-            signal_type=SignalType.EXIT,
+            signal_type=SignalType.CLOSE_ALL,
             source=source,
-            metadata=metadata,
+            metadata=metadata
         )
 
     # ==========================
@@ -119,7 +142,7 @@ class Signal:
 
     def is_hedge(self) -> bool:
         return self.signal_type in {
-            SignalType.HEDGE_OPEN,
+            SignalType.HEDGE_ENTRY,
             SignalType.HEDGE_CLOSE,
         }
 

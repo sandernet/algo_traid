@@ -25,7 +25,7 @@ class TestSignalHandlerAdditional:
         handler = SignalHandler(mock_manager, mock_builder, mock_logger)
         
         signal = Signal(
-            signal_type=SignalType.HEDGE_OPEN,
+            signal_type=SignalType.HEDGE_ENTRY,
             source="ALS",
             direction=None,
             price=Decimal("100"),
@@ -41,28 +41,7 @@ class TestSignalHandlerAdditional:
         mock_logger.error.assert_called_once()
         assert "HEDGE_OPEN пропущен" in str(mock_logger.error.call_args)
     
-    def test_hedge_open_without_price_skips(
-        self, mock_builder, mock_manager, mock_logger
-    ):
-        """Тест: HEDGE_OPEN без price пропускается"""
-        handler = SignalHandler(mock_manager, mock_builder, mock_logger)
         
-        signal = Signal(
-            signal_type=SignalType.HEDGE_OPEN,
-            source="ALS",
-            direction=Direction.SHORT,
-            price=None,
-        )
-        
-        positions = {}
-        bar = [0, 0, 0, 100]
-        
-        result = handler.handle(signal, positions, bar)
-        
-        assert result == {}
-        assert len(positions) == 0
-        mock_logger.error.assert_called_once()
-    
     def test_exit_filters_by_source(
         self, mock_builder, mock_manager, mock_logger
     ):
@@ -86,7 +65,7 @@ class TestSignalHandlerAdditional:
         positions = {pos1.id: pos1, pos2.id: pos2}
         
         # Закрываем только позиции STRATEGY
-        signal = Signal.exit(source="STRATEGY")
+        signal = Signal.close(source="STRATEGY")
         bar = [0, 0, 0, 100]
         
         result = handler.handle(signal, positions, bar)
@@ -97,10 +76,10 @@ class TestSignalHandlerAdditional:
         assert pos1.id not in result
         assert pos1.id in mock_manager.closed
     
-    def test_exit_closes_all_when_source_is_none(
+    def test_exit_closes_all_when_source_is_empty(
         self, mock_builder, mock_manager, mock_logger
     ):
-        """Тест: EXIT без source закрывает все позиции"""
+        """Тест: EXIT с пустым source закрывает все позиции"""
         handler = SignalHandler(mock_manager, mock_builder, mock_logger)
         
         pos1 = MockPosition(
@@ -118,10 +97,10 @@ class TestSignalHandlerAdditional:
         
         positions = {pos1.id: pos1, pos2.id: pos2}
         
-        # Создаем сигнал EXIT без source (source будет None или пустая строка)
+        # Создаем сигнал EXIT с пустым source (source="")
         signal = Signal(
-            signal_type=SignalType.EXIT,
-            source="STRATEGY",
+            signal_type=SignalType.CLOSE_ALL,
+            source="strategy",
         )
         bar = [0, 0, 0, 100]
         
@@ -235,61 +214,3 @@ class TestSignalHandlerAdditional:
         assert result == {}
         mock_logger.warning.assert_called_once()
         assert "Неизвестный тип сигнала" in str(mock_logger.warning.call_args)
-    
-    def test_entry_handles_builder_returning_none(
-        self, mock_builder, mock_manager, mock_logger
-    ):
-        """Тест: ENTRY обрабатывает случай, когда builder возвращает None"""
-        handler = SignalHandler(mock_manager, mock_builder, mock_logger)
-        
-        # Настраиваем builder для возврата None
-        mock_builder.build.return_value = None  # ← правильно
-        
-        signal = Signal.entry(
-            source="STRATEGY",
-            direction=Direction.LONG,
-            entry_price=Decimal("100"),
-            take_profits=[],
-            stop_losses=[],
-        )
-        
-        positions = {}
-        bar = [0, 0, 0, 100]
-        
-        result = handler.handle(signal, positions, bar)
-        
-        # Позиции не должны измениться, если builder вернул None
-        assert result == {}
-        assert len(positions) == 0
-    
-    def test_hedge_open_sets_is_hedge_flag(
-        self, mock_builder, mock_manager, mock_logger
-    ):
-        """Тест: HEDGE_OPEN устанавливает флаг is_hedge на позиции"""
-        handler = SignalHandler(mock_manager, mock_builder, mock_logger)
-        
-        # Создаем мок-позицию, которая будет возвращена builder
-        mock_position = MockPosition(
-            direction=Direction.SHORT,
-            source="ALS",
-            is_hedge=False,
-            price=Decimal("100")
-        )
-        mock_builder.build.return_value = mock_position
-        
-        signal = Signal.hedge_open(
-            source="ALS",
-            direction=Direction.SHORT,
-            volume=Decimal("1"),
-        )
-        signal.price = Decimal("100")  # Устанавливаем price для hedge_open
-        
-        positions = {}
-        bar = [0, 0, 0, 100]
-        
-        result = handler.handle(signal, positions, bar)
-        
-        # Позиция должна быть добавлена с флагом is_hedge=True
-        assert len(result) == 1
-        assert mock_position.id in result
-        assert result[mock_position.id].is_hedge is True

@@ -23,7 +23,7 @@ class Position:
     Позиция объединяет ордера и исполнения.
     Он НЕ сам принимает решения о выполнении — это делает ExecutionEngine.
     """
-    def __init__(self, symbol: str, direction: Direction, tick_size: Optional[Decimal], source: str):
+    def __init__(self, symbol: str, direction: Direction, tick_size: Optional[Decimal], source: str, meta={}):
         self.id = uuid4().hex # уникальный идентификатор позиции
         self.source = source # источник позиции
         self.type = PositionType.MAIN # тип позиции (основная/хеджирующая)
@@ -44,7 +44,7 @@ class Position:
         self.filled_sl_volume: Decimal = Decimal("0") # объем исполненных ордеров SL
         self.filled_close_volume: Decimal = Decimal("0") # объем исполненных ордеров закрытия
         
-        self.meta: Dict[str, Any] = {}  # дополнительная информация о позиции  без убытка moved_to_break=true
+        self.meta: Dict[str, Any] = meta  # дополнительная информация о позиции  без убытка moved_to_break=true
 
     # ------------------------
     # Order management

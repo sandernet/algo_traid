@@ -2,6 +2,7 @@
 import pandas as pd
 from pandas import Timedelta, DateOffset
 from typing import List
+from decimal import Decimal
 
 # ====================================================
 # Логирование и конфигурация
@@ -20,6 +21,10 @@ from src.logical.indicators.zigzag import ZigZag
 from src.trading_engine.core.enums import  Direction, PositionType  # статусы
 from src.trading_engine.core.position import Position
 from src.trading_engine.core.signal import Signal
+# ====================================================
+# Risk Manager
+# ====================================================
+from src.risk_manager.risk_manager import RiskManager
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Класс стратегии
@@ -34,6 +39,7 @@ class ZigZagAndFibo:
         self.allowed_min_bars = config.get_setting("STRATEGY_SETTINGS", "MINIMUM_BARS_FOR_STRATEGY_CALCULATION")
         self.ALLOWED_Z2_OFFSET = config.get_setting("STRATEGY_SETTINGS", "Z2_INDEX_OFFSET")
         self.source = config.get_setting("STRATEGY_SETTINGS", "STRATEGY_NAME")
+        self.risk_manager = RiskManager(coin)
         
     # ===================================================
     # ? Запуск стратегии на выходе Signal
@@ -89,6 +95,7 @@ class ZigZagAndFibo:
         z2_index = zigzag["z2_index"] # индекс ближайшей точки z2 
         # Оптимизация: используем numpy напрямую вместо iloc
         entry_price = data_values[-1, 3]  # close - последний элемент, столбец 3
+        volume = self.calculate_position_size(entry_price)  # размер позиции
         current_index = pd.Timestamp(timestamps[-1])  # текущий бар
 
         direction = None
@@ -141,14 +148,21 @@ class ZigZagAndFibo:
                 sls.append(info)
         
         signal = Signal.entry(
-            source=self.source,
+            
             direction=direction,
             entry_price=entry_price,
+            volume=volume,
             take_profits=tps,
             stop_losses=sls,
+            source=self.source,
             metadata = {"z2_index":z2_index}
         )
         return signal
+    
+    def calculate_position_size(self, entry_price): 
+        """Расчет размера позиции на основе цены входа"""
+        entry_price = Decimal(str(entry_price))
+        return self.risk_manager.calculate_position_size(entry_price)
 
 # ------------------------------------------
 # Расчет индикаторов

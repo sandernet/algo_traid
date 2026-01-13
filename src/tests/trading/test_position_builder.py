@@ -13,17 +13,25 @@ from src.trading_engine.core.enums import Direction, SignalType, OrderType
 from src.trading_engine.core.position import Position
 
 
+# @pytest.fixture
+# def real_position_manager():
+#     """Фикстура с реальным менеджером позиций"""
+#     from src.trading_engine.managers.position_manager import PositionManager  # ← импортируйте реальный класс
+#     return PositionManager()  # или с нужными параметрами
+
 @pytest.fixture
 def mock_position_manager():
     """Фикстура для мок-менеджера позиций с методом open_position"""
     manager = MagicMock()
     
-    def open_position(symbol, source, direction, tick_size, open_bar):
+    def open_position(symbol, source, direction, tick_size, open_bar, meta):
         position = Position(
             symbol=symbol,
             direction=direction,
             tick_size=tick_size,
-            source=source
+            source=source,
+            meta=meta
+            
         )
         position.bar_opened = open_bar
         return position
@@ -60,11 +68,13 @@ class TestPositionBuilder:
         builder = PositionBuilder(mock_position_manager, mock_coin)
         
         signal = Signal.entry(
-            source="strategy",
             direction=Direction.LONG,
             entry_price=Decimal("100"),
+            volume=Decimal("10"),
             take_profits=[],
             stop_losses=[],
+            source="strategy",
+            metadata={"entry_price": Decimal("100")},
         )
         
         position = builder.build(signal, mock_bar)
@@ -88,6 +98,7 @@ class TestPositionBuilder:
             source="strategy",
             direction=Direction.LONG,
             entry_price=Decimal("100"),
+            volume=Decimal("10"),
             take_profits=[
                 {"price": "110", "volume": "0.5"},
                 {"price": "120", "volume": "0.5"},
@@ -114,6 +125,7 @@ class TestPositionBuilder:
             source="strategy",
             direction=Direction.LONG,
             entry_price=Decimal("100"),
+            volume=Decimal("10"),
             take_profits=[],
             stop_losses=[
                 {"price": "90", "volume": "1.0"},
@@ -138,6 +150,7 @@ class TestPositionBuilder:
             source="strategy",
             direction=Direction.LONG,
             entry_price=Decimal("100"),
+            volume=Decimal("10"),
             take_profits=[
                 {"price": "110", "volume": "0.5"},
             ],
@@ -164,6 +177,7 @@ class TestPositionBuilder:
             source="strategy",
             direction=Direction.LONG,
             entry_price=Decimal("100"),
+            volume=Decimal("10"),
             take_profits=[
                 {"price": "110", "volume": "0.5", "tp_to_break": True},
             ],
@@ -186,6 +200,7 @@ class TestPositionBuilder:
             source="strategy",
             direction=Direction.LONG,
             entry_price=Decimal("100"),
+            volume=Decimal("10"),
             take_profits=[
                 {"price": "110", "volume": 0.5},
                 {"price": "120", "volume": 0.5},
@@ -215,6 +230,7 @@ class TestPositionBuilder:
             source="strategy",
             direction=Direction.LONG,
             entry_price=Decimal("100"),
+            volume=Decimal("10"),
             take_profits=[],
             stop_losses=[
                 {"price": "90", "volume": "0.8"},
@@ -270,6 +286,7 @@ class TestPositionBuilder:
             source="strategy",
             direction=Direction.LONG,
             entry_price=Decimal("100.123"),
+            volume=Decimal("10"),
             take_profits=[],
             stop_losses=[],
         )
@@ -290,6 +307,7 @@ class TestPositionBuilder:
             source="strategy",
             direction=Direction.SHORT,
             entry_price=Decimal("100"),
+            volume=Decimal("10"),
             take_profits=[],
             stop_losses=[],
         )
@@ -315,6 +333,7 @@ class TestPositionBuilder:
             source="strategy",
             direction=Direction.LONG,
             entry_price=Decimal("100"),
+            volume=Decimal("10"),
             take_profits=[],
             stop_losses=[],
         )
@@ -340,6 +359,7 @@ class TestPositionBuilder:
             source="strategy",
             direction=Direction.LONG,
             entry_price=Decimal("100"),
+            volume=Decimal("10"),
             take_profits=[],
             stop_losses=[],
         )

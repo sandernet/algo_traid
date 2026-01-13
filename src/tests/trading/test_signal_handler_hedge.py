@@ -13,23 +13,36 @@ def test_hedge_open(
     mock_manager,
     mock_logger,
 ):
+    """
+    Тест: HEDGE_OPEN создает хедж-позицию
+    """
     handler = SignalHandler(mock_manager, mock_builder, mock_logger)
 
-    positions = {}
+    pos1 = MockPosition(
+        direction=Direction.LONG,
+        source="STRATEGY",
+        price=Decimal("100")
+    )
+    
+    positions = {pos1.id: pos1}
 
-    signal = Signal.hedge_open(
-        source="ALS",
+    signal = Signal.hadge_entry(
         direction=Direction.SHORT,
-        volume=Decimal("1"),
+        entry_price=Decimal("100"),
+        volume=Decimal("10"),
+        take_profits=[],
+        stop_losses=[],
+        source="ALS",        
+        metadata={"is_hedge": True},
     )
 
     bar = [0, 0, 0, 100]
 
     positions = handler.handle(signal, positions, bar)
 
-    assert len(positions) == 1
-    hedge = list(positions.values())[0]
-    assert signal.is_hedge() is True
+    assert len(positions) > 1
+    hedge = list(positions.values())[-1]
+    assert signal.signal_type == SignalType.HEDGE_ENTRY
     assert hedge.is_hedge is True
 
 
