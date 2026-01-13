@@ -14,10 +14,20 @@ try:
 except ImportError:
     from tests.mocks.mock_position import MockPosition
 
-
+@pytest.fixture
+def mock_position():
+    """Фикстура для мок-position """
+    return {
+        "SYMBOL": "BTC",
+        "MINIMAL_TICK_SIZE": "0.01",
+        "LEVERAGE": "10",
+        "START_DEPOSIT_USDT": "10000",
+        "VOLUME_SIZE": "100"
+    }
+    
 class TestSignalHandlerAdditional:
     """Дополнительные тесты для SignalHandler"""
-    
+        
     def test_hedge_open_without_direction_skips(
         self, mock_builder, mock_manager, mock_logger
     ):

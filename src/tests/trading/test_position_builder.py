@@ -51,7 +51,6 @@ def mock_coin():
         "VOLUME_SIZE": "100"
     }
 
-
 @pytest.fixture
 def mock_bar():
     """Фикстура для мок-бара OHLCV [open, high, low, close, timestamp]"""
