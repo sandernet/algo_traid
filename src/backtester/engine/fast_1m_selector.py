@@ -24,7 +24,7 @@ class Fast1mBarSelector:
         Инициализация селектора.
         
         :param ohlcv_1m: DataFrame с 1-минутными данными, должен иметь DatetimeIndex
-                         и колонки ['open', 'high', 'low', 'close', 'volume']
+        и колонки ['open', 'high', 'low', 'close', 'volume']
         """
         if not isinstance(ohlcv_1m.index, pd.DatetimeIndex):
             raise ValueError("ohlcv_1m должен иметь DatetimeIndex")
@@ -55,7 +55,9 @@ class Fast1mBarSelector:
         Получить 1-минутные бары для заданного диапазона времени.
         
         :param start_time: Начальное время (включительно)
-        :param end_time: Конечное время (включительно)
+        :param end_time: Конечное время (ИСКЛЮЧИТЕЛЬНО - не включается)
+                         Это нужно для корректной работы с HTF интервалами
+                         где end_time указывает на начало СЛЕДУЮЩЕГО бара
         :return: numpy массив формы (N, 5) где:
                  - столбцы 0-3: open, high, low, close
                  - столбец 4: timestamp (datetime64[ns])
@@ -76,9 +78,10 @@ class Fast1mBarSelector:
         # Бинарный поиск начального индекса (первый >= start_ts)
         start_idx = np.searchsorted(self._timestamps, start_ts, side='left')
         
-        # Бинарный поиск конечного индекса (последний <= end_ts)
-        # Используем side='right' и вычитаем 1, чтобы получить последний <= end_ts
-        end_idx = np.searchsorted(self._timestamps, end_ts, side='right')
+        # Бинарный поиск конечного индекса (первый >= end_ts)
+        # Это исключает бары в момент end_ts, что корректно для HTF интервалов
+        # где end_ts указывает на начало СЛЕДУЮЩЕГО бара
+        end_idx = np.searchsorted(self._timestamps, end_ts, side='left')
         
         # Проверка, что есть хотя бы один бар в диапазоне
         if start_idx >= end_idx:

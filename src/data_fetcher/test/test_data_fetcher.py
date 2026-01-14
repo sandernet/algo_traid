@@ -71,7 +71,7 @@ def test_get_export_path_xlsx(data_fetcher):
 
 # ===== ЗАГРУЗКА ДАННЫХ (МОКИ) =====
 
-@patch("src.data_fetcher.ccxt")
+@patch("src.data_fetcher.data_fetcher.ccxt")
 def test_generic_fetcher_successful(mock_ccxt, data_fetcher):
     # Мок биржи
     mock_exchange = MagicMock()
@@ -88,7 +88,7 @@ def test_generic_fetcher_successful(mock_ccxt, data_fetcher):
     data_fetcher._set_exchange()
 
     # Мок time.time()
-    with patch("src.data_fetcher.time.time", return_value=1672534800.0):  # соответствует 2-й свече
+    with patch("src.data_fetcher.data_fetcher.time.time", return_value=1672534800.0):  # соответствует 2-й свече
         df = data_fetcher._generic_fetcher("1h", start_date_ms=1672531200000 - 1, end_date_ms=1672534800000)
 
     assert df is not None
@@ -97,14 +97,14 @@ def test_generic_fetcher_successful(mock_ccxt, data_fetcher):
     assert df["close"].iloc[0] == 20500
 
 
-@patch("src.data_fetcher.ccxt")
+@patch("src.data_fetcher.data_fetcher.ccxt")
 def test_generic_fetcher_empty_response(mock_ccxt, data_fetcher):
     mock_exchange = MagicMock()
     mock_ccxt.binance.return_value = mock_exchange
     mock_exchange.fetch_ohlcv.return_value = []
 
     data_fetcher._set_exchange()
-    with patch("src.data_fetcher.time.time", return_value=1672534800.0):
+    with patch("src.data_fetcher.data_fetcher.time.time", return_value=1672534800.0):
         df = data_fetcher._generic_fetcher("1h")
 
     assert df is None

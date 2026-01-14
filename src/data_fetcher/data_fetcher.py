@@ -45,12 +45,15 @@ class DataFetcher:
             # Параметры, зависящие от монеты
             self.market_type = coin.get("MARKET_TYPE", "spot")   # spot | linear | inverse
             self.base = coin.get("SYMBOL")
-            self.symbol = self._detect_symbol_format() # assigned after load_markets()
-
-            # self.timeframe = coin.get("TIMEFRAME") 
+            
+            # Времяфрейм (устанавливаем сразу, чтобы тесты могли проверять атрибут)
+            self.timeframe = coin.get("TIMEFRAME")
             self.min_timeframe = coin.get("MIN_TIMEFRAME") if coin.get("MIN_TIMEFRAME") else "1"
 
             self.directory = directory
+            # Не инициализируем биржу при конструкторе (избегаем побочных эффектов в тестах).
+            # Формат символа можно определить без реального соединения с ccxt.
+            self.symbol = self._detect_symbol_format()
         except Exception as e:
             logger.error(f"Критическая ошибка при инициализации класса: {e}")
             raise
@@ -73,7 +76,7 @@ class DataFetcher:
                 })
             
             # self.exchange.load_markets()
-            self._detect_symbol_format()
+            # Не вызываем _detect_symbol_format() здесь — символ определяется независимо от экземпляра биржи.
             
             logger.info(f"Подключение к бирже {self.exchange_id} успешно.")
         except AttributeError:
@@ -112,11 +115,12 @@ class DataFetcher:
         Формирует полный путь для сохранения файла и гарантирует существование директории.
         """
         file_prefix = f"{self.symbol.replace('/', '_').replace(':', '_')}_{timeframe}_{self.exchange_id}"
-        path = ""
+        
+        # ИСПРАВЛЕНИЕ 3: Используем os.path.join() вместо конкатенации строк
         if file_extension == "csv":
-            path = self.directory+"csv_files"
-        elif file_extension == "xlsx":
-            path = self.directory+"excel"
+            path = os.path.join(self.directory, "csv_files")
+        else:  # xlsx
+            path = os.path.join(self.directory, "excel")
 
         # 1. Создание директории, если она не существует
         if not os.path.exists(path):
@@ -134,17 +138,24 @@ class DataFetcher:
     # -------------------------------------------------------------
     def _convert_date_to_ms(self, date_str: str, is_end_date: bool = False) -> int:
         """
-        Конвертирует дату YYYY-MM-DD в Unix-таймштамп в миллисекундах.
+        Конвертирует дату YYYY-MM-DD в Unix-таймштамп в миллисекундах (UTC).
         Для конечной даты (is_end_date=True) устанавливает время на конец дня (23:59:59.999).
         """
         try:
-            dt = datetime.strptime(date_str, '%Y-%m-%d')
+            # Используем pandas Timestamp и value (наносекунды от эпохи) для стабильно
+            # воспроизводимого результата в миллисекундах (UTC).
+            ts = pd.Timestamp(date_str)
+            # Локализуем в UTC, если нет информации о TZ
+            if ts.tzinfo is None:
+                ts = ts.tz_localize('UTC')
+
             if is_end_date:
                 # Конец дня: 23:59:59.999
-                dt = dt.replace(hour=23, minute=59, second=59, microsecond=999000)
-            
-            return int(dt.timestamp() * 1000)
-        except ValueError:
+                ts = ts + pd.Timedelta(hours=23, minutes=59, seconds=59, milliseconds=999)
+
+            # pd.Timestamp.value возвращает наносекунды; переводим в миллисекунды
+            return int(ts.value // 1_000_000)
+        except Exception:
             logger.error(f"Неверный формат даты: {date_str}. Ожидается 'YYYY-MM-DD'.")
             raise
     

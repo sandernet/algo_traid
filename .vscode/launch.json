@@ -54,7 +54,7 @@
             "request": "launch",
             "module": "pytest",
             "args": [
-                "src/tests",
+                "src/",
                 "-v"
             ],
             "console": "integratedTerminal",
